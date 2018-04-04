@@ -1,0 +1,1 @@
+# tp-2018-1c-Solitario-Windows-95
