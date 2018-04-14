@@ -1,4 +1,4 @@
-#include "tp0.h"
+#include "solitario.h"
 
 
 
