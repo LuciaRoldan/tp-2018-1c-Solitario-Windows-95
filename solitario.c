@@ -1,3 +1,0 @@
-main(){
-		inicializar_coordinador;
-}
