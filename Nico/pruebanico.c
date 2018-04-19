@@ -1,7 +1,8 @@
+#define BACKLOG 10
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,8 +10,6 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-
-
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
@@ -25,6 +24,8 @@
 #include <time.h>
 #include <sys/mman.h>
 #include <math.h>
+
+
 
 void sigchld_handler(int s)
 	{
@@ -48,11 +49,35 @@ void sigchld_handler(int s)
 	}
 
 
-	void servidor(char* ip,int puerto){
 
 
 
-		    int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
+
+
+
+
+
+
+
+
+int main(){
+char* ip;
+int puerto;
+
+
+	t_config* configuracion=config_create("/home/utnso/tp-2018-1c-Solitario-Windows-95/Nico/configuracion_prueba");
+
+	ip=config_get_string_value(configuracion,"IP");
+	puerto=config_get_int_value(configuracion,"PUERTO");
+
+//servidor(ip,puerto);
+
+	printf("%s : %d\n", ip, puerto);
+
+
+
+
+	    int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 		    struct addrinfo hints, *servinfo, *p;
 		    struct sockaddr_storage their_addr; // connector's address information
 		    socklen_t sin_size;
@@ -66,7 +91,7 @@ void sigchld_handler(int s)
 		    hints.ai_socktype = SOCK_STREAM;
 		    hints.ai_flags = AI_PASSIVE; // use my IP
 
-		    if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
+		    if ((rv = getaddrinfo(NULL, puerto, &hints, &servinfo)) != 0) {
 		        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		        return 1;
 		    }
@@ -140,25 +165,6 @@ void sigchld_handler(int s)
 		    }
 
 
-		}
-
-
-
-
-
-int main(){
-char* ip;
-int puerto;
-
-
-	t_config* configuracion=config_create("/home/utnso/tp-2018-1c-Solitario-Windows-95/configuracion_prueba");
-
-	ip=config_get_string_value(configuracion,"IP");
-	puerto=config_get_int_value(configuracion,"PUERTO");
-
-servidor(ip,puerto);
-
-//	printf("%s : %d\n", ip, puerto);
 
 
 
