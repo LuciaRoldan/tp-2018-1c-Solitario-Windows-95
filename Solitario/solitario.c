@@ -1,0 +1,3 @@
+main(){
+		inicializar_coordinador;
+}
