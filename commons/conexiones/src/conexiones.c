@@ -1,5 +1,10 @@
 #include "conexiones.h"
 
+int main(){
+	printf("hola");
+	return 0;
+}
+
 void configure_logger() {
 
 	logger = log_create("cliente.log", "LOG", true, LOG_LEVEL_INFO); //creacion de log
@@ -33,6 +38,38 @@ int connect_to_server(char * ip, char * port){
 		return server_socket;
 }
 
+
+void inicializar_servidor(char* ip, char* puerto){
+
+
+	struct sockaddr_in direccionServidor;
+	direccionServidor.sin_family = AF_INET; //que se fije solon si es IPv4 o IPv6
+	direccionServidor.sin_addr.s_addr = *ip;
+	direccionServidor.sin_port = *puerto;
+
+	int servidor = socket(AF_INET, SOCK_STREAM, 0);
+
+	int activado = 1;
+		setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
+
+		if(bind(servidor, (void*) &direccionServidor, sizeof(direccionServidor)) != 0){
+			_exit_with_error(servidor, "Fallo el bind", NULL);
+
+		}
+
+		printf("estoy escuchando\n");
+		listen(servidor, 100);
+
+	//--------------------------------------
+
+	struct sockaddr_in direccionCliente;
+	unsigned int tamanoDireccion;
+	int cliente = accept(servidor, (void*) &direccionCliente,&tamanoDireccion);
+	printf("recibi una conexion en %d\n", cliente);
+}
+
+
+
 void wait_handshake(int socket){
 	char *handshake = "Handshake"; //el servidor deberia mandar lo mismo que dice el protocolo
 
@@ -58,7 +95,7 @@ void wait_handshake(int socket){
 
 Mensaje read_mensaje(){
 
-	Mensaje mensaje = {.primerMensaje = "", .segundoMensaje = ""};	//creo estructura del mensaje
+	Mensaje mensaje = {strcpy(mensaje.primerMensaje, "") , strcpy(mensaje.segundoMensaje,  "")};	//creo estructura del mensaje
 
 
 
@@ -86,14 +123,14 @@ Mensaje read_mensaje(){
 return mensaje;
 }
 
-void send_mensaje(int socket, Protocolo mensaje) {
+void send_mensaje(int socket, Mensaje mensaje) {
 
 	log_info(logger, "Enviando mensaje");
 
 
 	mensaje.id_mensaje = 99;
 
-int resultado = send(socket, &mensaje, sizeof(Protocolo) , 0);
+int resultado = send(socket, &mensaje, sizeof(Mensaje) , 0);
 if(resultado <= 0) {
 
 	_exit_with_error(socket, "No se pudo enviar el mensaje", NULL);
@@ -146,6 +183,58 @@ log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(Cont
   return buf;
 }
 
+
+void send_content(int socket, void * content) {
+
+
+int longitud = sizeof(&content);
+//printf("Longitud del mensaje");
+//scanf(%d,longitud);
+
+  ContentHeader header = { .id = 33, .len = longitud };
+
+  int result_header = send(socket, &header,sizeof(ContentHeader),0);
+
+
+  int message_size = sizeof(Mensaje) + longitud;
+  void * buf = malloc(message_size);
+
+  memcpy(buf, &content, sizeof(message_size));
+
+
+
+
+  free(content);
+
+
+
+  log_info(logger, "Enviando contenido");
+  int result_send =  send(socket, buf, message_size, 0);
+  free(buf);
+
+  if (result_send <= 0) {
+    _exit_with_error(socket, "No se pudo enviar el contenido", NULL);
+  }
+}
+
+void wait_confirmation(int socket) {
+  int result = 1; // Dejemos creado un resultado por defecto
+  /*
+    19.   Ahora nos toca recibir la confirmacion del servidor.
+          Si el resultado obvenido es distinto de 0, entonces hubo un error
+  */
+  log_info(logger, "Esperando confirmacion");
+  if (recv(socket, &result, sizeof(int), 0) <= 0) {
+    _exit_with_error(socket, "No se pudo recibir confirmacion", NULL);
+  }
+
+  if (result != 1) {
+    _exit_with_error(socket, "Se recibio la confimación", NULL);
+  }
+
+  log_info(logger, "Comunicacion exitosa");
+  close(socket);
+}
 
 
 void _exit_with_error(int socket, char* error_msg, void * buffer) {

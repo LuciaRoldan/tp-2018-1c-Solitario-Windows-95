@@ -49,11 +49,13 @@ typedef struct {
 
 void _exit_with_error(int socket, char* error_msg, void * buffer);
 int connect_to_server(char * ip, char * port);
+int listen_for_connections(char* ipServer, int puertoServidor,int* socketServidor);
 void wait_handshake(int socket);
 Mensaje read_mensaje();
 void send_mensaje(int socket, Mensaje mensaje);
 void * wait_content(int socket);
-
+void send_content(int socket, void * content);
+void inicializar_servidor(char* ip, char* puerto);
 
 
 
