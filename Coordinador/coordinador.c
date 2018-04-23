@@ -18,7 +18,7 @@ void esperar_contenido{
 	listen
 	accept;
 }
-int atender_conexion_esi(clave){ //recibe la solicitud del esi con la clave que quiere
+/*int atender_conexion_esi(clave){ //recibe la solicitud del esi con la clave que quiere
 	//acceder
 	aceptar_solicitud_esi;
 	procesar_solicitud_esi;
@@ -31,7 +31,7 @@ void procesar solicitud esi{
 	verificar_existencia(instancia);
 
 }
-
+*/
 
 
 void inicializar_coordinador;
@@ -40,4 +40,3 @@ void enviar_configuracion_instancia;
 void configurar_planificador;
 void esperar_contenido;
 void atender_conexion_esi;
-

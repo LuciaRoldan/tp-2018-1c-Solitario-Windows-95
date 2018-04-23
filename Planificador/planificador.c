@@ -69,7 +69,7 @@ void asignarEsi(esi);
 	//
 
 void ejecutarEsi(esi){
-	//mandarle el script al esi ??
-	send(script);
+	solicitarEjecucion(esi); //le va a mandar al ESI un mensaje diciéndole que quiere
+							//que ejecute
+	//send(script); /mandarle el script al esi ??
 }
-
