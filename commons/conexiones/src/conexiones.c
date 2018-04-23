@@ -1,6 +1,5 @@
 #include "conexiones.h"
 
-
 void configure_logger() {
 
 	logger = log_create("cliente.log", "LOG", true, LOG_LEVEL_INFO); //creacion de log
@@ -35,10 +34,10 @@ int connect_to_server(char * ip, char * port){
 }
 
 void wait_handshake(int socket){
-	char * handshake = "Handshake"; //el servidor deberia mandar lo mismo que dice el protocolo
+	char *handshake = "Handshake"; //el servidor deberia mandar lo mismo que dice el protocolo
 
 
-	char * buffer = (char*) calloc(sizeof(char), strlen(handshake) + 1);
+	char *buffer = (char*) calloc(sizeof(char), strlen(handshake) + 1);
 
 	int result_recv = recv(socket, buffer, strlen(handshake), MSG_WAITALL); //recibo el handshake del servidor
 
@@ -57,19 +56,29 @@ void wait_handshake(int socket){
 	}
 
 
-Protocolo read_mensaje(){
+Mensaje read_mensaje(){
 
-	Protocolo mensaje = {.primerMensaje = "", .segundoMensaje = ""};	//creo estructura del mensaje
+	Mensaje mensaje = {.primerMensaje = "", .segundoMensaje = ""};	//creo estructura del mensaje
 
-	char * primerMensaje = readline("primerMensaje: "); //readline reserva memoria
+
+
+	char *primerMensaje = malloc(41);
+	printf("Primer mensaje: \n");
+	scanf("%s",primerMensaje);
+
+
 
 	memcpy(mensaje.primerMensaje, primerMensaje, strlen(primerMensaje));
 	free(primerMensaje);
 
 
 
+	char *segundoMensaje = malloc(41);
+	printf("Segundo mensaje: \n");
+	scanf("%s",segundoMensaje);
 
-	char * segundoMensaje = readline("segundoMensaje: ");
+
+
 
 	memcpy(mensaje.segundoMensaje, segundoMensaje, strlen(segundoMensaje));
 	free(segundoMensaje);
@@ -93,7 +102,7 @@ if(resultado <= 0) {
 }
 
 
-void * wait_content(int socket) {
+void *wait_content(int socket) {
 
 log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(ContentHeader));
   // 13.1. Reservamos el suficiente espacio para guardar un ContentHeader
