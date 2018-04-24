@@ -1,10 +1,26 @@
+typedef enum {
+	NUEVO,
+	LISTO,
+	BLOQUEANDO,
+	EJECUTANDO
+} estado;
+
+typedef struct {
+	estado estado;
+	int retardo; //tiempo en ser atendido el esi la ultima vez que ejecuto
+	int ultimaRafaga; //con el retardo y la ultimaRafaga se calcula la estimacion ?
+
+} pcb;
+
 int main(){
 
+	int idEsi;
 
-	/*iniciarEsi();
+	/*iniciarEsi(); //conectarse con el coordinador y el planificador
+
 	while(1){
 		mensaje = listen(); //escuchar los mensajes
-			switch (mensaje->quien)
+			switch (puertoDeLlegada)
 			case (planificador){
 				switch (mensaje->instruccion)
 				case (ejecutar){
@@ -17,18 +33,19 @@ int main(){
 
 				}
 			}
+
 	}
 }*/
 
 /*int traducirYEjecutar(){
 	//variable instruccion
 	int resultadoEjecucion;
-	recibir(script); //va a haber un listen para el send del script del Planificador
-	while(readln()){ //mientras haya cosas para leer en el script
-		readln();
-		instruccion = traducir(); //parsear la linea
-		resultadoEjecucion = ejecutar(instruccion);
-		informarPlanificador(resultadoEjecucion); //le cuenta al planificador si pudo
+	while(readln(script)){ //mientras haya cosas para leer en el script
+		linea = readln();
+		solicitud = parser(linea); //parsear la linea
+		resultadoEjecucion = enviarSolicitud(solicitud);
+		actualizarPCB(resultadoEjecucion);
+		informarPlanificador(PCB); //le cuenta al planificador si pudo
 												//ejecutar o no
 
 	}
@@ -45,13 +62,11 @@ int iniciarEsi(){ //se conecta con el planificador y el coordinador y si puede
 	//recibir el script del planificador
 	ejecutarPrograma(script);
 }*/
-void ejecutarPrograma(script){ //ejecuta el script del programa cuando el planificador
-	//se lo indica, pasándole el programa como parámetro
-	for() {//ejecuta sentencias una por una y se las pasa al coordinador. Ejec atomica.
-		clave = parsearSentencia(sentencia); //obtiene la clave que le tiene que pedir al coordinador
-		resultado = pasarSentenciaCoordinador(clave); //el coordinador le retorna
-		//el resultado de la ejecucion de la sentencia
-		informarResultadoAlPlanificador(resultado);
+void enviarSolicitud(solicitud){
+	int resultado;
+	//mandar la instruccion al Coordinador
+	resultado = //recibir
+
 	}
 }
 
