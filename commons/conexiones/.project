@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>commons</project>
+		<project>conexiones</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
