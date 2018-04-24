@@ -1,6 +1,8 @@
+#include "commons_propias.h"
+
 //atributos? variables?
 int puertoEscucha;
-algoritmoDistribucion;//LSU EL o KE
+void* algoritmoDistribucion;//LSU EL o KE
 int cantidadEntradas;
 int tamanoEntrada;
 int retardo;
@@ -42,15 +44,18 @@ mensaje procesar solicitud esi{
 }
 */
 
-
+/*
 void inicializar_coordinador;
 void leer_archivo_configuracion;
 void enviar_configuracion_instancia;
 void configurar_planificador;
 void esperar_contenido;
 void atender_conexion_esi;
-
+*/
 int main(){
+
 	//conectarse_servidor(su archivo de configuracion);
+
+return 0;
 
 }
