@@ -62,10 +62,11 @@ int iniciarEsi(){ //se conecta con el planificador y el coordinador y si puede
 	//recibir el script del planificador
 	ejecutarPrograma(script);
 }*/
-void enviarSolicitud(solicitud){
-	int resultado;
-	//mandar la instruccion al Coordinador
-	resultado = //recibir
+//int enviarSolicitud(solicitud){
+//	int resultadoEjecucion;
+//	//mandar la instruccion al Coordinador
+//	resultado = //recibir
+//	return resultadoEjecucion;
 
 	}
 }

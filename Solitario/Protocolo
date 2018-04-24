@@ -1,0 +1,8 @@
+AA = cuál de todos los quien envió el mensaje (para ESIS e Instancias)
+	00 Coordinador
+	00 Planificador
+	ID Instancia
+	ID ESI
+BB = instruccion a ejecutar
+	ESI
+		01 ejecutarse
