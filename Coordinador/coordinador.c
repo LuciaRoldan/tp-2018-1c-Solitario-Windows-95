@@ -1,25 +1,35 @@
 #include "commons_propias.h"
 
-//atributos? variables?
-int puertoEscucha;
-void* algoritmoDistribucion;//LSU EL o KE
-int cantidadEntradas;
-int tamanoEntrada;
+typedef enum {LSU, EL, KE}tipo_algoritmo; //Va en el .h
+
+
+char* puerto_escucha;
+tipo_algoritmo algoritmo_distribucion;//LSU EL o KE
+int cantidad_entradas;
+int tamano_entrada;
 int retardo;
+FILE* configuracion;
+char* ip;
+char* puerto;
 
 
+void inicializar_coordinador(){
+	leer_archivo_configuracion();
+	inicializar_servidor(ip, puerto);
+}
 
-//void inicializar_coordinador{
-//	leer_archivo_configuracion;
-//	enviar_configuracion_instancia;
-//	configurar planificador;
-//}
-//void esperar_contenido{
-//	socket
-//	bind
-//	listen
-//	accept;
-//}
+void leer_archivo_configuracion(){
+	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
+	configuracion = fopen("Configuracion coordinador.txt", "r");
+	fscanf(configuracion, "%s %s %d %d %d %d", &ip, &puerto_escucha, &algoritmo_distribucion , &cantidad_entradas, &tamano_entrada, &retardo);
+	fclose(configuracion);
+}
+
+void enviar_configuracion_instancia(){
+	//send_content(int socket, void * content)
+}
+
+
 /*int atender_conexion_esi(clave){ //recibe la solicitud del esi con la clave que quiere
 	//acceder
 	aceptar_solicitud_esi;
@@ -53,8 +63,8 @@ void esperar_contenido;
 void atender_conexion_esi;
 */
 int main(){
+	inicializar_cooridnador();
 
-	//conectarse_servidor(su archivo de configuracion);
 
 return 0;
 
