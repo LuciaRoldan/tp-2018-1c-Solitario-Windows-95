@@ -1,4 +1,4 @@
-#include "commons_propias.h"
+#include <commons_propias.h>
 
 char* ipCoordinador;
 int puertoCoordinador;
@@ -12,11 +12,13 @@ int main() {
 	int puertoDeLlegada, PUERTO_ESI, PUERTO_COORDINADOR;
 
 	int socket = connect_to_server("127.0.0.1", "8000"); //preguntar como hacer que lo traiga de nuestras commons
-/*
-    char* buffer = malloc(sizeof(Mensaje));
+
+    char* buffer = malloc(sizeof(struct Mensaje));
 	struct Mensaje mensaje = recv(socket, buffer, strlen(buffer), 0); //recibe el mensaje del coordinador
 
-	void procesar_mensaje(Mensaje mensaje) {
+
+
+	/*	void procesar_mensaje(Mensaje mensaje) {
 
 		while (1) {
 
@@ -42,9 +44,11 @@ int main() {
 			enviar_resultado_coordinador ();
 		}
 */
-	}
+	return 0;
 
-	void send_content;
+}
+
+/*	void send_content;
 	void contestar_solicitud;
 
 	void recibir_configuracion_inicial;
@@ -55,4 +59,5 @@ int main() {
 	void procesar_mensaje( mensaje);
 	void enviar_resultado_coordinador();
 }
-
+*/
+}

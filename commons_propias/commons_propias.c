@@ -34,7 +34,7 @@ int connect_to_server(char * ip, char * port){
 }
 
 
-void inicializar_servidor(char* ip, char* puerto){
+int inicializar_servidor(char* ip, char* puerto){
 
 
 	struct sockaddr_in direccionServidor;
@@ -61,6 +61,8 @@ void inicializar_servidor(char* ip, char* puerto){
 	unsigned int tamanoDireccion;
 	int cliente = accept(servidor, (void*) &direccionCliente,&tamanoDireccion);
 	printf("recibi una conexion en %d\n", cliente);
+
+	return cliente;
 }
 
 
@@ -86,6 +88,7 @@ void wait_handshake(int socket){
 	log_info(logger, "Handshake recibido: '%s'", buffer);
 	free(buffer);
 	}
+
 
 
 Mensaje read_mensaje(){
@@ -117,6 +120,7 @@ Mensaje read_mensaje(){
 
 return mensaje;
 }
+
 
 void send_mensaje(int socket, Mensaje mensaje) {
 

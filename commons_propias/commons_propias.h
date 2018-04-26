@@ -52,7 +52,7 @@ Mensaje read_mensaje();
 void send_mensaje(int socket, Mensaje mensaje);
 void * wait_content(int socket);
 void send_content(int socket, void * content);
-void inicializar_servidor(char* ip, char* puerto);
+int inicializar_servidor(char* ip, char* puerto);
 
 
 
