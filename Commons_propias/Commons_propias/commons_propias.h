@@ -65,7 +65,7 @@ void * wait_content(int socket);//espera contenido de tamaño variable
 void send_content(int socket, void * content);//envia contenido de tamaño variable
 
 
-
+void prueba_magica(int n);
 
 
 

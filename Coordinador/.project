@@ -4,7 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>Commons</project>
-		<project>commons_propias</project>
+		<project>Commons_propias</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -1,11 +1,11 @@
 #include "commons_propias.h"
 
 
-int main(){
+void prueba_magica(int n){
 
-	int cliente =inicializar_servidor("127.0.0.1","8080");
-	recv_string(cliente);
+	n++;
 
+printf("%d",n);
 }
 
 void configure_logger() {
@@ -43,20 +43,31 @@ int connect_to_server(char * ip, char * port){
 
 
 int inicializar_servidor(char* ip, char* puerto){
-	printf("0");
 
-	struct sockaddr_in direccionServidor;
-	direccionServidor.sin_family = AF_INET; //que se fije solon si es IPv4 o IPv6
-	direccionServidor.sin_addr.s_addr = *ip;
-	direccionServidor.sin_port = *puerto;
-printf("1");
-	int servidor = socket(AF_INET, SOCK_STREAM, 0);
 
-printf("2");
+	//struct sockaddr_in direccionServidor;
+	     // fill in my IP for me
+
+	struct addrinfo hints, *res;
+
+
+
+	memset(&hints,0,sizeof hints);
+
+
+	hints.ai_family = AF_UNSPEC; //que se fije solon si es IPv4 o IPv6
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = 0;
+
+
+	getaddrinfo(ip, puerto, &hints, &res);
+	int servidor = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+
 	int activado = 1;
 		setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
-printf("3");
-		if(bind(servidor, (void*) &direccionServidor, sizeof(direccionServidor)) != 0){
+
+		if(bind(servidor, (void*) &hints, sizeof(hints)) != 0){
 			_exit_with_error(servidor, "Fallo el bind", NULL);
 
 		}
