@@ -1,5 +1,13 @@
 #include "commons_propias.h"
 
+
+int main(){
+
+	int cliente =inicializar_servidor("127.0.0.1","8080");
+	recv_string(cliente);
+
+}
+
 void configure_logger() {
 
 	logger = log_create("cliente.log", "LOG", true, LOG_LEVEL_INFO); //creacion de log
@@ -35,18 +43,19 @@ int connect_to_server(char * ip, char * port){
 
 
 int inicializar_servidor(char* ip, char* puerto){
-
+	printf("0");
 
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET; //que se fije solon si es IPv4 o IPv6
 	direccionServidor.sin_addr.s_addr = *ip;
 	direccionServidor.sin_port = *puerto;
-
+printf("1");
 	int servidor = socket(AF_INET, SOCK_STREAM, 0);
 
+printf("2");
 	int activado = 1;
 		setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
-
+printf("3");
 		if(bind(servidor, (void*) &direccionServidor, sizeof(direccionServidor)) != 0){
 			_exit_with_error(servidor, "Fallo el bind", NULL);
 
@@ -67,59 +76,33 @@ int inicializar_servidor(char* ip, char* puerto){
 
 
 
-void wait_handshake(int socket){
-	char *handshake = "Handshake"; //el servidor deberia mandar lo mismo que dice el protocolo
+/*
+int send_string(int socket, char* mensaje){
+int len, bytes_sent;
+
+len = strlen(mensaje);
 
 
-	char *buffer = (char*) calloc(sizeof(char), strlen(handshake) + 1);
-
-	int result_recv = recv(socket, buffer, strlen(handshake), MSG_WAITALL); //recibo el handshake del servidor
-
-	if(result_recv <= 0) {
-		_exit_with_error(socket, "No se pudo recibir el handshke", buffer);
+bytes_sent= send(socket,mensaje,len,0);
 
 
-	}
+return bytes_sent;
 
-	if(strcmp(buffer, handshake) != 0) {
-		_exit_with_error(socket, "No llego el handshake esperado", buffer);
-	}
-
-	log_info(logger, "Handshake recibido: '%s'", buffer);
-	free(buffer);
-	}
-
-
-
-Mensaje read_mensaje(){
-
-	Mensaje mensaje = {strcpy(mensaje.id_mensaje, "") , strcpy(mensaje.instruccion,  "")};	//creo estructura del mensaje
-
-
-
-	char *id_mensaje = malloc(41);
-	printf("Id Mensaje: \n");
-	scanf("%s",id_mensaje);
-
-
-
-	memcpy(mensaje.id_mensaje, id_mensaje, strlen(id_mensaje));
-	free(id_mensaje);
-
-
-
-	char *instruccion = malloc(41);
-	printf("instruccion: \n");
-	scanf("%s",instruccion);
-
-
-
-
-	memcpy(mensaje.instruccion, instruccion, strlen(instruccion));
-	free(instruccion);
-
-return mensaje;
 }
+*/
+int recv_string(int socket){
+
+int bytes_recv;
+char* mensaje_recibido [10];
+
+bytes_recv= recv(socket,mensaje_recibido, 11,0);
+printf("%s",&mensaje_recibido);
+return bytes_recv;
+}
+
+
+
+
 
 
 void send_mensaje(int socket, Mensaje mensaje) {
@@ -136,7 +119,23 @@ if(resultado <= 0) {
 }
 
 }
+/*
+void wait_mensaje(int socket){
 
+	log_info(logger, "Esperando mensaje");
+
+	struct Mensaje buffer = malloc(sizeof(struct Mensaje));
+
+	if (recv(socket, buffer, sizeof(ContentHeader), 0) <= 0) {
+	    _exit_with_error(socket, "No se pudo recibir el encabezado del contenido", header);
+	  }
+
+	  if (header->id != 18) {
+	    _exit_with_error(socket, "Id incorrecto, deberia ser 18", header);
+	  }
+
+}
+*/
 
 void *wait_content(int socket) {
 
@@ -216,25 +215,6 @@ int longitud = sizeof(&content);
   }
 }
 
-void wait_confirmation(int socket) {
-  int result = 1; // Dejemos creado un resultado por defecto
-  /*
-    19.   Ahora nos toca recibir la confirmacion del servidor.
-          Si el resultado obvenido es distinto de 0, entonces hubo un error
-  */
-  log_info(logger, "Esperando confirmacion");
-  if (recv(socket, &result, sizeof(int), 0) <= 0) {
-    _exit_with_error(socket, "No se pudo recibir confirmacion", NULL);
-  }
-
-  if (result != 1) {
-    _exit_with_error(socket, "Se recibio la confimación", NULL);
-  }
-
-  log_info(logger, "Comunicacion exitosa");
-  close(socket);
-}
-
 
 void _exit_with_error(int socket, char* error_msg, void * buffer) {
   if (buffer != NULL) {
@@ -245,4 +225,12 @@ void _exit_with_error(int socket, char* error_msg, void * buffer) {
   exit_gracefully(1);
 }
 
-
+void exit_gracefully(int return_nr) {
+  /*
+    20.   Siempre llamamos a esta funcion para cerrar el programa.
+          Asi solo necesitamos destruir el logger y usar la llamada al
+          sistema exit() para terminar la ejecucion
+  */
+  log_destroy(logger);
+  exit(return_nr);
+}
