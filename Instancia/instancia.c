@@ -11,16 +11,17 @@ int main() {
 
 	int puertoDeLlegada, PUERTO_ESI, PUERTO_COORDINADOR;
 
-	int socket = connect_to_server("127.0.0.1", 8000); //preguntar como hacer que lo traiga de nuestras commons
+	int socket = connect_to_server("127.0.0.1", "8000"); //preguntar como hacer que lo traiga de nuestras commons
 /*
-	struct mensaje mensaje = recv(socket, buffer, len_mensaje, 0); //recibe el mensaje del coordinador
+    char* buffer = malloc(sizeof(Mensaje));
+	struct Mensaje mensaje = recv(socket, buffer, strlen(buffer), 0); //recibe el mensaje del coordinador
 
-	void procesar_mensaje(mensaje) {
+	void procesar_mensaje(Mensaje mensaje) {
 
 		while (1) {
 
-			instruccion = mensaje->intruccion; //del mensaje obtenemos la instruccion
-			clave = mensaje->clave;
+			char * instruccion = strcpy(mensaje->intruccion,instruccion); //del mensaje obtenemos la instruccion
+			int clave = mensaje->clave;
 			int respuesta;
 			acceder_a_entrada(clave); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
 			switch (instruccion) { // la instruccion puede ser GET,SET o STORE
