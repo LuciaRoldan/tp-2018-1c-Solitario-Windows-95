@@ -237,9 +237,12 @@ void wait_confirmation(int socket) {
 
 
 void _exit_with_error(int socket, char* error_msg, void * buffer) {
-  if(buffer != NULL){
+  if (buffer != NULL) {
     free(buffer);
   }
+  log_error(logger, error_msg);
+  close(socket);
+  exit_gracefully(1);
 }
 
 
