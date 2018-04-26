@@ -34,7 +34,7 @@ int connect_to_server(char * ip, char * port){
 }
 
 
-void inicializar_servidor(char* ip, char* puerto){
+int inicializar_servidor(char* ip, char* puerto){
 
 
 	struct sockaddr_in direccionServidor;
@@ -61,6 +61,8 @@ void inicializar_servidor(char* ip, char* puerto){
 	unsigned int tamanoDireccion;
 	int cliente = accept(servidor, (void*) &direccionCliente,&tamanoDireccion);
 	printf("recibi una conexion en %d\n", cliente);
+
+	return cliente;
 }
 
 
@@ -88,35 +90,6 @@ void wait_handshake(int socket){
 	}
 
 
-Mensaje read_mensaje(){
-
-	Mensaje mensaje = {strcpy(mensaje.primerMensaje, "") , strcpy(mensaje.segundoMensaje,  "")};	//creo estructura del mensaje
-
-
-
-	char *primerMensaje = malloc(41);
-	printf("Primer mensaje: \n");
-	scanf("%s",primerMensaje);
-
-
-
-	memcpy(mensaje.primerMensaje, primerMensaje, strlen(primerMensaje));
-	free(primerMensaje);
-
-
-
-	char *segundoMensaje = malloc(41);
-	printf("Segundo mensaje: \n");
-	scanf("%s",segundoMensaje);
-
-
-
-
-	memcpy(mensaje.segundoMensaje, segundoMensaje, strlen(segundoMensaje));
-	free(segundoMensaje);
-
-return mensaje;
-}
 
 void send_mensaje(int socket, Mensaje mensaje) {
 
