@@ -90,30 +90,30 @@ void wait_handshake(int socket){
 
 Mensaje read_mensaje(){
 
-	Mensaje mensaje = {strcpy(mensaje.primerMensaje, "") , strcpy(mensaje.segundoMensaje,  "")};	//creo estructura del mensaje
+	Mensaje mensaje = {strcpy(mensaje.id_mensaje, "") , strcpy(mensaje.instruccion,  "")};	//creo estructura del mensaje
 
 
 
-	char *primerMensaje = malloc(41);
-	printf("Primer mensaje: \n");
-	scanf("%s",primerMensaje);
+	char *id_mensaje = malloc(41);
+	printf("Id Mensaje: \n");
+	scanf("%s",id_mensaje);
 
 
 
-	memcpy(mensaje.primerMensaje, primerMensaje, strlen(primerMensaje));
-	free(primerMensaje);
+	memcpy(mensaje.id_mensaje, id_mensaje, strlen(id_mensaje));
+	free(id_mensaje);
 
 
 
-	char *segundoMensaje = malloc(41);
-	printf("Segundo mensaje: \n");
-	scanf("%s",segundoMensaje);
+	char *instruccion = malloc(41);
+	printf("instruccion: \n");
+	scanf("%s",instruccion);
 
 
 
 
-	memcpy(mensaje.segundoMensaje, segundoMensaje, strlen(segundoMensaje));
-	free(segundoMensaje);
+	memcpy(mensaje.instruccion, instruccion, strlen(instruccion));
+	free(instruccion);
 
 return mensaje;
 }
