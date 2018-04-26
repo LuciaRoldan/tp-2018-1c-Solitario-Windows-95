@@ -11,53 +11,44 @@ int main() {
 
 	int puertoDeLlegada, PUERTO_ESI, PUERTO_COORDINADOR;
 
+	//seria como inicializar la instancia
 	int socket = connect_to_server("127.0.0.1", "8000"); //preguntar como hacer que lo traiga de nuestras commons
 
-    char* buffer = malloc(sizeof(struct Mensaje));
+	char* buffer = malloc(sizeof(struct Mensaje));
 	struct Mensaje mensaje = recv(socket, buffer, strlen(buffer), 0); //recibe el mensaje del coordinador
 
-
-
-	/*	void procesar_mensaje(Mensaje mensaje) {
+	void procesar_mensaje(Mensaje mensaje) {
 
 		while (1) {
 
-			char * instruccion = strcpy(mensaje->intruccion,instruccion); //del mensaje obtenemos la instruccion
-			int clave = mensaje->clave;
+			char * instruccion = strcpy(mensaje->instruccion, instruccion); //del mensaje obtenemos la instruccion
+			//como sacamos la clavee de la instruccion????
 			int respuesta;
-			acceder_a_entrada(clave); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
+			acceder_a_entrada(instruccion); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
 			switch (instruccion) { // la instruccion puede ser GET,SET o STORE
-			case (GET): //con el get la instancia bloquea la clave de la entrada
+			case (1): //con el 1 = GET la instancia bloquea la clave de la entrada
 				bloquearClave();
-				return 1; //si todo sale bien retorna un 1 sino 0( no se como verifica que salga bien)
 				break;
-			case (SET): //guarda la info
+			case (2): // 2 = SET guarda la info
 				almacenar_infor(); //
-				return 1; //exito
 				break;
-			case (STORE): //guarda la info y desbloquea clave de la entrada
+			case (3): // 3 = STORE guarda la info y desbloquea clave de la entrada
 				almacenar_info();
 				desbloquearClave();
-				return 1;
 				break;
 			}
-			enviar_resultado_coordinador ();
+			enviar_resultado_coordinador();
 		}
-*/
-	return 0;
+	}
 
-}
+	/*	void send_content;
+	 void contestar_solicitud;
 
-/*	void send_content;
-	void contestar_solicitud;
+	 void recibir_configuracion_inicial;
+	 void inicializar_instancia;
 
-	void recibir_configuracion_inicial;
-	void inicializar_instancia;
+	 void bloquear_clave();
 
-	void bloquear_clave();
-
-	void procesar_mensaje( mensaje);
-	void enviar_resultado_coordinador();
-}
-*/
+	 void enviar_resultado_coordinador();
+	 */
 }
