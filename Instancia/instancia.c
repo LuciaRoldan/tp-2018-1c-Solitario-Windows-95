@@ -1,4 +1,4 @@
-#include <commons_propias.h>
+#include <Commons_propias/commons_propias.h>
 
 char* ipCoordinador;
 int puertoCoordinador;
@@ -9,6 +9,10 @@ int intervaloDump;
 
 int main() {
 
+connect_to_server("127.0.0.1","8081");
+
+return 0;
+	/*
 	int puertoDeLlegada, PUERTO_ESI, PUERTO_COORDINADOR;
 
 	//seria como inicializar la instancia
@@ -51,4 +55,5 @@ int main() {
 
 	 void enviar_resultado_coordinador();
 	 */
+
 }

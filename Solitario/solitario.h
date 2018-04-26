@@ -19,7 +19,7 @@
 #include <commons/txt.h>
 #include <commons/collections/dictionary.h>
 #include <commons/collections/queue.h>
-
+#include <Commons_propias/commons_propias.h>
 
 // Definimos algunas variables globales
 t_log * logger;

@@ -1,3 +1,5 @@
-main(){
-		inicializar_coordinador;
+#include "solitario.h"
+
+void main(){
+		//inicializar_coordinador;
 }

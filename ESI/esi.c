@@ -1,3 +1,5 @@
+#include <Commons_propias/commons_propias.h>
+
 typedef enum {
 	NUEVO,
 	LISTO,
@@ -69,7 +71,7 @@ int iniciarEsi(){ //se conecta con el planificador y el coordinador y si puede
 //	return resultadoEjecucion;
 
 	}
-}
+
 
 void bloquearEsi(clave, id){
 	//termina de ejecutar la linea que esatba ejecutando
