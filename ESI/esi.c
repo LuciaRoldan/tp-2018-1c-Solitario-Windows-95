@@ -18,23 +18,26 @@ int main(){
 
 	int idEsi;
 
-	/*iniciarEsi(); //conectarse con el coordinador y el planificador
+	iniciarEsi(); //conectarse con el coordinador y el planificador
 
 	while(1){
-		mensaje = listen(); //escuchar los mensajes
-			switch (puertoDeLlegada)
-			case (planificador){
-				switch (mensaje->instruccion)
-				case (ejecutar){
+		int mensaje = listen(); //escuchar los mensajes. El Panificador le pasa Ints para decirle
+		//que ejecute, se bloquee o se desbloquee.
+			switch (puertoLlegada()){
+			case ("PUERTOPLANIFICADOR"): //chequeo que el puerto sea por el que me comunico con el Plani
+				switch (mensaje){
+				case ("EJECUTAR"): //deberian ser consts definidas en el protocoloo.
 					traducirYEjecutar();
-				}
-				case (bloquearse){
-
-				}
-				case (desbloquearse){
-
+				break;
+				case ("BLOQUEARSE"):
+					bloquearse_esi();
+				break;
+				case ("DESBLOQUEARSE"):
+				break;
 				}
 			}
+			case ("PUERTOCOORDINADOR"):
+
 
 	}
 }*/
