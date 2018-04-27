@@ -1,6 +1,75 @@
 #include "commons_propias.h"
 
+// COMMONS ESI //
 
+typedef enum{
+	GET,
+	SET,
+	STORE
+} InstruccionAtomica;
+
+typedef char Clave [30];
+
+
+//mensaje que manda el ESI al Coordinador
+
+typedef struct{
+	InstruccionAtomica instruccion;
+	Clave clave;
+} MenasajeEsi;
+
+
+
+
+
+// COMMONS PLANIFICADOR //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// COMMONS CONEXIONES //
 void prueba_magica(int n){
 
 	n++;
