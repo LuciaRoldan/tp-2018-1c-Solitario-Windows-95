@@ -32,8 +32,11 @@ t_log * logger;
 
 typedef struct  {
   int id_mensaje;
-  char* instruccion [10];
+  char instruccion [10];
 } __attribute__((packed)) Mensaje;
+//no se deberian usar punteros en las structs cuando van a ser llamadas por sockets
+// no nos va a alcanzar con un solo tipo de mensaje, tenemos que hacer varios dependiendo de quien lo reciba
+
 
 
 typedef struct {
