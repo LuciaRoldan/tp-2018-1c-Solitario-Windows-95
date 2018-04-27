@@ -14,6 +14,16 @@ typedef struct{
 	struct Esi* sgte;
 } ColaDeEsi; //esto es una cola o un esi ???
 
+typedef struct{ //estructura que va a contener todas las claves y el estado de cada una
+	Clave clave; //deberia llegarle de las commons
+	int esiQueLaUsa;
+	ColaDeEsi esisEnEspera;
+} ClaveBloqueada;
+
+typedef struct{
+	ClaveBloqueada clave;
+	ClaveBloqueada* sgte;
+} ClavesBloqueadas;
 
 struct ColaDeEsi* colaDeReadyEsis;
 struct ColaDeEsi* colaDeBloqueadoEsis;
@@ -36,25 +46,29 @@ int main() {
 //	inicializar_servidor(IP_PLANIFICADOR, PUERTO_PLANIFICADOR); // Esto lo saca por arch de config
 
 	while(1){
-	struct mensaje mensaje = listen();
+	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
 	switch (puertoDeLlegada){
 		case (PUERTO_ESI):
-			switch (mensaje->idEsi){
+			switch (idEsi()){ //no se como obtener el id del esi que me llega. AYUDA
 			case (!esi_existente()):
-					agregarAColaDeReady(mensaje->idEsi);
+					agregar_a_cola_de_ready(idEsi()); //como puedo saber el id del Esi? fork?
+											//idEsi NO va a ser una func, pero no se de dd sale
 			break;
 			case(esi_existente()):
-					recibir_exito_o_error();
+					recibir_exito_o_error(mensaje);
+					ejecutar_proximo_esi();
 			break;
 		case (PUERTO_COORDINADOR):
 			switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
 			//me estan preguntando esta tomada o no
 			case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
 					//que retorna true o false
+					mover_esi_a_bloqueado(idEsi);
+					asignar_esi_a_clave(mensaje->clave, idEsi);
 					return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
 			break;
 			case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
-					asignar_clave_a_esi(mensaje->clave, mensaje->idEsi); //no se donde se guardara la info de los esis ?
+					asignar_esi_a_clave(mensaje->clave, idEsi);
 					return 1; //exito
 			break;
 			}
@@ -62,77 +76,76 @@ int main() {
 	}
 	}
 
-int clave_tomada(int clave){
-	int tomada = ";";//buscar en la estructura que tenga las instancias a ver si esta bloqueada
-	return tomada;
-}
-
-void asignar_clave_a_esi(int clave, int idEsi){
-	//buscar en donde sea que tenga las claves con los esis y asignarles el esi.
-}
-
-//para que un usuario bloquee al planificador y no de mas ordenes a esis ni nada
-}
-
 
 
 //CONSOLA//
 void pausarPlanificador(){
 	//syscall bloqueante ?????
-	}
+}
 
 
+//para que un usuario bloquee al planificador y no de mas ordenes a esis ni nada
 void bloquearEsi(int clave, int idEsi){
 	mover_esi_a_bloqueados(colaDeBloqueadoEsis, idEsi, clave); //encola al Esi en la lista de bloqueados con la clave
 	//que corresponda
-	moverEsiABloqueado(idEsi); //mueve al ESI a la cola de bloqueado del planificador
 }
 
 void encolar(ColaDeEsi cola, claveYesi){ //hacer el encolar como en Algoritmos.. y claveYesi es como
 	//las dos cosas que se van a guardar en un nodo pero no se como seria la estructura
 }
 
-
-
-
-
 void desbloquearEsi(clave){
-	esiDesbloquearse(clave);
-	moverEsiAReady(clave);
-
+	mover_esi_a_ready(clave);
 }
 
-//listaRecursos listar(recursos){ //lista procesos encolados en ese recurso
+ColaDeEsi listar(Clave clave){ //recurso == clave?
+	return "claveBloqueada.esisEnEspera"; //busca en su lista de Claves bloqueadas, la clave que se le pide,
+	//y devuelve la cola de esis bloqueados.
 }
 
-void kill(id){
-//	moverEsiAFinalizado(clave);
-	//liberar recursos que tenia en la instancia calculo
+void kill(idEsi){
+	mover_esi_a_finalizado(idEsi);
+	//liberar los recursos. Fijarse que clave estaba ocupando y desocuparla.
 }
 
-//int status(clave){
+int status(clave){
 	//devuelve informacion de la instancia que se consulta
-//}
-
-//int* deadlock(){ //va a devolver los esis con deadlocks
-
-//	matarEsis(); //consulta al usuario que ESIs quiere matar y los mata
-//	}
+	//fijarse en la ClavesBloqueadas a ver si esta la clave
+	return 1;
 }
 
+int* deadlock(){return 0;} //va a devolver los esis con deadlocks //no se jaja
 
-void matarEsis(){
-	//decime que esis
+void matarEsis(ColaDeEsi esis){
 //	for(){ //mata los esis uno por uno
 //	kill(esi); }
 }
 
-void moverEsiABloqueado(clave){}
-void moverEsiAReady(clave){}
-void moverEsiAFinalizado(clave){}
 
-//void asignarEsi(esi);
-	//
+
+// OTRAS FUNCIONES ESI-PLANI //
+
+void mover_esi_a_bloqueado(int idEsi){} //hay que hacer estas funciones de encolar
+void mover_esi_a_ready(int idEsi){}
+void mover_esi_a_finalizado(int idEsi){}
+
+int esiExistente(int idEsi){return 1;} //bueno aca, o me puedo fijar en mis colas si ya tengo al Esi, o puedo
+//fijarme que me esta mandando. Si me manda un 1 o un -1 es pq es existente.
+
+void recibir_exito_o_fallo(int mensaje){ //esto deberia llegar de las commons
+	//recibiria un 1 o un -1
+}
+
+int clave_tomada(int clave){
+	int tomada = ";";//buscar en la estructura que tenga las claves a ver si esta bloqueada
+	return tomada;
+}
+
+void asignar_esi_a_clave(Clave clave, int idEsi){
+	//buscar en donde sea que tenga las claves con los esis y asignarle el esi.
+}
+
+void ejecutar_proximo_esi(){}
 
 void ejecutarEsi(esi){
 	solicitarEjecucion(esi); //le va a mandar al ESI un mensaje diciéndole que quiere
