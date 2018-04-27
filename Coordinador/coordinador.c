@@ -1,4 +1,4 @@
-#include <Commons_propias/commons_propias.h>
+#include "coordinador.h"
 
 typedef enum {LSU, EL, KE}tipo_algoritmo; //Va en el .h
 
@@ -11,7 +11,7 @@ int retardo;
 FILE* configuracion;
 char* ip;
 char* puerto;
-
+t_conexion conexion;
 
 void inicializar_coordinador(){
 	leer_archivo_configuracion();
@@ -63,8 +63,17 @@ void esperar_contenido;
 void atender_conexion_esi;
 */
 int main(){
-	//inicializar_cooridnador();
-inicializar_servidor("127.0.0.1","8081");
+
+t_config* configuracion=config_create("/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Config");
+
+strcpy(conexion.ip,config_get_string_value(configuracion,"IP_COORDINADOR"));
+
+strcpy(conexion.puerto,config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
+
+
+
+
+inicializar_servidor(conexion.ip,conexion.puerto);
 return 0;
 
 }

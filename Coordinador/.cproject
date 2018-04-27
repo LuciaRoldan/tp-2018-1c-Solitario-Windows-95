@@ -74,6 +74,7 @@
 						<entry flags="RESOLVED" kind="libraryFile" name="Commons_propias" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
+				<externalSettings containerId="Coordinador;cdt.managedbuild.config.gnu.exe.release.1975163875" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier"/>
 			</storageModule>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.exe.release.1975163875">

@@ -2,6 +2,8 @@
 
 // COMMONS ESI //
 
+
+/*
 typedef enum{
 	GET,
 	SET,
@@ -19,54 +21,8 @@ typedef struct{
 } MenasajeEsi;
 
 
-
-
-
+*/
 // COMMONS PLANIFICADOR //
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // COMMONS CONEXIONES //
@@ -145,7 +101,10 @@ int inicializar_servidor(char* ip, char* puerto){
 	int cliente = accept(servidor, (void*) &direccionCliente,&tamanoDireccion);
 	printf("recibi una conexion en %d\n", cliente);
 
-	return cliente;
+
+
+		return cliente;
+
 }
 
 
@@ -300,11 +259,8 @@ void _exit_with_error(int socket, char* error_msg, void * buffer) {
 }
 
 void exit_gracefully(int return_nr) {
-  /*
-    20.   Siempre llamamos a esta funcion para cerrar el programa.
-          Asi solo necesitamos destruir el logger y usar la llamada al
-          sistema exit() para terminar la ejecucion
-  */
+
   log_destroy(logger);
   exit(return_nr);
+
 }
