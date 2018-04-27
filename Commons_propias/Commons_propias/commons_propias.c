@@ -70,12 +70,6 @@ typedef struct{
 
 
 // COMMONS CONEXIONES //
-void prueba_magica(int n){
-
-	n++;
-
-printf("%d",n);
-}
 
 void configure_logger() {
 
