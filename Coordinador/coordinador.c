@@ -1,4 +1,4 @@
-#include "commons_propias.h"
+#include <Commons_propias/commons_propias.h>
 
 typedef enum {LSU, EL, KE}tipo_algoritmo; //Va en el .h
 
@@ -63,9 +63,8 @@ void esperar_contenido;
 void atender_conexion_esi;
 */
 int main(){
-	inicializar_cooridnador();
-
-
+	//inicializar_cooridnador();
+inicializar_servidor("127.0.0.1","8081");
 return 0;
 
 }

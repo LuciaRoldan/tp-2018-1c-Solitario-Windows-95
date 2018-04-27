@@ -32,8 +32,11 @@ t_log * logger;
 
 typedef struct  {
   int id_mensaje;
-  char* instruccion [10];
+  char instruccion [10];
 } __attribute__((packed)) Mensaje;
+//no se deberian usar punteros en las structs cuando van a ser llamadas por sockets
+// no nos va a alcanzar con un solo tipo de mensaje, tenemos que hacer varios dependiendo de quien lo reciba
+
 
 
 typedef struct {
@@ -44,17 +47,28 @@ typedef struct {
 
 //------------------funciones
 
+//funcoines de salida
 void _exit_with_error(int socket, char* error_msg, void * buffer);
-int connect_to_server(char * ip, char * port);
+void exit_gracefully(int return_nr);
 
-void wait_handshake(int socket);
-Mensaje read_mensaje();
-void send_mensaje(int socket, Mensaje mensaje);
-void * wait_content(int socket);
-void send_content(int socket, void * content);
-int inicializar_servidor(char* ip, char* puerto);
+//funciones de conexion
+
+int inicializar_servidor(char* ip, char* puerto);//inicializa un servidor y espera conexiones
+int connect_to_server(char * ip, char * port);//devuelve el socket con el que se establece la conexion a un servidor
+
+//funciones de recv() y send()
+void send_string(int socket, char* mensaje);
+void wait_string(int socket, int len);
 
 
+//funciones de recv() y send() variables para despues de serializacion
+void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
+void wait_mensaje(int socket);
+void * wait_content(int socket);//espera contenido de tamaño variable
+void send_content(int socket, void * content);//envia contenido de tamaño variable
+
+
+void prueba_magica(int n);
 
 
 

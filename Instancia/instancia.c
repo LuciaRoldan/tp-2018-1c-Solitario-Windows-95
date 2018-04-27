@@ -1,4 +1,4 @@
-#include <commons_propias.h>
+#include <Commons_propias/commons_propias.h>
 
 char* ipCoordinador;
 int puertoCoordinador;
@@ -9,46 +9,34 @@ int intervaloDump;
 
 int main() {
 
-	int puertoDeLlegada, PUERTO_ESI, PUERTO_COORDINADOR;
 
-	//seria como inicializar la instancia
-	int socket = connect_to_server("127.0.0.1", "8000"); //preguntar como hacer que lo traiga de nuestras commons
+//seria como inicializar la instancia
+	int socket = connect_to_server("127.0.0.1", "8081");
 
-	char* buffer = malloc(sizeof(struct Mensaje));
-	struct Mensaje mensaje = recv(socket, buffer, strlen(buffer), 0); //recibe el mensaje del coordinador
+	Mensaje mensaje = malloc(sizeof(struct Mensaje));
+	int cantidad_bytes = recv(socket, mensaje, sizeof(Mensaje), 0); //recibe el mensaje del coordinador
+// se usa el sizeof (Mensaje) por que quiere saber todo el valor de la struct
+//El recv guarda la cantidad de bytes no el mensaje por lo tanto este se va a guardar en el "buffer" mensaje que creamos
+//probar que la cant de bytes sea mayor a cero
 
 	void procesar_mensaje(Mensaje mensaje) {
 
 		while (1) {
 
 			char * instruccion = strcpy(mensaje->instruccion, instruccion); //del mensaje obtenemos la instruccion
-			//como sacamos la clavee de la instruccion????
-			int respuesta;
-			acceder_a_entrada(instruccion); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
-			switch (instruccion) { // la instruccion puede ser GET,SET o STORE
-			case (1): //con el 1 = GET la instancia bloquea la clave de la entrada
-				bloquearClave();
-				break;
-			case (2): // 2 = SET guarda la info
-				almacenar_infor(); //
-				break;
-			case (3): // 3 = STORE guarda la info y desbloquea clave de la entrada
-				almacenar_info();
-				desbloquearClave();
-				break;
-			}
-			enviar_resultado_coordinador();
+			//como sacamos la clavee de la instruccion???? vamos a tener que armar otro tipo de struct que separe la instruccion de la clave
+			/*
+			 acceder_a_entrada(clave); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
+			 int respuesta;
+			 //no vamos a necesitar un switch porque la instancia solo lee o guarda es decir GET y SET
+
+			 if (instruccion == "GET") {
+			 respuesta = read_archivo();
+			 } else {
+			 respuesta = guardar_archivo();
+			 }
+			 send_mensaje(socket, respuesta);
+			 //aca supuestamente le avisa al coordinador como salio pero no se si la respuesta va como el numero directo o habria que armarla en un protocolo
+			 */
 		}
 	}
-
-	/*	void send_content;
-	 void contestar_solicitud;
-
-	 void recibir_configuracion_inicial;
-	 void inicializar_instancia;
-
-	 void bloquear_clave();
-
-	 void enviar_resultado_coordinador();
-	 */
-}
