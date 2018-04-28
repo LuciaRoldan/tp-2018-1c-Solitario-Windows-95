@@ -15,7 +15,7 @@ t_conexion conexion;
 
 void inicializar_coordinador(){
 	leer_archivo_configuracion();
-	inicializar_servidor(ip, puerto);
+	inicializar_servidor(ip, puerto,logger);
 }
 
 void leer_archivo_configuracion(){
@@ -70,10 +70,11 @@ strcpy(conexion.ip,config_get_string_value(configuracion,"IP_COORDINADOR"));
 
 strcpy(conexion.puerto,config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
 
+logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
 
 
 
-inicializar_servidor(conexion.ip,conexion.puerto);
+inicializar_servidor(conexion.ip,conexion.puerto,logger);
 return 0;
 
 }

@@ -20,21 +20,17 @@ typedef struct{
 	Clave clave;
 } MenasajeEsi;
 
-
 */
+
 // COMMONS PLANIFICADOR //
 
 
 // COMMONS CONEXIONES //
 
-void configure_logger() {
-
-	logger = log_create("cliente.log", "LOG", true, LOG_LEVEL_INFO); //creacion de log
-}
 
 
 
-int connect_to_server(char * ip, char * port){
+int connect_to_server(char * ip, char * port, t_log * logger){
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 
@@ -61,7 +57,7 @@ int connect_to_server(char * ip, char * port){
 }
 
 
-int inicializar_servidor(char* ip, char* puerto){
+int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 
 
 	//struct sockaddr_in direccionServidor;
@@ -92,6 +88,7 @@ int inicializar_servidor(char* ip, char* puerto){
 		}
 
 		printf("estoy escuchando\n");
+		log_info(logger, "Escuchando!");
 		listen(servidor, 100);
 
 	//--------------------------------------

@@ -3,6 +3,7 @@
 
 #include <Commons_propias/commons_propias.h>
 
+//structs
 
 typedef struct {
 	char* ip [10];
@@ -11,6 +12,10 @@ typedef struct {
 }t_conexion;
 
 
+//declares
+
 t_conexion conexion;
+t_log * logger;
+
 
 #endif /* COORDINADOR_H_ */
