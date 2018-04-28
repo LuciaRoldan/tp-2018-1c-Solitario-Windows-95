@@ -170,11 +170,8 @@ void wait_mensaje(int socket){
 void *wait_content(int socket) {
 
 log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(ContentHeader));
-  // 13.1. Reservamos el suficiente espacio para guardar un ContentHeader
-  ContentHeader * header = (ContentHeader*) malloc(sizeof(ContentHeader));
 
-  // 13.2. Recibamos el header en la estructura y chequiemos si el id es el correcto.
-  //      No se olviden de validar los errores!
+  ContentHeader * header = (ContentHeader*) malloc(sizeof(ContentHeader));
 
   if (recv(socket, header, sizeof(ContentHeader), 0) <= 0) {
     _exit_with_error(socket, "No se pudo recibir el encabezado del contenido", header);
@@ -185,14 +182,7 @@ log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(Cont
   }
 
   log_info(logger, "Esperando el contenido (%d bytes)", header->len);
-/*
 
-      14.   Ahora, recibamos el contenido variable. Ya tenemos el tamaño,
-            por lo que reecibirlo es lo mismo que veniamos haciendo:
-      14.1. Reservamos memoria
-      14.2. Recibimos el contenido en un buffer (si hubo error, fallamos, liberamos y salimos
-
-*/
 
   void * buf = calloc(sizeof(char), header->len + 1);
   if (recv(socket, buf, header->len, MSG_WAITALL) <= 0) {
@@ -200,11 +190,6 @@ log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(Cont
     _exit_with_error(socket, "Error recibiendo el contenido", header);
   }
 
-  /*
-
-      15.   Finalmente, no te olvides de liberar la memoria que pedimos
-            para el header y retornar el contenido recibido.
-*/
 
   log_info(logger, "Contenido recibido '%s'", (char*) buf);
   free(header);
@@ -216,8 +201,6 @@ void send_content(int socket, void * content) {
 
 
 int longitud = sizeof(&content);
-//printf("Longitud del mensaje");
-//scanf(%d,longitud);
 
   ContentHeader header = { .id = 33, .len = longitud };
 
