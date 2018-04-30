@@ -1,0 +1,7 @@
+NNNN //puerto escucha de conexiones
+XX //algoritmo de planificacion
+N //estimacion inicial para cada esi que tenga que planificar
+NNNNNNN //ip de conexion al coordinador
+NNNN //puerto de conexion al coordinador
+//claves bloqueadas inicialmente. Puede ser una lista, pero el temita es como las paso de txt a lita.
+//leo una por una, una abajo de la otra y las voy metiendo?
