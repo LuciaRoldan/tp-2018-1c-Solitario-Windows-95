@@ -2,21 +2,45 @@
 
 char* ipCoordinador;
 int puertoCoordinador;
-//algoritmoReemplazo; CIRC LRU o BSU;
+typedef enum {
+	LRU, CIRC, BSU
+} tipo_algoritmo;
+tipo_algoritmo algoritmo_reemplazo;
 //puntoDeMontaje; //path absoluto ???
 char* nombreInstancia;
 int intervaloDump;
+int cantidad_entradas;
+int tamano_entrada;
+int matriz_memoria[cantidad_entradas][tamano_entrada];
+
+typedef struct {
+	int clave_fila;
+	int clave_columna;
+}__attribute__((packed)) clave;
 
 typedef struct {
 	char instruccion[];
 	int clave;
 }__attribute__((packed)) Mensaje_Instancia;
-//arma otro tipo de struct (local) que separe la instruccion de la clave
+
+typedef struct {
+	char instruccion[];
+}__attribute__((packed))Mensaje_a_Coordinador;
 
 int main() {
 
-//seria como inicializar la instancia
-	int socket = connect_to_server("127.0.0.1", "8081");
+	void leer_archivo_configuracion() {
+		configuracion = fopen("Configuracion instancia.txt", "r");
+		fscanf(configuracion, "%s %s %s %d %d", &ipCoordinador,
+				&puertoCoordinador, &algoritmo_reemplazo, &cantidad_entradas,
+				&tamano_entrada);
+		fclose(configuracion);
+	}
+
+	void inicializar_planificador() {
+		leer_archivo_configuracion();
+		int socket = connect_to_server(ipCoordinador, puertoCoordinador);
+	}
 
 	Mensaje mensaje = malloc(sizeof(struct Mensaje));
 	int cantidad_bytes = recv(socket, mensaje, sizeof(Mensaje), 0); //recibe el mensaje del coordinador
@@ -29,32 +53,65 @@ int main() {
 		while (1) {
 
 			char * instruccion = strcpy(mensaje->instruccion, instruccion); //del mensaje obtenemos la instruccion
-			char * clave = strcpy(mensaje->clave, clave); //obtenemos la clave del mensaje
+			int * clave = strcpy(mensaje->clave, clave); //obtenemos la clave del mensaje
 
 			acceder_entrada(clave); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
 			int respuesta;
 			//no vamos a necesitar un switch porque la instancia solo lee o guarda es decir GET y SET
-
-			if (instruccion == "GET") {
-				respuesta = read_archivo();
-			} else {
+			switch (instruccion) {
+			case (instruccion == "GET"):
+				respuesta = read_archivo(clave);
+				break;
+			case (instruccion == "SET"):
 				respuesta = guardar_archivo();
+				break;
+			case (instruccion == "STORE"):
+				respuesta = guardar_archivo_y_desbloquar();
+				if(respuesta){
+				respuesta = 2;
+				}
+				break;
 			}
-			send_mensaje(socket, respuesta);
-			//aca supuestamente le avisa al coordinador como salio pero no se si la respuesta va como el numero directo o habria que armarla en un protocolo
 
+			enviar_mesnaje_coordinador(respuesta);
+			//aca supuestamente le avisa al coordinador como salio pero no se si la respuesta va como el numero directo o habria que armarla en un protocolo
 		}
 	}
 
-	void acceder_entrada(int clave) {
-
+	int acceder_entrada(clave clave) {
+		int * clave_fila = strcpy(clave->clave_fila, clave_fila);
+		int * clave_columna = strcpy(clave->clave_columna, clave_columna);
+		return matriz_memoria[clave_fila][clave_columna];
 	}
 
 	int read_archivo() {
-
+		int entrada = acceder_entrada();
+		return fopen(entrada); // si sale bien retorna 1 y si mal 0??
+		fclose();
 	}
 
-	guardar_archivo();
+	int guardar_archivo(int archivo) {
+		int entrada = acceder_entrada();
+		return entrada = archivo;
+	}
+	//donde viene el archivo??
+
+
+	void enviar_mensaje_coordinador(int respuesta){
+
+		switch(respuesta){
+		case(0):
+				Mensaje_a_Coordinador mensaje = {"Algo salio mal"};
+		break;
+		case(1):
+				Mensaje_a_Coordinador mensaje = {"Todo OK"};
+		break;
+		case (2):
+				Mensaje_a_Coordinador mensaje = {"desbloquearESI"};
+		break;
+		}
+		send_mensaje(socket,mensaje);
+	}
 
 }
 
