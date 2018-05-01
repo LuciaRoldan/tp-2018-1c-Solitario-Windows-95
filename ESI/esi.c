@@ -1,4 +1,4 @@
-#include <Commons_propias/commons_propias.h>
+#include "esi.h"
 
 typedef enum {
 	NUEVO,
@@ -25,7 +25,8 @@ int main(){
 		//que ejecute, se bloquee o se desbloquee.
 			switch (puertoLlegada()){
 			case ("PUERTOPLANIFICADOR"): //chequeo que el puerto sea por el que me comunico con el Plani
-				switch (mensaje){
+				struct InstruccionESI accionESI = listen();
+				switch (accionESI->intruccion){
 				case ("EJECUTAR"): //deberian ser consts definidas en el protocoloo.
 					traducirYEjecutar();
 				break;
@@ -40,7 +41,6 @@ int main(){
 
 
 	}
-}*/
 
 /*int traducirYEjecutar(){
 	//variable instruccion
@@ -72,8 +72,6 @@ int iniciarEsi(){ //se conecta con el planificador y el coordinador y si puede
 //	//mandar la instruccion al Coordinador
 //	resultado = //recibir
 //	return resultadoEjecucion;
-
-	}
 
 
 void bloquearEsi(clave, id){

@@ -1,4 +1,4 @@
-#include <Commons_propias/commons_propias.h>
+#include "planificador.h"
 
 //Aca hay que hacer lo que hizo Lu R en el coordinador que lee las coasa del archivo y las
 //pone en variables
@@ -11,33 +11,15 @@ int puertoCoordinador;
 listaDeClaves clavesInicialmenteBloqueadas; //es una lista.
 */
 
-typedef struct{
-	int IDEsi;
-	struct Esi* sgte;
-} ColaDeEsi; //esto es una cola o un esi ???
+struct ColaDeEsi *colaDeReadyEsis;
+struct ColaDeEsi *colaDeBloqueadoEsis;
+struct ColaDeEsi *colaDeFinalizadoEsis;
 
-typedef struct{ //estructura que va a contener todas las claves y el estado de cada una
-	Clave clave; //deberia llegarle de las commons
-	int esiQueLaUsa;
-	ColaDeEsi esisEnEspera;
-} ClaveBloqueada;
-
-typedef struct{
-	ClaveBloqueada clave;
-	ClaveBloqueada* sgte;
-} ClavesBloqueadas;
-
-struct ColaDeEsi* colaDeReadyEsis;
-struct ColaDeEsi* colaDeBloqueadoEsis;
-struct ColaDeEsi* colaDeFinalizadoEsis;
-
-//hay que hacer un struct para que el planificador guarde las claves de las instancias bloqueadas
-//y especifique que ESI la bloqueo. O sea, el Esi va a querer buscar las claves, y capaz que va a querer
-//saber que ESI esta ocupando la clave. Entonces un struct capaz no es lo mas copado..
+struct ClavesBloqueadas *clavesBloqueadas;
 
 
 //estados en lo que puede estar el planificador
-pausado;
+//pausado;
 
 
 void agregarEsiAColaDeReady(...){}
