@@ -18,29 +18,48 @@ int main(){
 
 	int idEsi;
 
-	iniciarEsi(); //conectarse con el coordinador y el planificador
+	char* puerto_escucha;
+	/*int cantidad_entradas;
+	int tamano_entrada;
+	int retardo;*/
+	FILE* configuracion;
+	char* ip;
+	char* puerto;
+	t_conexion conexion;
 
-	while(1){
-		int mensaje = listen(); //escuchar los mensajes. El Panificador le pasa Ints para decirle
-		//que ejecute, se bloquee o se desbloquee.
-			switch (puertoLlegada()){
-			case ("PUERTOPLANIFICADOR"): //chequeo que el puerto sea por el que me comunico con el Plani
-				struct InstruccionESI accionESI = listen();
-				switch (accionESI->intruccion){
-				case ("EJECUTAR"): //deberian ser consts definidas en el protocoloo.
-					traducirYEjecutar();
-				break;
-				case ("BLOQUEARSE"):
-					bloquearse_esi();
-				break;
-				case ("DESBLOQUEARSE"):
-				break;
-				}
+
+
+	int main(){
+		t_log* log_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
+		int socket_Planificador = connect_to_server("IP_PLANIFICADOR", "PUERTO_PLANIFICADOR", log_esi);
+		char* line;
+		Mensaje mensaje;
+		mensaje.instruccion = parse(line); //Parsea y devuelve instrucción de ESI
+
+		while(1){
+				int mensaje = wait_content(socket_Planificador); //el planificador devuelve la proxima linea a ejecutar
+					switch (mensaje){
+					case ("PUERTO_PLANIFICADOR"): //chequeo que el puerto sea por el que me comunico con el Plani
+						struct InstruccionESI accionESI = listen();
+						switch (accionESI->intruccion){
+						case ("EJECUTAR"): //deberian ser consts definidas en el protocolo.
+							traducirYEjecutar();
+						break;
+						case ("BLOQUEARSE"):
+							bloquearse_esi();
+						break;
+						case ("DESBLOQUEARSE"):
+						break;
+						}
+					}
+					case ("PUERTOCOORDINADOR"):
+
+
 			}
-			case ("PUERTOCOORDINADOR"):
-
 
 	}
+
+
 
 /*int traducirYEjecutar(){
 	//variable instruccion
