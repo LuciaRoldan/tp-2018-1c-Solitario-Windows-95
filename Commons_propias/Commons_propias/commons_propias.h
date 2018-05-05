@@ -41,11 +41,6 @@ typedef enum{ //posibles instrucciones
 typedef char Clave [30]; //keys
 
 
-typedef struct{
-	int cantidad_entradas;
-	int tamano_entrada;
-}datos_configuracion;
-
 //-----------------------MENSAJES
 
 //ESI-COORDINADOR
