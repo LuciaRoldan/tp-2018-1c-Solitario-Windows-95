@@ -20,6 +20,12 @@ typedef struct{
 	ClaveBloqueada* sgte;
 } ClavesBloqueadas;
 
+typedef enum{
+	SJF_CD,
+	SJF_SD,
+	HRRN
+} AlgoritmoPlanificacion;
+
 
 //FUNCIONES
 

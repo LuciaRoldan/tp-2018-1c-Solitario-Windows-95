@@ -29,7 +29,38 @@
 
 t_log * logger;
 
-//---------------------structs
+//---------------------structs para mensajes
+
+typedef enum{ //posibles instrucciones
+	GET,
+	SET,
+	STORE
+} InstruccionAtomica;
+
+typedef char Clave [30]; //keys
+
+typedef struct{ //mensaje que manda el ESI al Coordinador
+	InstruccionAtomica instruccion;
+	Clave clave;
+} MenasajeEsi;
+
+//PLANIFICADOR-ESI
+typedef enum{
+	EJECUTAR,
+	BLOQUEARSE,
+	DESBLOQUEARSE
+} AccionESI;
+typedef struct{ //mensaje que manda Planificador an ESI
+	AccionESI instruccion;
+} InstruccionESI;
+
+//---------------------structs para conexions
+
+//PARA EL PLANIFICADOR Y EL COORDINADOR
+typedef struct {
+	char* ip [10];
+	char* puerto [5];
+}t_conexion;
 
 typedef struct  {
   int id_mensaje;
@@ -38,13 +69,10 @@ typedef struct  {
 //no se deberian usar punteros en las structs cuando van a ser llamadas por sockets
 // no nos va a alcanzar con un solo tipo de mensaje, tenemos que hacer varios dependiendo de quien lo reciba
 
-
-
 typedef struct {
   int id;
   int len;
 } __attribute__((packed)) ContentHeader;
-
 
 //------------------funciones
 

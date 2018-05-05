@@ -1,15 +1,13 @@
 #include "planificador.h"
 
-//Aca hay que hacer lo que hizo Lu R en el coordinador que lee las coasa del archivo y las
-//pone en variables
-/*int puertoEscuchas;
-//el algoritmo de planificacion con el que querramos que ejecute
-algoritmoPlanificacion; //SJF CD/SD o HRRN
+char* puertoEscucha;
+AlgoritmoPlanificacion algoritmoPlanificacion;
 int estimacionInicial;
 char* ipCoordinador[10]; //es una cadena de caracteres, es char*??????
-int puertoCoordinador;
-listaDeClaves clavesInicialmenteBloqueadas; //es una lista.
-*/
+char* puertoCoordinador;
+char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
+FILE* configuracion;
+t_conexion conexion;
 
 struct ColaDeEsi *colaDeReadyEsis;
 struct ColaDeEsi *colaDeBloqueadoEsis;
@@ -17,19 +15,18 @@ struct ColaDeEsi *colaDeFinalizadoEsis;
 
 struct ClavesBloqueadas *clavesBloqueadas;
 
-
 //estados en lo que puede estar el planificador
 //pausado;
 
-
-void agregarEsiAColaDeReady(...){}
+//void agregarEsiAColaDeReady(...){}
 
 int main() {
-	int puertoDeLlegada, PUERTO_ESI, PUERTO_COORDINADOR;
-	int pausado = 0;
-//	inicializar_servidor(IP_PLANIFICADOR, PUERTO_PLANIFICADOR); // Esto lo saca por arch de config
 
-	while(1){
+	logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
+	inicializar_planificador(); //leyendo archivo configuracion
+
+
+	while(1){ //recibiendo mensajes
 	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
 	switch (puertoDeLlegada){
 		case (PUERTO_ESI):
