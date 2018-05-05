@@ -19,3 +19,8 @@ void inicializar_servidor(){
 	strcpy(conexion.puerto,config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
 	connect_to_server(conexion.ip, conexion.puerto, logger);
 }
+
+void escuchar_esis(){
+	wait_content(atoi(*puertoEscucha));
+
+}

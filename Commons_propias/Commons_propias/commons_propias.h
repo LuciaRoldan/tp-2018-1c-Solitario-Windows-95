@@ -25,6 +25,7 @@
 #include <commons/collections/list.h>
 #include <commons/config.h>
 #include <unistd.h>
+#include <pthread.h>
 
 
 t_log * logger;
@@ -39,6 +40,15 @@ typedef enum{ //posibles instrucciones
 
 typedef char Clave [30]; //keys
 
+
+typedef struct{
+	int cantidad_entradas;
+	int tamano_entrada;
+}datos_configuracion;
+
+//-----------------------MENSAJES
+
+//ESI-COORDINADOR
 typedef struct{ //mensaje que manda el ESI al Coordinador
 	InstruccionAtomica instruccion;
 	Clave clave;
@@ -50,9 +60,17 @@ typedef enum{
 	BLOQUEARSE,
 	DESBLOQUEARSE
 } AccionESI;
-typedef struct{ //mensaje que manda Planificador an ESI
+typedef struct{ //mensaje que manda Planificador a ESI
 	AccionESI instruccion;
 } InstruccionESI;
+
+//INSTANCIA-COORDINADOR
+typedef struct{
+	int cantidad_entradas;
+	int tamano_entrada;
+} datos_configuracion;
+
+
 
 //---------------------structs para conexions
 
@@ -61,6 +79,10 @@ typedef struct {
 	char* ip [10];
 	char* puerto [5];
 }t_conexion;
+
+
+
+
 
 typedef struct  {
   int id_mensaje;
@@ -94,7 +116,7 @@ void wait_string(int socket, int len);
 void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
 void wait_mensaje(int socket);
 void * wait_content(int socket);//espera contenido de tamaño variable
-void send_content(int socket, void * content);//envia contenido de tamaño variable
+void send_content(int socket, void * content, int id);//envia contenido de tamaño variable
 
 
 

@@ -1,0 +1,21 @@
+La longitud del id del mensaje es un int
+
+
+
+///////////////// INSTANCIA /////////////////
+1 datos_configuracion
+
+
+///////////////// COORDINADOR /////////////////
+
+
+
+///////////////// PPLANIFICADOR /////////////////
+
+
+
+///////////////// ESI /////////////////
+/// Esi al Planificador ////
+1 solicitud_ejecucion (Esi Nuevo)
+2 resultado_ejecucion_finalizada (Esi que finalizo)
+3 resultado_ ejecucion_bloqueo (Esi que termino de ejecutar porque se bloqueo)

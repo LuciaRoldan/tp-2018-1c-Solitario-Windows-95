@@ -25,8 +25,12 @@ int main() {
 	logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
 	inicializar_planificador(); //leyendo archivo configuracion
 
+	pthread_t hiloEscuchaEsis;
 
 	while(1){ //recibiendo mensajes
+
+	pthread_t escucharEsis = pthread_create(&hiloEscuchaEsis, NULL, escucharEsis(), NULL);
+
 	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
 	switch (puertoDeLlegada){
 		case (PUERTO_ESI):

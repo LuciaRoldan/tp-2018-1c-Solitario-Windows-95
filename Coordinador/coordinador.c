@@ -1,4 +1,5 @@
 #include "coordinador.h"
+#include "coordinador_funciones.h"
 
 char* puerto_escucha;
 tipo_algoritmo algoritmo_distribucion;//LSU EL o KE
@@ -24,7 +25,7 @@ void leer_archivo_configuracion(){
 
 void enviar_configuracion_instancia(){
 	datos_configuracion mensaje = {tamano_entrada, cantidad_entradas};
-	send_content(int socket, void * content, 1);
+	//send_content(int socket, void * content, 1);
 }
 
 

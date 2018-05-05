@@ -197,12 +197,12 @@ log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(Cont
 }
 
 
-void send_content(int socket, void * content) {
+void send_content(int socket, void * content, int id) {
 
 
-int longitud = sizeof(&content);
+  int longitud = sizeof(&content);
 
-  ContentHeader header = { .id = 33, .len = longitud };
+  ContentHeader header = { .id = id, .len = longitud };
 
   int result_header = send(socket, &header,sizeof(ContentHeader),0);
 

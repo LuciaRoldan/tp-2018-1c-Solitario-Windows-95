@@ -1,4 +1,5 @@
 #include "esi.h"
+#include "esi_funciones.h"
 
 typedef enum {
 	NUEVO,

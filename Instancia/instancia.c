@@ -1,4 +1,5 @@
 #include <Commons_propias/commons_propias.h>
+#include "instancia.h"
 
 char* ipCoordinador;
 int puertoCoordinador;
