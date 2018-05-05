@@ -1,8 +1,5 @@
 #include "coordinador.h"
 
-typedef enum {LSU, EL, KE}tipo_algoritmo; //Va en el .h
-
-
 char* puerto_escucha;
 tipo_algoritmo algoritmo_distribucion;//LSU EL o KE
 int cantidad_entradas;
@@ -11,7 +8,7 @@ int retardo;
 FILE* configuracion;
 char* ip;
 char* puerto;
-t_conexion conexion;
+t_conexion conexionInstancia;
 
 void inicializar_coordinador(){
 	leer_archivo_configuracion();
@@ -26,7 +23,8 @@ void leer_archivo_configuracion(){
 }
 
 void enviar_configuracion_instancia(){
-	//send_content(int socket, void * content)
+	datos_configuracion mensaje = {tamano_entrada, cantidad_entradas};
+	send_content(int socket, void * content, 1);
 }
 
 

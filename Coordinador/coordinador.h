@@ -5,7 +5,12 @@
 
 //structs
 
+typedef enum {LSU, EL, KE}tipo_algoritmo;
 
+typedef struct{				//Va en commons_propias
+	int cantidad_entradas;
+	int tamano_entrada;
+}datos_configuracion;
 
 //declares
 

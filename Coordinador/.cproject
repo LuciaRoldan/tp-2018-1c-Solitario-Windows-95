@@ -36,9 +36,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.2082529265" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.278745563" name="Library search path (-L)" superClass="gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Commons_propias/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Commons/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.2114385861" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-									<listOptionValue builtIn="false" value="Commons_propias"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="Commons_propias"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="Commons"/>
 									<listOptionValue builtIn="false" value="commons"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.215643369" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
@@ -122,7 +124,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="Coordinador.null.1500025457" name="Coordinador"/>
+		<project id="Coordinador.null.1752781337" name="Coordinador"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
