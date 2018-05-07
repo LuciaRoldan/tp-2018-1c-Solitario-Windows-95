@@ -1,118 +1,176 @@
+#ifndef COORDINADOR_H_
+#define COORDINADOR_H_
+
 #include <Commons_propias/commons_propias.h>
 #include "instancia.h"
 
 char* ipCoordinador;
 int puertoCoordinador;
+
 typedef enum {
 	LRU, CIRC, BSU
 } tipo_algoritmo;
+
 tipo_algoritmo algoritmo_reemplazo;
+
 //puntoDeMontaje; //path absoluto ???
+
 char* nombreInstancia;
 int intervaloDump;
 int cantidad_entradas;
 int tamano_entrada;
-int matriz_memoria[cantidad_entradas][tamano_entrada];
+int matriz_memoria[cantidad_entradas][3];
+int espacio_para_memoria;
+char* memoria;
+FILE *archivo;
 
-typedef struct {
-	int clave_fila;
-	int clave_columna;
-}__attribute__((packed)) clave;
+//-------------structs------------------//
 
 typedef struct {
 	char instruccion[];
+	uint32_t intruccion_long;
 	int clave;
-}__attribute__((packed)) Mensaje_Instancia;
+	uint32_t clave_long;
+}__attribute__((packed)) Mensaje_tipo1;
 
 typedef struct {
 	char instruccion[];
-}__attribute__((packed))Mensaje_a_Coordinador;
+	uint32_t instruccon_long;
+	int clave;
+	uint32_t clave_long;
+	int value;
+	uint32_t value_long;
+}__attribute__((packed)) Mensaje_tipo2;
 
+typedef struct {
+	char instruccion[];
+}__attribute__((packed)) Mensaje_tipo3;
+
+//hay que hacer una variable char que es todo el espacio de memoria que le hago un malloc para guardar todo ese espacio para ella
+//y que lo obtengo a partir del archivo de configuracion que me da el coordinador
 int main() {
+
+	void inicializar_instancia() {
+		int socket = connect_to_server(ipCoordinador, puertoCoordinador);
+		leer_archivo_configuracion();
+		memoria = malloc(espacio_para_memoria);
+	}
+
+	//buscar como hacer el recv a header
 
 	void leer_archivo_configuracion() {
 		configuracion = fopen("Configuracion instancia.txt", "r");
-		fscanf(configuracion, "%s %s %s %d %d", &ipCoordinador,
+		fscanf(configuracion, "%s %s %s %d %d %d", &ipCoordinador,
 				&puertoCoordinador, &algoritmo_reemplazo, &cantidad_entradas,
-				&tamano_entrada);
+				&tamano_entrada, &espacio_para_memoria);
 		fclose(configuracion);
 	}
 
-	void inicializar_planificador() {
-		leer_archivo_configuracion();
-		int socket = connect_to_server(ipCoordinador, puertoCoordinador);
-	}
+	ContentHeader header = malloc(sizeof(struct ContentHeader));
 
-	Mensaje mensaje = malloc(sizeof(struct Mensaje));
-	int cantidad_bytes = recv(socket, mensaje, sizeof(Mensaje), 0); //recibe el mensaje del coordinador
-// se usa el sizeof (Mensaje) por que quiere saber todo el valor de la struct
-//El recv guarda la cantidad de bytes no el mensaje por lo tanto este se va a guardar en el "buffer" mensaje que creamos
-//probar que la cant de bytes sea mayor a cero
+	int cantidad_bytes_header = recv(socket, header, sizeof(ContentHeader), 0); //tengo que hacer un recv para recibir el header y conocer el tipo de mensaje
 
-	void procesar_mensaje(Mensaje_Instancia mensaje) {
+	void procesar_mensaje(ContentHeader header) {
+		int id = strcpy(header->id, id);
+		char * instruccion;
+		int * clave;
+		Mensaje_tipo1 mensaje_tipo1 = malloc(sizeof(struct Mensaje_tipo1));
+		Mensaje_tipo2 mensaje_tipo2 = malloc(sizeof(struct Mensaje_tipo2));
+		int respuesta;
+
+		if (id == 1) {
+			recv(socket, mensaje_tipo1, sizeof(Mensaje_tipo1), 0);
+
+			instruccion = strcpy(mensaje_tipo1->instruccion, instruccion); //del mensaje obtenemos la instruccion
+			clave = strcpy(mensaje_tipo1->clave, clave); //obtenemos la clave del mensaje
+
+		} else {
+			recv(socket, mensaje_tipo2, sizeof(Mensaje_tipo2), 0);
+
+			instruccion = strcpy(mensaje_tipo2->instruccion, instruccion); //del mensaje obtenemos la instruccion
+			clave = strcpy(mensaje_tipo2->clave, clave); //obtenemos la clave del mensaje
+		}
 
 		while (1) {
 
-			char * instruccion = strcpy(mensaje->instruccion, instruccion); //del mensaje obtenemos la instruccion
-			int * clave = strcpy(mensaje->clave, clave); //obtenemos la clave del mensaje
-
-			acceder_entrada(clave); //ingresa a la tabla de entradas segun la clave que se manda por el mensaje
-			int respuesta;
-			//no vamos a necesitar un switch porque la instancia solo lee o guarda es decir GET y SET
 			switch (instruccion) {
 			case (instruccion == "GET"):
-				respuesta = read_archivo(clave);
+
+				void bloquear_clave(clave);
+
+			    Mensaje_tipo3 buffer_info = malloc(sizeof(struct Mensaje_tipo3));
+				int direccion = obtener_direccion(clave);
+				memcpy(buffer_info, *direccion, sizeof(buffer_info)); //obtiene la info a leer
+
+				void enviar_info_coordinador(buffer_info);
+
 				break;
 			case (instruccion == "SET"):
-				respuesta = guardar_archivo();
+
+				int * value = strcpy(mensaje_tipo2->value, value);
+				void guardar_archivo( value);
+
 				break;
 			case (instruccion == "STORE"):
-				respuesta = guardar_archivo_y_desbloquar();
-				if(respuesta){
-				respuesta = 2;
-				}
+
+				int direccion = obtener_direccion(clave);
+				char informacion[];
+
+				memcpy(informacion,*direccion, sizeof(informacion));
+
+				archivo = fopen("informacion.txt","w");
+				fwrite(&informacion, sizeof(informacion),1,archivo);
+				fclose(archivo);
+
+				void desbloquear_clave(clave);
+
 				break;
 			}
-
-			enviar_mesnaje_coordinador(respuesta);
-			//aca supuestamente le avisa al coordinador como salio pero no se si la respuesta va como el numero directo o habria que armarla en un protocolo
 		}
+
 	}
 
-	int acceder_entrada(clave clave) {
-		int * clave_fila = strcpy(clave->clave_fila, clave_fila);
-		int * clave_columna = strcpy(clave->clave_columna, clave_columna);
-		return matriz_memoria[clave_fila][clave_columna];
-	}
+// se usa el sizeof (Mensaje) por que quiere saber todo el valor de la struct
+//El recv guarda la cantidad de bytes no el mensaje por lo tanto este se va a guardar en el "buffer" mensaje que creamos
 
-	int read_archivo() {
-		int entrada = acceder_entrada();
-		return fopen(entrada); // si sale bien retorna 1 y si mal 0??
-		fclose();
-	}
-
-	int guardar_archivo(int archivo) {
-		int entrada = acceder_entrada();
-		return entrada = archivo;
-	}
-	//donde viene el archivo??
-
-
-	void enviar_mensaje_coordinador(int respuesta){
-
-		switch(respuesta){
-		case(0):
-				Mensaje_a_Coordinador mensaje = {"Algo salio mal"};
-		break;
-		case(1):
-				Mensaje_a_Coordinador mensaje = {"Todo OK"};
-		break;
-		case (2):
-				Mensaje_a_Coordinador mensaje = {"desbloquearESI"};
-		break;
+	int obtener_direccion(int clave) {
+		int i, direccion;
+		while (i != clave) {
+			direccion = matriz_memoria[i][2];
+			i++;
 		}
-		send_mensaje(socket,mensaje);
+		return direccion;
 	}
+
+	void bloquear_clave(int clave) {
+
+		ContentHeader header = (1, sizeof(Mensaje_tipo1));
+		send(socket, header, sizeof(header), 0);
+
+		Mensaje_tipo1 mensaje = { "Bloquear_clave", clave };
+		send_mensaje(socket, mensaje);
+	}
+
+	void desbloquear_clave(int clave) {
+
+		ContentHeader header = (1, sizeof(Mensaje_tipo1));
+		send(socket, header, sizeof(header), 0);
+
+		Mensaje_tipo1 mensaje = { "Desbloquear_clave", clave };
+		send_mensaje(socket, mensaje);
+	}
+
+	void enviar_coordinador(Mensaje_tipo3 informacion) {
+
+		send_content(socket, *informacion, sizeof(Mensaje_tipo3));
+	}
+
+
+	void guardar_archivo(int clave, int * value) {
+
+		int direccion = obtener_direccion(clave);
+		memcopy(*direccion, value, sizeof(value));
+	}
+
 
 }
-
