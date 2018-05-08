@@ -2,15 +2,18 @@
 #define COORDINADOR_H_
 
 #include <Commons_propias/commons_propias.h>
+//#include "coordinador_funciones.h"
 
-//structs
 
-typedef enum {LSU, EL, KE}tipo_algoritmo;
+typedef enum {LSU, EL, KE} tipo_algoritmo;
 
-//declares
-
-t_conexion conexion;
-t_log * logger;
-
+typedef struct{
+	char* ip;
+	char* puerto_escucha;
+	int* algoritmo_distribucion;
+	int* cantidad_entradas;
+	int* tamano_entrada;
+	int* retardo;
+}info_archivo_config;
 
 #endif /* COORDINADOR_H_ */
