@@ -1,20 +1,6 @@
 #include "esi.h"
 #include "esi_funciones.h"
 
-typedef enum {
-	NUEVO,
-	LISTO,
-	BLOQUEANDO,
-	EJECUTANDO
-} estado;
-
-typedef struct {
-	estado estado;
-	int retardo; //tiempo en ser atendido el esi la ultima vez que ejecuto
-	int ultimaRafaga; //con el retardo y la ultimaRafaga se calcula la estimacion ?
-
-} pcb;
-
 int main(){
 
 	int idEsi;

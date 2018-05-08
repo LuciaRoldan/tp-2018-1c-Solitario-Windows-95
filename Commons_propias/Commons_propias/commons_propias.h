@@ -33,6 +33,13 @@ typedef enum{ //posibles instrucciones
 
 typedef char Clave [30]; //keys
 
+typedef enum { //posibles estados del ESI
+	NUEVO,
+	LISTO,
+	BLOQUEANDO,
+	EJECUTANDO
+} estado;
+
 //////////////////////////// MENSAJES ////////////////////////////
 
 //ESI-COORDINADOR
@@ -40,6 +47,15 @@ typedef struct{ //mensaje que manda el ESI al Coordinador
 	InstruccionAtomica instruccion;
 	Clave clave;
 } MenasajeEsi;
+
+//ESI-PLANIFICADOR
+typedef struct {
+	int id;
+	estado estado;
+	int retardo; //tiempo en ser atendido el esi la ultima vez que ejecuto
+	int ultimaRafaga; //con el retardo y la ultimaRafaga se calcula la estimacion ?
+	int ultimaEstimacion;
+} pcb;
 
 //PLANIFICADOR-ESI
 typedef enum{

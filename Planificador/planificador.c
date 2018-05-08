@@ -26,12 +26,16 @@ int main() {
 	inicializar_planificador(); //leyendo archivo configuracion
 
 	pthread_t hiloEscuchaEsis;
+	pthread_t hiloEscuchaCoordinador;
+
 
 	while(1){ //recibiendo mensajes
 
-	pthread_t escucharEsis = pthread_create(&hiloEscuchaEsis, NULL, escucharEsis(), NULL);
+	pthread_create(&hiloEscuchaEsis, NULL, escucharEsis(), NULL);
+	pthread_create(&hiloEscuchaCoordinador, NULL, escucharCoordinador(), NULL);
 
-	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
+
+/*	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
 	switch (puertoDeLlegada){
 		case (PUERTO_ESI):
 			switch (idEsi()){ //no se como obtener el id del esi que me llega. AYUDA
@@ -61,7 +65,7 @@ int main() {
 	}
 	}
 
-
+*/
 
 //CONSOLA//
 void pausarPlanificador(){
@@ -137,4 +141,5 @@ void ejecutarEsi(esi){
 							//que ejecute
 	//send(script); /mandarle el script al esi ??
 }
+
 
