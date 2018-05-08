@@ -1,10 +1,3 @@
-/*
- * commons_propias.h
- *
- *  Created on: 24 abr. 2018
- *      Author: utnso
- */
-
 #ifndef COMMONS_PROPIAS_H_
 #define COMMONS_PROPIAS_H_
 
@@ -30,7 +23,7 @@
 
 t_log * logger;
 
-//---------------------structs para mensajes
+///////////////////////// INSTRUCCIONES /////////////////////////
 
 typedef enum{ //posibles instrucciones
 	GET,
@@ -40,8 +33,7 @@ typedef enum{ //posibles instrucciones
 
 typedef char Clave [30]; //keys
 
-
-//-----------------------MENSAJES
+//////////////////////////// MENSAJES ////////////////////////////
 
 //ESI-COORDINADOR
 typedef struct{ //mensaje que manda el ESI al Coordinador
@@ -55,6 +47,7 @@ typedef enum{
 	BLOQUEARSE,
 	DESBLOQUEARSE
 } AccionESI;
+
 typedef struct{ //mensaje que manda Planificador a ESI
 	AccionESI instruccion;
 } InstruccionESI;
@@ -65,9 +58,7 @@ typedef struct{
 	int tamano_entrada;
 } datos_configuracion;
 
-
-
-//---------------------structs para conexions
+/////////////////////////// CONEXIONES ///////////////////////////
 
 //PARA EL PLANIFICADOR Y EL COORDINADOR
 typedef struct {
@@ -76,29 +67,25 @@ typedef struct {
 }t_conexion;
 
 
-
-
-
 typedef struct  {
   int id_mensaje;
   char instruccion [10];
 } __attribute__((packed)) Mensaje;
 //no se deberian usar punteros en las structs cuando van a ser llamadas por sockets
-// no nos va a alcanzar con un solo tipo de mensaje, tenemos que hacer varios dependiendo de quien lo reciba
+
 
 typedef struct {
   int id;
   int len;
 } __attribute__((packed)) ContentHeader;
 
-//------------------funciones
+//////////////////////////// FUNCIONES ////////////////////////////
 
 //funcoines de salida
 void _exit_with_error(int socket, char* error_msg, void * buffer);
 void exit_gracefully(int return_nr);
 
 //funciones de conexion
-
 int inicializar_servidor(char* ip, char* puerto, t_log* logger);//inicializa un servidor y espera conexiones
 int connect_to_server(char* ip, char * port, t_log* logger);//devuelve el socket con el que se establece la conexion a un servidor
 
@@ -106,16 +93,11 @@ int connect_to_server(char* ip, char * port, t_log* logger);//devuelve el socket
 void send_string(int socket, char* mensaje);
 void wait_string(int socket, int len);
 
-
 //funciones de recv() y send() variables para despues de serializacion
 void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
 void wait_mensaje(int socket);
 void * wait_content(int socket);//espera contenido de tamaño variable
 void send_content(int socket, void * content, int id);//envia contenido de tamaño variable
-
-
-
-
 
 
 #endif /* COMMONS_PROPIAS_H_ */
