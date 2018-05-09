@@ -63,15 +63,11 @@ int main() {
 		fclose(configuracion);
 	}
 
-	void recibir_mensaje(){
-
-	}
-
 	ContentHeader header = malloc(sizeof(struct ContentHeader));
 
 	int cantidad_bytes_header = recv(socket, header, sizeof(ContentHeader), 0); //tengo que hacer un recv para recibir el header y conocer el tipo de mensaje
 
-	void procesar_mensaje(ContentHeader header) {
+	void procesar_mensaje() {
 		char buffer = malloc(sizeof(buffer));
 		int id = wait_content(socket, &buffer); //recibe el header y el mensaje queda guardado en el buffer
 		char * instruccion;
@@ -100,7 +96,7 @@ int main() {
 
 				void bloquear_clave(clave);
 
-			    Mensaje_tipo3 buffer_info = malloc(sizeof(struct Mensaje_tipo3));
+			    Mensaje_tipo3 buffer_info = malloc(sizeof(struct Mensaje_tipo3)); //crea el buffer donde se va a enviar la info
 				int direccion = obtener_direccion(clave);
 				memcpy(buffer_info, *direccion, sizeof(buffer_info)); //obtiene la info a leer
 
