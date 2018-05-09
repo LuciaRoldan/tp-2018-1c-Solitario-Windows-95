@@ -87,32 +87,48 @@ void send_mensaje(int socket, Mensaje mensaje) {
 }
 
 
-void *wait_content(int socket) {
+int wait_content(int socket, *buffer) {
+
+	malloc(sizeof(*buffer));
 
 	log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(ContentHeader));
 
 	ContentHeader * header = (ContentHeader*) malloc(sizeof(ContentHeader));
+	int id = strcpy(header->id,id);
 
 	if (recv(socket, header, sizeof(ContentHeader), 0) <= 0) {
 		_exit_with_error(socket, "No se pudo recibir el encabezado del contenido", header);
 	}
-
-	if (header->id != 18) {
-		_exit_with_error(socket, "Id incorrecto, deberia ser 18", header);
-	}
-
 	log_info(logger, "Esperando el contenido (%d bytes)", header->len);
 
+	switch(id){
+
+		case(0):
+				recv(socket, *buffer,sizeof(datos_configuracion),0);
+				break;
+		case(1):
+				recv(socket, *buffer, sizeof(Mensaje_tipo1), 0);
+				break;
+		case(2):
+				recv(socket, *buffer, sizeof(Mensaje_tipo2), 0);
+				break;
+		case(3):
+				recv(socket, *buffer, sizeof(Mensaje_tipo3),0);
+				break;
+	}
+
+/*
 	void * buf = calloc(sizeof(char), header->len + 1);
 	if (recv(socket, buf, header->len, MSG_WAITALL) <= 0) {
 		free(buf);
 		_exit_with_error(socket, "Error recibiendo el contenido", header);
-	}
-
-	log_info(logger, "Contenido recibido '%s'", (char*) buf);
-	free(header);
-	return buf;
+	} No se si dejar esto o que haga el switch por que en si esto es puede darnos lo mismo, un buffer.
+*/
+	log_info(logger, "Contenido recibido '%s'", (char*) buffer);
+	return header;
 }
+
+
 
 
 void send_content(int socket, void * content, int id) {

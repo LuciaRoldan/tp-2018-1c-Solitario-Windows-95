@@ -7,9 +7,6 @@
 char* ipCoordinador;
 int puertoCoordinador;
 
-typedef enum {
-	LRU, CIRC, BSU
-} tipo_algoritmo;
 
 tipo_algoritmo algoritmo_reemplazo;
 
@@ -52,18 +49,22 @@ int main() {
 
 	void inicializar_instancia() {
 		int socket = connect_to_server(ipCoordinador, puertoCoordinador);
-		leer_archivo_configuracion();
+		void *configuracion = wait_content(socket);
+		leer_archivo_configuracion(configuracion);
 		memoria = malloc(espacio_para_memoria);
 	}
 
 	//buscar como hacer el recv a header
 
-	void leer_archivo_configuracion() {
-		configuracion = fopen("Configuracion instancia.txt", "r");
+	void leer_archivo_configuracion(configuracion) {
 		fscanf(configuracion, "%s %s %s %d %d %d", &ipCoordinador,
 				&puertoCoordinador, &algoritmo_reemplazo, &cantidad_entradas,
 				&tamano_entrada, &espacio_para_memoria);
 		fclose(configuracion);
+	}
+
+	void recibir_mensaje(){
+
 	}
 
 	ContentHeader header = malloc(sizeof(struct ContentHeader));
@@ -71,21 +72,22 @@ int main() {
 	int cantidad_bytes_header = recv(socket, header, sizeof(ContentHeader), 0); //tengo que hacer un recv para recibir el header y conocer el tipo de mensaje
 
 	void procesar_mensaje(ContentHeader header) {
-		int id = strcpy(header->id, id);
+		char buffer = malloc(sizeof(buffer));
+		int id = wait_content(socket, &buffer); //recibe el header y el mensaje queda guardado en el buffer
 		char * instruccion;
 		int * clave;
-		Mensaje_tipo1 mensaje_tipo1 = malloc(sizeof(struct Mensaje_tipo1));
 		Mensaje_tipo2 mensaje_tipo2 = malloc(sizeof(struct Mensaje_tipo2));
-		int respuesta;
 
 		if (id == 1) {
-			recv(socket, mensaje_tipo1, sizeof(Mensaje_tipo1), 0);
+			Mensaje_tipo1 mensaje_tipo1 = malloc(sizeof(struct Mensaje_tipo1));
+			mensaje_tipo1 = *buffer; //no se si esto esta bien
 
 			instruccion = strcpy(mensaje_tipo1->instruccion, instruccion); //del mensaje obtenemos la instruccion
 			clave = strcpy(mensaje_tipo1->clave, clave); //obtenemos la clave del mensaje
 
 		} else {
-			recv(socket, mensaje_tipo2, sizeof(Mensaje_tipo2), 0);
+			mensaje_tipo2 = malloc(sizeof(struct Mensaje_tipo2));
+			mensaje_tipo2 = *buffer;
 
 			instruccion = strcpy(mensaje_tipo2->instruccion, instruccion); //del mensaje obtenemos la instruccion
 			clave = strcpy(mensaje_tipo2->clave, clave); //obtenemos la clave del mensaje
@@ -94,7 +96,7 @@ int main() {
 		while (1) {
 
 			switch (instruccion) {
-			case (instruccion == "GET"):
+			case ("GET"):
 
 				void bloquear_clave(clave);
 
@@ -105,13 +107,13 @@ int main() {
 				void enviar_info_coordinador(buffer_info);
 
 				break;
-			case (instruccion == "SET"):
+			case ("SET"):
 
 				int * value = strcpy(mensaje_tipo2->value, value);
 				void guardar_archivo( value);
 
 				break;
-			case (instruccion == "STORE"):
+			case ("STORE"):
 
 				int direccion = obtener_direccion(clave);
 				char informacion[];

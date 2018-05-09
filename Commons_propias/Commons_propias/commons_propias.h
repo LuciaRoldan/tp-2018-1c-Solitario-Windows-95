@@ -40,6 +40,13 @@ typedef enum { //posibles estados del ESI
 	EJECUTANDO
 } estado;
 
+//////////////////////////// ALGORITMOS REEMPLAZO ////////////////////////////
+
+typedef enum {
+	LRU, CIRC, BSU
+} tipo_algoritmo;
+
+
 //////////////////////////// MENSAJES ////////////////////////////
 
 //ESI-COORDINADOR
@@ -70,9 +77,34 @@ typedef struct{ //mensaje que manda Planificador a ESI
 
 //INSTANCIA-COORDINADOR
 typedef struct{
+	char ipCoordinador[];
+	int puertoCoordinador;
+	tipo_algoritmo algoritmo_reemplazo;
 	int cantidad_entradas;
 	int tamano_entrada;
+	int espacion_para_memoria;
 } datos_configuracion;
+
+//TRES TIPOS DE MENSAJES
+typedef struct {
+	char instruccion[];
+	uint32_t intruccion_long;
+	int clave;
+	uint32_t clave_long;
+}__attribute__((packed)) Mensaje_tipo1;
+
+typedef struct {
+	char instruccion[];
+	uint32_t instruccon_long;
+	int clave;
+	uint32_t clave_long;
+	int value;
+	uint32_t value_long;
+}__attribute__((packed)) Mensaje_tipo2;
+
+typedef struct {
+	char instruccion[];
+}__attribute__((packed)) Mensaje_tipo3;
 
 /////////////////////////// CONEXIONES ///////////////////////////
 
