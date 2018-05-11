@@ -1,9 +1,10 @@
 #include "planificador.h"
 #include "planificador.c"
 
-void inicializar_planificador(){
+void inicializar_planificador(int* socketCoordinador, int* socketEsis){ //como hago para decir que recibo puntero?
 	leer_archivo_configuracion();
-	inicializar_servidor();
+	socketCoordinador = conectarse_al_coordinador();
+	socketEsis = inicializar_servidor(conexion.ip, conexion.puerto, logger);
 }
 
 void leer_archivo_configuracion(){
@@ -13,14 +14,16 @@ void leer_archivo_configuracion(){
 	fclose(configuracion);
 }
 
-void inicializar_servidor(){
+int conectarse_al_coordinador(){
+	int socketCoordinador;
 	t_config* configuracion=config_create("/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Config");
 	strcpy(conexion.ip,config_get_string_value(configuracion,"IP_COORDINADOR"));
 	strcpy(conexion.puerto,config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
-	connect_to_server(conexion.ip, conexion.puerto, logger);
+	socketCoordinador = connect_to_server(conexion.ip, conexion.puerto, logger);
+	return socketCoordinador;
 }
 
-void escuchar_esis(){
+void manejar_esi(){
 	pcb *mensaje = malloc(sizeof(pcb)); //no entiendo. Problema con si es un puntero a void
 	//y como lo paso a un struct pcb. Puedo guardar un puntero a void en un puntero a pcb ???
 	mensaje = wait_content(atoi(*puertoEscucha)); //espera a que le llegue algo del puerto por el

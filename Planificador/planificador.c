@@ -8,6 +8,7 @@ char* puertoCoordinador;
 char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
 FILE* configuracion;
 t_conexion conexion;
+logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
 
 struct ColaDeEsi *colaDeReadyEsis;
 struct ColaDeEsi *colaDeBloqueadoEsis;
@@ -21,18 +22,40 @@ struct ClavesBloqueadas *clavesBloqueadas;
 //void agregarEsiAColaDeReady(...){}
 
 int main() {
-
+	int socketCoordinador;
+	int socketEsis;
+	int conexionEsi;
 	logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
-	inicializar_planificador(); //leyendo archivo configuracion
+	inicializar_planificador(*socketCoordinador, *socketEsis); //leyendo archivo configuracion
 
 	pthread_t hiloEscuchaEsis;
 	pthread_t hiloEscuchaCoordinador;
 
 
-	while(1){ //recibiendo mensajes
 
-	pthread_create(&hiloEscuchaEsis, NULL, escucharEsis(), NULL);
-	pthread_create(&hiloEscuchaCoordinador, NULL, escucharCoordinador(), NULL);
+	while(conexionEsi = recibir_conexion(socketEsis)){ //es como una funcion con un accept basicamente
+													//que devuelve lo que me devuelve el accept
+		log_info(logger, "Conexion aceptada del Esi: "); //imprimir el id del Esi que se me conecto
+		if( pthread_create(&hiloEscuchaEsis, NULL ,  manejar_esi, (void*) &conexionEsi) < 0){
+			perror("No se pudo crear el hilo");
+		    return 1; // ???? retornea? esta bien perror?
+		}
+
+		        //Now join the thread , so that we dont terminate before the thread
+		        pthread_join(hiloEscuchaEsis , NULL);
+		        log_info(logger, "Esi asignado");
+		    }
+
+		    if (conexionEsi < 0){
+		        perror("accept failed");
+		        return 1;
+		    }
+		    return 0;
+	}
+
+	//pthread_create(&hiloEscuchaCoordinador, NULL, escucharCoordinador(), NULL);
+
+
 
 
 /*	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
