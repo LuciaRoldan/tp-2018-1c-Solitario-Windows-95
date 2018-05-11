@@ -41,6 +41,11 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 
 	getaddrinfo(ip, puerto, &hints, &res);
 	int servidor = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (servidor == -1){
+        log_info(logger, "No se pudo crear el socket");
+    }
+    log_info(logger, "Socket creado");
+
 
 	int activado = 1;
 		setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
