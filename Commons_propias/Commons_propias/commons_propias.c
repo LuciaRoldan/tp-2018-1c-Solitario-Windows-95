@@ -59,15 +59,19 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 		log_info(logger, "Escuchando!");
 		listen(servidor, 100);
 
+	return servidor;
+
 	//--------------------------------------
 
+}
+
+int aceptar_conexion(int servidor){
 	struct sockaddr_in direccionCliente;
 	unsigned int tamanoDireccion;
 	int cliente = accept(servidor, (void*) &direccionCliente,&tamanoDireccion);
-	printf("recibi una conexion en %d\n", cliente);
+	log_info(logger, "Recibi una conexion en %d\n", cliente);
 
 	return cliente;
-
 }
 
 
