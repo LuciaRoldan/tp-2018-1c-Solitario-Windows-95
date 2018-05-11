@@ -21,7 +21,6 @@
 #include <pthread.h>
 
 
-t_log * logger;
 
 ///////////////////////// INSTRUCCIONES /////////////////////////
 
