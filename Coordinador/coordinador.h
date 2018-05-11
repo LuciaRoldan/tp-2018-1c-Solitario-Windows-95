@@ -16,4 +16,11 @@ typedef struct{
 	int* retardo;
 }info_archivo_config;
 
+typedef enum{			//PARA LA COMMONS
+	PLANIFICADOR,
+	COORDINADOR,
+	INSTANCIA,
+	ESI
+}proceso;
+
 #endif /* COORDINADOR_H_ */

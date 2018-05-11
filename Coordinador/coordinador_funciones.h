@@ -29,8 +29,33 @@ void enviar_configuracion_instancia(info_archivo_config configuracion){
 	send_content(4, &mensaje, 1); //Que socket le pongo??
 }
 
+void hanshake(int socket){
+	int proceso_recibido;
+	send(socket, COORDINADOR , sizeof(proceso),0);
+	recv(socket, &proceso_recibido , sizeof(proceso),0);
+	switch(proceso_recibido){
+	case PLANIFICADOR:
+		//conectar_planificador();
+		break;
+	case INSTANCIA:
+		//manejar_instancia();
+		break;
+	case ESI:
+		//manejar_esi();
+		break;
+	case COORDINADOR:
+		//rompo_todo();
+		break;
+	}
+}
 
-
+void procesar_conexiones(int socket){
+	while(1){
+		//int cliente = aceptar_conexion();
+		int cliente;
+		handshake(cliente);
+	}
+}
 
 
 
