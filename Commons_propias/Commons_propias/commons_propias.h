@@ -129,8 +129,8 @@ typedef struct {
 //////////////////////////// FUNCIONES ////////////////////////////
 
 //funcoines de salida
-void _exit_with_error(int socket, char* error_msg, void * buffer);
-void exit_gracefully(int return_nr);
+void _exit_with_error(int socket, char* error_msg, void * buffer, t_log logger);
+void exit_gracefully(int return_nr, t_log logger);
 
 //funciones de conexion
 int inicializar_servidor(char* ip, char* puerto, t_log* logger);//inicializa un servidor y espera conexiones
@@ -143,8 +143,8 @@ void wait_string(int socket, int len);
 //funciones de recv() y send() variables para despues de serializacion
 void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
 void wait_mensaje(int socket);
-void * wait_content(int socket);//espera contenido de tamaño variable
-void send_content(int socket, void * content, int id);//envia contenido de tamaño variable
+int wait_content(int socket, *buffer, t_log logger);//espera contenido de tamaño variable
+void send_content(int socket, void * content, int id, t_log logger);//envia contenido de tamaño variable
 
 
 #endif /* COMMONS_PROPIAS_H_ */
