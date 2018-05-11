@@ -65,6 +65,7 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 
 }
 
+/*
 int aceptar_conexion(int servidor){
 	struct sockaddr_in direccionCliente;
 	unsigned int tamanoDireccion;
@@ -73,7 +74,7 @@ int aceptar_conexion(int servidor){
 
 	return cliente;
 }
-
+*/
 
 int recv_string(int socket){
 
@@ -85,7 +86,7 @@ int recv_string(int socket){
 }
 
 
-void send_mensaje(int socket, Mensaje mensaje) {
+void send_mensaje(int socket, Mensaje mensaje, t_log logger) {
 
 	log_info(logger, "Enviando mensaje");
 	mensaje.id_mensaje = 99;
@@ -96,7 +97,7 @@ void send_mensaje(int socket, Mensaje mensaje) {
 }
 
 
-int wait_content(int socket, *buffer) {
+int wait_content(int socket, *buffer, t_log logger) {
 
 	log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(ContentHeader));
 
@@ -121,7 +122,7 @@ int wait_content(int socket, *buffer) {
 
 
 
-void send_content(int socket, void * content, int id) {
+void send_content(int socket, void * content, int id, t_log logger) {
 
 	int longitud = sizeof(&content);
 	ContentHeader header = { .id = id, .len = longitud };
@@ -143,7 +144,7 @@ void send_content(int socket, void * content, int id) {
 }
 
 
-void _exit_with_error(int socket, char* error_msg, void * buffer) {
+void _exit_with_error(int socket, char* error_msg, void * buffer, t_log logger) {
 	if (buffer != NULL) {
 		free(buffer);
 	}
@@ -152,7 +153,7 @@ void _exit_with_error(int socket, char* error_msg, void * buffer) {
 	exit_gracefully(1);
 }
 
-void exit_gracefully(int return_nr) {
+void exit_gracefully(int return_nr, t_log logger) {
 	log_destroy(logger);
 	exit(return_nr);
 }
