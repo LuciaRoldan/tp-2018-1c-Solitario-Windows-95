@@ -18,17 +18,19 @@
 #include <commons/config.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <parsi/parser.h>
 
 
 
 ///////////////////////// INSTRUCCIONES /////////////////////////
 
+/*
 typedef enum{ //posibles instrucciones
 	GET,
 	SET,
 	STORE
 } InstruccionAtomica;
-
+*/
 typedef char Clave [30]; //keys
 
 typedef enum { //posibles estados del ESI
@@ -120,6 +122,7 @@ typedef struct {
   int id;
   int len;
 } __attribute__((packed)) ContentHeader;
+
 
 //////////////////////////// FUNCIONES ////////////////////////////
 

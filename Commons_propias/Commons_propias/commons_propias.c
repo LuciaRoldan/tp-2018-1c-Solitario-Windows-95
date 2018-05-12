@@ -74,14 +74,14 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 
 
 
-		    	if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
+		    /*	if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
 		    	        {
 		    				_exit_with_error(client_sock, "No se pudo crear el hilo",NULL);
 
 		    	            return 1;
 		    	}
 		    	log_info(logger, "Handler asignado");
-
+*/
 		    }
 
 		    if (client_sock < 0)
@@ -93,7 +93,9 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 		    close(client_sock);
 		    return 0;
 		}
-	/*
+
+
+/*
 #AGREGAR COMPORTAMIENTO PARA LOS HILOS
 void *connection_handler(void *socket_desc)
 {
