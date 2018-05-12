@@ -24,19 +24,61 @@ int conectarse_al_coordinador(){
 }
 
 void manejar_esi(){
-	pcb *mensaje = malloc(sizeof(pcb)); //no entiendo. Problema con si es un puntero a void
+	resultado_esi* mensaje = malloc(sizeof(resultado_esi)); //no entiendo. Problema con si es un puntero a void
 	//y como lo paso a un struct pcb. Puedo guardar un puntero a void en un puntero a pcb ???
 	mensaje = wait_content(atoi(*puertoEscucha)); //espera a que le llegue algo del puerto por el
 												  //que le hablan los Esis
 												  //el ESI le manda la PCB
-	switch (mensaje->id){ //no se como obtener el id del esi que me llega. AYUDA
-				case (!esi_existente()):
-						pthread_t hilo_ESI; //creo hilo para el nuevo ESI
-						agregar_a_cola_de_ready(mensaje->id); //saco el ID de la PCB
-						pthread_create(&hilo_ESI, NULL, planificar_ESI(), NULL);
+	//switch (mensaje->id){ //no se como obtener el id del esi que me llega. AYUDA
+				//case (!esi_existente()):
+				//		pthread_t hilo_ESI; //creo hilo para el nuevo ESI
+				//		agregar_a_cola_de_ready(mensaje->id); //saco el ID de la PCB
+				//		pthread_create(&hilo_ESI, NULL, planificar_ESI(), NULL);
+				//break;
+				//case(esi_existente()):
+				procesar_exito_o_error(resultado_esi);
+				ejecutar_proximo_esi();
+				//break;
+}
+
+void procesar_exito_o_error(int resultado_esi){
+	switch(resultado_esi){
+	case(EXITO):
+				actualizar_pcb_esi();
+				ejecutar_proximo_esi();
+	case(PEDIUNACLAVEMUYLARGA):
+				bloquear
+	}
+}
+
+
+// Commons
+// typedef enum{
+// 	EXITO,
+// 	MEBLOQUIE, (y manda clave)
+// 	PEDIUNACLAVEMUYLARGA,
+// 	PEDIUNACLAVENOID,
+// 	PEDIUNACLAVEINACC,
+// } resultados_esi;
+
+
+
+
+void manejar_coordinador(){
+
+
+	/*switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
+				//me estan preguntando esta tomada o no
+				case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
+						//que retorna true o false
+						mover_esi_a_bloqueado(idEsi);
+						asignar_esi_a_clave(mensaje->clave, idEsi);
+						return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
 				break;
-				case(esi_existente()):
-						recibir_exito_o_error(mensaje);
-						ejecutar_proximo_esi();
+				case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
+						asignar_esi_a_clave(mensaje->clave, idEsi);
+						return 1; //exito
 				break;
+				}
+				} */
 }

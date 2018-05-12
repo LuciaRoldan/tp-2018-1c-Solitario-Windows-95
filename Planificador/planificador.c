@@ -24,34 +24,42 @@ struct ClavesBloqueadas *clavesBloqueadas;
 int main() {
 	int socketCoordinador;
 	int socketEsis;
-	int conexionEsi;
 	logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
 	inicializar_planificador(*socketCoordinador, *socketEsis); //leyendo archivo configuracion
 
 	pthread_t hiloEscuchaEsis;
-	pthread_t hiloEscuchaCoordinador;
+	pthread_t hiloCoordinador;
+	pthread_t hiloConsola;
 
 
+	pthread_create(&hiloEscuchaEsis, NULL, recibir_esis, (void*) socketEsis);
+	pthread_create(&hiloCoordinador, NULL, manejar_coordinador, ((void*) &socketCoordinador));
 
-	while(conexionEsi = recibir_conexion(socketEsis)){ //es como una funcion con un accept basicamente
-													//que devuelve lo que me devuelve el accept
+	return 0;
+}
+
+void recibir_esis(int socketEsis){
+	int conexionEsi;
+	while(conexionEsi = aceptar_conexion(socketEsis)){ //es como una funcion con un accept basicamente
+													//que devuelve lo que me devuelve el accept. Now
+													//en las commons!
+
 		log_info(logger, "Conexion aceptada del Esi: "); //imprimir el id del Esi que se me conecto
-		if( pthread_create(&hiloEscuchaEsis, NULL ,  manejar_esi, (void*) &conexionEsi) < 0){
+		pthread_t hiloEscuchaEsi;
+		if( pthread_create(&hiloEscuchaEsi, NULL ,  manejar_esi, (void*) &conexionEsi) < 0){
 			perror("No se pudo crear el hilo");
-		    return 1; // ???? retornea? esta bien perror?
 		}
-
-		        //Now join the thread , so that we dont terminate before the thread
-		        pthread_join(hiloEscuchaEsis , NULL);
-		        log_info(logger, "Esi asignado");
-		    }
-
-		    if (conexionEsi < 0){
-		        perror("accept failed");
-		        return 1;
-		    }
-		    return 0;
+		    //Now join the thread , so that we dont terminate before the thread
+		pthread_join(hiloEscuchaEsi , NULL);
+		log_info(logger, "Esi asignado");
 	}
+
+		if (conexionEsi < 0){
+	        perror("accept failed");
+		}
+}
+
+
 
 	//pthread_create(&hiloEscuchaCoordinador, NULL, escucharCoordinador(), NULL);
 
@@ -144,9 +152,6 @@ void mover_esi_a_finalizado(int idEsi){}
 int esiExistente(int idEsi){return 1;} //bueno aca, o me puedo fijar en mis colas si ya tengo al Esi, o puedo
 //fijarme que me esta mandando. Si me manda un 1 o un -1 es pq es existente.
 
-void recibir_exito_o_fallo(int mensaje){ //esto deberia llegar de las commons
-	//recibiria un 1 o un -1
-}
 
 int clave_tomada(int clave){
 	int tomada = ";";//buscar en la estructura que tenga las claves a ver si esta bloqueada
