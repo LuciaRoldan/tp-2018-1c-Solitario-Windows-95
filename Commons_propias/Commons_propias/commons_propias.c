@@ -151,10 +151,8 @@ int aceptar_conexion(int servidor){
 }
 */
 
-int recv_string(int socket){
-
+int recv_string(int socket, char* mensaje_recibido [10]){
 	int bytes_recv;
-	char* mensaje_recibido [10];
 	bytes_recv= recv(socket,mensaje_recibido, 11,0);
 	printf("%s",&mensaje_recibido);
 	return bytes_recv;

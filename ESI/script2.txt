@@ -1,0 +1,3 @@
+SET materias:K3001 sistemas_operativos
+SET materias:K2001 analisis_matematico
+STORE materias:K3001

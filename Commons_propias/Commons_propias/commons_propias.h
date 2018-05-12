@@ -139,6 +139,7 @@ int connect_to_server(char* ip, char * port, t_log* logger);//devuelve el socket
 //funciones de recv() y send()
 void send_string(int socket, char* mensaje);
 void wait_string(int socket, int len);
+int recv_string(int socket, char* mensaje_recibido [10])
 
 //funciones de recv() y send() variables para despues de serializacion
 void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
