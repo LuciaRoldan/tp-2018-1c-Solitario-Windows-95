@@ -27,8 +27,9 @@ int connect_to_server(char * ip, char * port, t_log * logger){
 
 
 int inicializar_servidor(char* ip, char* puerto, t_log * logger){
+	 int socket_desc , client_sock , c;
+	struct sockaddr_in server , client;
 
-	//struct sockaddr_in direccionServidor;
 	     // fill in my IP for me
 
 	struct addrinfo hints, *res;
@@ -59,11 +60,85 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 		log_info(logger, "Escuchando!");
 		listen(servidor, 100);
 
-	return servidor;
 
+
+		  //Accept an incoming connection
+
+		    c = sizeof(struct sockaddr_in);
+
+		    pthread_t thread_id;
+
+		       while(client_sock=accept(socket_desc,(struct sockaddr*)&client,(socklen_t*)&c))
+		       {
+		    	log_info(logger, "Conexión aceptada");
+
+
+
+		    	if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
+		    	        {
+		    				_exit_with_error(client_sock, "No se pudo crear el hilo",NULL);
+
+		    	            return 1;
+		    	}
+		    	log_info(logger, "Handler asignado");
+
+		    }
+
+		    if (client_sock < 0)
+		    {
+		        _exit_with_error(client_sock, "Fallo el accept", logger);
+
+		        return 1;
+		    }
+		    close(client_sock);
+		    return 0;
+		}
+	/*
+#AGREGAR COMPORTAMIENTO PARA LOS HILOS
+void *connection_handler(void *socket_desc)
+{
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[2000];
+
+    //Send some messages to the client
+    message = "Greetings! I am your connection handler\n";
+    write(sock , message , strlen(message));
+
+    message = "Now type something and i shall repeat what you type \n";
+    write(sock , message , strlen(message));
+
+    //Receive a message from client
+    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    {
+        //end of string marker
+		client_message[read_size] = '\0';
+
+		//Send the message back to client
+        write(sock , client_message , strlen(client_message));
+
+		//clear the message buffer
+		memset(client_message, 0, 2000);
+    }
+
+    if(read_size == 0)
+    {
+        puts("Client disconnected");
+        fflush(stdout);
+    }
+    else if(read_size == -1)
+    {
+        perror("recv failed");
+    }
+
+    return 0;
+}
+
+*/
 	//--------------------------------------
 
-}
+
 
 /*
 int aceptar_conexion(int servidor){
@@ -158,6 +233,10 @@ void exit_gracefully(int return_nr, t_log logger) {
 	exit(return_nr);
 }
 
+
+
+
+//revisar bien el mensaje que recibe
 
 
 

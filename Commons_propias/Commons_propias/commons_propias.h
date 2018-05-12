@@ -146,5 +146,6 @@ void wait_mensaje(int socket);
 int wait_content(int socket, *buffer, t_log logger);//espera contenido de tamaño variable
 void send_content(int socket, void * content, int id, t_log logger);//envia contenido de tamaño variable
 
+//funciones de serializacion, una por tipo de mensaje?
 
 #endif /* COMMONS_PROPIAS_H_ */
