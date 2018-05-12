@@ -5,7 +5,7 @@
 //#include "coordinador_funciones.h"
 
 
-typedef enum {LSU, EL, KE} tipo_algoritmo;
+typedef enum {LSU, EL, KE} tipo_algoritmo_distribucion;
 
 typedef struct{
 	char* ip;

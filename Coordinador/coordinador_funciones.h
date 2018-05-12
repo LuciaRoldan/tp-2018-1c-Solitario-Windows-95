@@ -17,19 +17,19 @@ info_archivo_config leer_archivo_configuracion(FILE* archivo){
 }
 
 
-info_archivo_config inicializar_coordinador(FILE* archivo){
+info_archivo_config inicializar_coordinador(FILE* archivo, t_log logger){
 	info_archivo_config datos_configuracion = leer_archivo_configuracion(archivo);
 	inicializar_servidor(datos_configuracion.ip, datos_configuracion.puerto_escucha,logger);
 	return datos_configuracion;
 }
 
 
-void enviar_configuracion_instancia(info_archivo_config configuracion){
+void enviar_configuracion_instancia(info_archivo_config configuracion, t_log logger){
 	datos_configuracion mensaje = {*configuracion.tamano_entrada, *configuracion.cantidad_entradas};
-	send_content(4, &mensaje, 1); //Que socket le pongo??
+	send_content(4, &mensaje, 1, logger); //Que socket le pongo??
 }
 
-void hanshake(int socket){
+void handshake(int socket){
 	int proceso_recibido;
 	send(socket, COORDINADOR , sizeof(proceso),0);
 	recv(socket, &proceso_recibido , sizeof(proceso),0);

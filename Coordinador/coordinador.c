@@ -14,7 +14,7 @@ int main(){
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
 	 */
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
-	info_archivo_config datos_configuracion = inicializar_coordinador(archivo_configuracion);
+	info_archivo_config datos_configuracion = inicializar_coordinador(archivo_configuracion, logger);
 
 	return 0;
 }

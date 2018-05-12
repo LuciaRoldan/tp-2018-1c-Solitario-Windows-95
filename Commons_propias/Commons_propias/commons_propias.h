@@ -76,12 +76,8 @@ typedef struct{ //mensaje que manda Planificador a ESI
 
 //INSTANCIA-COORDINADOR
 typedef struct{
-	char ipCoordinador[];
-	int puertoCoordinador;
-	tipo_algoritmo algoritmo_reemplazo;
 	int cantidad_entradas;
 	int tamano_entrada;
-	int espacion_para_memoria;
 } datos_configuracion;
 
 //TRES TIPOS DE MENSAJES
