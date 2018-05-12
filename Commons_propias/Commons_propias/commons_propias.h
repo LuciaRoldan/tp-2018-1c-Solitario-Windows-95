@@ -6,7 +6,6 @@
 #include <readline/rltypedefs.h>
 #include <readline/keymaps.h>
 #include <readline/tilde.h>
-#include <openssl/md5.h> // Para calcular el MD5
 #include <string.h>
 #include <stdlib.h> // Para malloc
 #include <sys/socket.h> // Para crear sockets, enviar, recibir, etc
@@ -125,8 +124,8 @@ typedef struct {
 //////////////////////////// FUNCIONES ////////////////////////////
 
 //funcoines de salida
-void _exit_with_error(int socket, char* error_msg, void * buffer, t_log logger);
-void exit_gracefully(int return_nr, t_log logger);
+void _exit_with_error(int socket, char* error_msg, void * buffer, t_log* logger);
+void exit_gracefully(int return_nr, t_log* logger);
 
 //funciones de conexion
 int inicializar_servidor(char* ip, char* puerto, t_log* logger);//inicializa un servidor y espera conexiones
@@ -140,7 +139,7 @@ int recv_string(int socket, char* mensaje_recibido [10])
 //funciones de recv() y send() variables para despues de serializacion
 void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
 void wait_mensaje(int socket);
-int wait_content(int socket, *buffer, t_log logger);//espera contenido de tamaño variable
+int wait_content(int socket, *buffer, t_log* logger);//espera contenido de tamaño variable
 void send_content(int socket, void * content, int id, t_log logger);//envia contenido de tamaño variable
 
 //funciones de serializacion, una por tipo de mensaje?
