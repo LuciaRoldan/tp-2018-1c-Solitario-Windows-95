@@ -1,7 +1,7 @@
 #include "commons_propias.h"
 
 
-int connect_to_server(char * ip, char * port, t_log * logger){
+int connect_to_server(char * ip, char * port, t_log *  logger){
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 
@@ -18,7 +18,7 @@ int connect_to_server(char * ip, char * port, t_log * logger){
 	freeaddrinfo(server_info); //libero el arreglo
 
 	if (valorConnect < 0) { //ver niveles de logs de commons, verifico por error
-		_exit_with_error(server_socket, "No me pude conectar al servidor", NULL);
+		_exit_with_error(server_socket, "No me pude conectar al servidor", NULL, logger);
 	}
 
 		log_info(logger, "Conectado!"); //logeo exito
@@ -52,7 +52,7 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 		setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
 
 		if(bind(servidor, (void*) &hints, sizeof(hints)) != 0){
-			_exit_with_error(servidor, "Fallo el bind", NULL);
+			_exit_with_error(servidor, "Fallo el bind", NULL, logger);
 
 		}
 
@@ -86,7 +86,7 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 
 		    if (client_sock < 0)
 		    {
-		        _exit_with_error(client_sock, "Fallo el accept", logger);
+		        _exit_with_error(client_sock, "Fallo el accept",NULL, logger);
 
 		        return 1;
 		    }
@@ -167,12 +167,12 @@ void send_mensaje(int socket, Mensaje mensaje, t_log* logger) {
 	mensaje.id_mensaje = 99;
 	int resultado = send(socket, &mensaje, sizeof(Mensaje) , 0);
 	if(resultado <= 0) {
-		_exit_with_error(socket, "No se pudo enviar el mensaje", NULL);
+		_exit_with_error(socket, "No se pudo enviar el mensaje", NULL, logger);
 	}
 }
 
 
-int wait_content(int socket, *buffer, t_log logger) {
+int wait_content(int socket, char *buffer, t_log * logger) {
 
 	log_info(logger, "Esperando el encabezado del contenido(%ld bytes)", sizeof(ContentHeader));
 
@@ -180,14 +180,14 @@ int wait_content(int socket, *buffer, t_log logger) {
 	int id = strcpy(header->id,id);
 
 	if (recv(socket, header, sizeof(ContentHeader), 0) <= 0) {
-		_exit_with_error(socket, "No se pudo recibir el encabezado del contenido", header);
+		_exit_with_error(socket, "No se pudo recibir el encabezado del contenido", header, logger);
 	}
 	log_info(logger, "Esperando el contenido (%d bytes)", header->len);
 
 	void * buf = calloc(sizeof(char), header->len + 1);
 	if (recv(socket, buf, header->len, MSG_WAITALL) <= 0) {
 		free(buf);
-		_exit_with_error(socket, "Error recibiendo el contenido", header);
+		_exit_with_error(socket, "Error recibiendo el contenido", header, logger);
 	}
 
 	log_info(logger, "Contenido recibido '%s'", (char*) buffer);
@@ -214,7 +214,7 @@ void send_content(int socket, void * content, int id, t_log* logger) {
 	free(buf);
 
 	if (result_send <= 0) {
-		_exit_with_error(socket, "No se pudo enviar el contenido", NULL);
+		_exit_with_error(socket, "No se pudo enviar el contenido", NULL, logger);
 	}
 }
 
@@ -225,7 +225,7 @@ void _exit_with_error(int socket, char* error_msg, void * buffer, t_log* logger)
 	}
 	log_error(logger, error_msg);
 	close(socket);
-	exit_gracefully(1);
+	exit_gracefully(1, logger);
 }
 
 void exit_gracefully(int return_nr, t_log* logger) {

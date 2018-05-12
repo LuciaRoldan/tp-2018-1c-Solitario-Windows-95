@@ -3,6 +3,7 @@
 	<name>Commons_propias</name>
 	<comment></comment>
 	<projects>
+		<project>Commons</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

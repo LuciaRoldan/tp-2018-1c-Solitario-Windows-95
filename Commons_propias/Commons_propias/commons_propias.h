@@ -18,19 +18,18 @@
 #include <commons/config.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <parsi/parser.h>
-
+//#include <parsi/parser.h>
 
 
 ///////////////////////// INSTRUCCIONES /////////////////////////
 
-/*
+
 typedef enum{ //posibles instrucciones
 	GET,
 	SET,
 	STORE
 } InstruccionAtomica;
-*/
+
 typedef char Clave [30]; //keys
 
 typedef enum { //posibles estados del ESI
@@ -83,14 +82,14 @@ typedef struct{
 
 //TRES TIPOS DE MENSAJES
 typedef struct {
-	char instruccion[];
+	char instruccion[40];
 	uint32_t intruccion_long;
 	int clave;
 	uint32_t clave_long;
 }__attribute__((packed)) Mensaje_tipo1;
 
 typedef struct {
-	char instruccion[];
+	char instruccion[40];
 	uint32_t instruccon_long;
 	int clave;
 	uint32_t clave_long;
@@ -99,7 +98,7 @@ typedef struct {
 }__attribute__((packed)) Mensaje_tipo2;
 
 typedef struct {
-	char instruccion[];
+	char instruccion[40];
 }__attribute__((packed)) Mensaje_tipo3;
 
 /////////////////////////// CONEXIONES ///////////////////////////
@@ -127,23 +126,23 @@ typedef struct {
 //////////////////////////// FUNCIONES ////////////////////////////
 
 //funcoines de salida
-void _exit_with_error(int socket, char* error_msg, void * buffer, t_log* logger);
+void _exit_with_error(int socket, char* error_msg, void * buffer, t_log * logger);
 void exit_gracefully(int return_nr, t_log* logger);
 
 //funciones de conexion
-int inicializar_servidor(char* ip, char* puerto, t_log* logger);//inicializa un servidor y espera conexiones
-int connect_to_server(char* ip, char * port, t_log* logger);//devuelve el socket con el que se establece la conexion a un servidor
+int inicializar_servidor(char* ip, char* puerto, t_log * logger);//inicializa un servidor y espera conexiones
+int connect_to_server(char* ip, char * port, t_log * logger);//devuelve el socket con el que se establece la conexion a un servidor
 
 //funciones de recv() y send()
 void send_string(int socket, char* mensaje);
 void wait_string(int socket, int len);
-int recv_string(int socket, char* mensaje_recibido [10])
+int recv_string(int socket, char* mensaje_recibido [10]);
 
 //funciones de recv() y send() variables para despues de serializacion
-void send_mensaje(int socket, Mensaje mensaje);//envia un struct tipo Mensaje
+void send_mensaje(int socket, Mensaje mensaje, t_log *logger);//envia un struct tipo Mensaje
 void wait_mensaje(int socket);
-int wait_content(int socket, *buffer, t_log* logger);//espera contenido de tamaño variable
-void send_content(int socket, void * content, int id, t_log logger);//envia contenido de tamaño variable
+int wait_content(int socket, char *buffer, t_log * logger);//espera contenido de tamaño variable
+void send_content(int socket, void * content, int id, t_log * logger);//envia contenido de tamaño variable
 
 //funciones de serializacion, una por tipo de mensaje?
 
