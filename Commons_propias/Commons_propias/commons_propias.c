@@ -60,38 +60,8 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 		log_info(logger, "Escuchando!");
 		listen(servidor, 100);
 
+return 0;
 
-
-		  //Accept an incoming connection
-
-		    c = sizeof(struct sockaddr_in);
-
-		    pthread_t thread_id;
-
-		       while(client_sock=accept(socket_desc,(struct sockaddr*)&client,(socklen_t*)&c))
-		       {
-		    	log_info(logger, "Conexión aceptada");
-
-
-
-		    /*	if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
-		    	        {
-		    				_exit_with_error(client_sock, "No se pudo crear el hilo",NULL);
-
-		    	            return 1;
-		    	}
-		    	log_info(logger, "Handler asignado");
-*/
-		    }
-
-		    if (client_sock < 0)
-		    {
-		        _exit_with_error(client_sock, "Fallo el accept",NULL, logger);
-
-		        return 1;
-		    }
-		    close(client_sock);
-		    return 0;
 		}
 
 
