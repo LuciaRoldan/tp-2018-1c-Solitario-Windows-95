@@ -64,64 +64,23 @@ return 0;
 
 		}
 
+//Funciones para enviar y recibir cosas serializadas
 
-/*
-#AGREGAR COMPORTAMIENTO PARA LOS HILOS
-void *connection_handler(void *socket_desc)
-{
-    //Get the socket descriptor
-    int sock = *(int*)socket_desc;
-    int read_size;
-    char *message , client_message[2000];
-
-    //Send some messages to the client
-    message = "Greetings! I am your connection handler\n";
-    write(sock , message , strlen(message));
-
-    message = "Now type something and i shall repeat what you type \n";
-    write(sock , message , strlen(message));
-
-    //Receive a message from client
-    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
-    {
-        //end of string marker
-		client_message[read_size] = '\0';
-
-		//Send the message back to client
-        write(sock , client_message , strlen(client_message));
-
-		//clear the message buffer
-		memset(client_message, 0, 2000);
-    }
-
-    if(read_size == 0)
-    {
-        puts("Client disconnected");
-        fflush(stdout);
-    }
-    else if(read_size == -1)
-    {
-        perror("recv failed");
-    }
-
-    return 0;
+int enviar(int* socketAlQueEnvio, void* envio,int tamanioDelEnvio){
+	int payloadEnviado;
+	bytesEnviados=send(*socketAlQueEnvio,envio,tamanioDelEnvio,0);
+	return payloadEnviado;
 }
 
-*/
-	//--------------------------------------
-
-
-
-/*
-int aceptar_conexion(int servidor){
-	struct sockaddr_in direccionCliente;
-	unsigned int tamanoDireccion;
-	int cliente = accept(servidor, (void*) &direccionCliente,&tamanoDireccion);
-	log_info(logger, "Recibi una conexion en %d\n", cliente);
-
-	return cliente;
+int recibir(int* socketReceptor, void* bufferReceptor,int tamanioQueRecibo){
+	int payloadRecibido;
+	bytesRecibidos=recv(*socketReceptor,bufferReceptor,tamanioQueRecibo,MSG_WAITALL);
+	return payloadRecibido;
 }
-*/
+
+
+
+
 
 int recv_string(int socket, char* mensaje_recibido [10]){
 	int bytes_recv;
