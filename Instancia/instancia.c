@@ -8,7 +8,7 @@ char* ipCoordinador;
 int puertoCoordinador;
 
 
-tipo_algoritmo algoritmo_reemplazo;
+tipo_algoritmo_reemplazo algoritmo_reemplazo;
 
 //puntoDeMontaje; //path absoluto ???
 

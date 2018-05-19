@@ -39,12 +39,6 @@ typedef enum { //posibles estados del ESI
 	EJECUTANDO
 } estado;
 
-//////////////////////////// ALGORITMOS REEMPLAZO ////////////////////////////
-
-typedef enum {
-	LRU, CIRC, BSU
-} tipo_algoritmo;
-
 
 //////////////////////////// MENSAJES ////////////////////////////
 

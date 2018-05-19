@@ -66,16 +66,16 @@ return 0;
 
 //Funciones para enviar y recibir cosas serializadas
 
-int enviar(int* socketAlQueEnvio, void* envio,int tamanioDelEnvio){
-	int payloadEnviado;
-	bytesEnviados=send(*socketAlQueEnvio,envio,tamanioDelEnvio,0);
-	return payloadEnviado;
+int enviar(int* socket_destino, void* envio,int tamanio_del_envio){
+	int payload_enviado, bytes_enviados;
+	bytes_enviados=send(*socket_destino,envio,tamanio_del_envio,0);
+	return payload_enviado;
 }
 
-int recibir(int* socketReceptor, void* bufferReceptor,int tamanioQueRecibo){
-	int payloadRecibido;
-	bytesRecibidos=recv(*socketReceptor,bufferReceptor,tamanioQueRecibo,MSG_WAITALL);
-	return payloadRecibido;
+int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo){
+	int payload_recibido, bytes_recibidos;
+	bytes_recibidos=recv(*socket_receptor,buffer_receptor,tamanio_que_recibo,MSG_WAITALL);
+	return payload_recibido;
 }
 
 
