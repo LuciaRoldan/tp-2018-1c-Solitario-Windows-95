@@ -18,17 +18,11 @@
 #include <commons/config.h>
 #include <unistd.h>
 #include <pthread.h>
-//#include <parsi/parser.h>
+#include <parsi/parser.h>
 
 
 ///////////////////////// INSTRUCCIONES /////////////////////////
 
-
-typedef enum{ //posibles instrucciones
-	GET,
-	SET,
-	STORE
-} InstruccionAtomica;
 
 typedef char Clave [30]; //keys
 
@@ -73,6 +67,12 @@ typedef struct{
 	int cantidad_entradas;
 	int tamano_entrada;
 } datos_configuracion;
+
+//COORDINADOR-PLANIFICADOR
+typedef struct{
+	int esi_id;
+	t_esi_operacion instruccion;
+}pedido_esi;
 
 //TRES TIPOS DE MENSAJES
 typedef struct {
