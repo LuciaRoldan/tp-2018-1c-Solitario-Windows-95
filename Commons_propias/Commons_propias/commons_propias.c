@@ -25,13 +25,7 @@ int connect_to_server(char * ip, char * port, t_log *  logger){
 		return server_socket;
 }
 
-
 int inicializar_servidor(char* ip, char* puerto, t_log * logger){
-	 int socket_desc , client_sock , c;
-	struct sockaddr_in server , client;
-
-	     // fill in my IP for me
-
 	struct addrinfo hints, *res;
 
 	memset(&hints,0,sizeof hints);
@@ -60,7 +54,7 @@ int inicializar_servidor(char* ip, char* puerto, t_log * logger){
 		log_info(logger, "Escuchando!");
 		listen(servidor, 100);
 
-return 0;
+return servidor;
 
 		}
 
@@ -70,7 +64,7 @@ int enviar(int* socket_destino, void* envio,int tamanio_del_envio, t_log* logger
 	int payload_enviado, bytes_enviados;
 	bytes_enviados=send(*socket_destino,envio,tamanio_del_envio,0);
 	if(bytes_enviados <= 0){
-		_exit_with_error(socket, "No se pudo enviar el mensaje", NULL, logger);
+		_exit_with_error(*socket_destino, "No se pudo enviar el mensaje", NULL, logger);
 	}
 	return payload_enviado;
 }
@@ -79,11 +73,10 @@ int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, 
 	int payload_recibido, bytes_recibidos;
 	bytes_recibidos=recv(*socket_receptor,buffer_receptor,tamanio_que_recibo,MSG_WAITALL);
 	if (bytes_recibidos <= 0) {
-			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
+			_exit_with_error(*socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}
 	return payload_recibido;
 }
-
 
 int recv_string(int socket, char* mensaje_recibido [10]){
 	int bytes_recv;
@@ -91,7 +84,6 @@ int recv_string(int socket, char* mensaje_recibido [10]){
 	printf("%s",&mensaje_recibido);
 	return bytes_recv;
 }
-
 
 void send_mensaje(int socket, Mensaje mensaje, t_log* logger) {
 
@@ -102,7 +94,6 @@ void send_mensaje(int socket, Mensaje mensaje, t_log* logger) {
 		_exit_with_error(socket, "No se pudo enviar el mensaje", NULL, logger);
 	}
 }
-
 
 int wait_content(int socket, char *buffer, t_log * logger) {
 
@@ -126,9 +117,6 @@ int wait_content(int socket, char *buffer, t_log * logger) {
 	return header;
 }
 
-
-
-
 void send_content(int socket, void * content, int id, t_log* logger) {
 
 	int longitud = sizeof(&content);
@@ -150,7 +138,6 @@ void send_content(int socket, void * content, int id, t_log* logger) {
 	}
 }
 
-
 void _exit_with_error(int socket, char* error_msg, void * buffer, t_log* logger) {
 	if (buffer != NULL) {
 		free(buffer);
@@ -165,7 +152,12 @@ void exit_gracefully(int return_nr, t_log* logger) {
 	exit(return_nr);
 }
 
-
+int aceptar_conexion(int* socket_escucha, t_log* logger){
+	struct sockaddr_in cliente;
+	socklen_t tamanio = sizeof(cliente);
+	int socket_cliente = accept(*socket_escucha, (struct sockaddr *) &cliente, &tamanio);
+	return socket_cliente;
+}
 
 
 //revisar bien el mensaje que recibe

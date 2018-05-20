@@ -32,7 +32,7 @@ typedef enum { //posibles estados del ESI
 
 //////////////////////////// PROCESOS ////////////////////////////
 
-typedef enum{			//PARA LA COMMONS
+typedef enum{
 	PLANIFICADOR,
 	COORDINADOR,
 	INSTANCIA,
@@ -40,6 +40,11 @@ typedef enum{			//PARA LA COMMONS
 }proceso;
 
 //////////////////////////// MENSAJES ////////////////////////////
+//HANDSHAKE
+typedef struct{
+	proceso proceso;
+	int id_proceso;
+}t_handshake;
 
 //ESI-COORDINADOR
 
@@ -104,6 +109,11 @@ void exit_gracefully(int return_nr, t_log* logger);
 //funciones de conexion
 int inicializar_servidor(char* ip, char* puerto, t_log * logger);//inicializa un servidor y espera conexiones
 int connect_to_server(char* ip, char * port, t_log * logger);//devuelve el socket con el que se establece la conexion a un servidor
+int aceptar_conexion(int* socket_escucha, t_log* logger);
+
+//funciones de send() y recv()
+int enviar(int* socket_destino, void* envio,int tamanio_del_envio, t_log* logger);
+int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger);
 
 //funciones de recv() y send()
 void send_string(int socket, char* mensaje);
