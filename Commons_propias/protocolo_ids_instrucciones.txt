@@ -35,7 +35,7 @@ El mensaje consiste del tipo de dato que van a enviar.
 44 status_clave
 
 ///////////////// ESI /////////////////
-
+60 int (exito o fallo)
 
 
 ///////////////// TODOS /////////////////
