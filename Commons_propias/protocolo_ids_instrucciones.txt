@@ -1,21 +1,35 @@
-La longitud del id del mensaje es un int
+La longitud del id del mensaje es un int.
 
+Propongo que dejemos un espacio de 20 mensajes que va a recibir cada uno.
+O sea:
+	Instancia		del 00 al 19
+	Coordinador		del 20 al 39
+	Planificador	del 40 al 59
+	ESI				del 60 al 79
 
+Entonces cada uno va agregando los mensajes que RECIBE en su propio proceso.
+Y los mensajes que ENVIAN (que van a ser recibidos por otro poceso), en el otro porceso.
+
+El mensaje consiste del tipo de dato que van a enviar.
 
 ///////////////// INSTANCIA /////////////////
-1 datos_configuracion
+00 datos_configuracion
 
 
 ///////////////// COORDINADOR /////////////////
 
 
 
-///////////////// PPLANIFICADOR /////////////////
-
+///////////////// PLANIFICADOR /////////////////
+40 solicitud_ejecucion (Esi Nuevo)
+41 resultado_ejecucion_finalizada (Esi que finalizo)
+42 resultado_ ejecucion_bloqueo (Esi que termino de ejecutar porque se bloqueo)
 
 
 ///////////////// ESI /////////////////
-/// Esi al Planificador ////
-1 solicitud_ejecucion (Esi Nuevo)
-2 resultado_ejecucion_finalizada (Esi que finalizo)
-3 resultado_ ejecucion_bloqueo (Esi que termino de ejecutar porque se bloqueo)
+
+
+
+
+
+

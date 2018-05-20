@@ -1,5 +1,4 @@
 #include "planificador.h"
-#include "planificador.c"
 
 void inicializar_planificador(int* socketCoordinador, int* socketEsis){ //como hago para decir que recibo puntero?
 	leer_archivo_configuracion();

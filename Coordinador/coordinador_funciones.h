@@ -29,6 +29,11 @@ void enviar_configuracion_instancia(info_archivo_config configuracion, t_log log
 	send_content(4, &mensaje, 1, logger); //Que socket le pongo??
 }
 
+void enviar_pedido_esi(int esi_id, int socket, t_esi_operacion instruccion, t_log logger){
+	pedido_esi pedido = {esi_id, instruccion};
+	enviar(socket, pedido, sizeof(pedido), logger);
+}
+
 void handshake(int socket){
 	int proceso_recibido;
 	send(socket, COORDINADOR , sizeof(proceso),0);

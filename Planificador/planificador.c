@@ -1,4 +1,4 @@
-#include "planificador.h"
+#include "planificador_funciones.h"
 
 char* puertoEscucha;
 AlgoritmoPlanificacion algoritmoPlanificacion;

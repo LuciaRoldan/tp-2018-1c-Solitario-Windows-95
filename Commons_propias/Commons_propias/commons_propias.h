@@ -21,10 +21,7 @@
 #include <parsi/parser.h>
 
 
-///////////////////////// INSTRUCCIONES /////////////////////////
-
-
-typedef char Clave [30]; //keys
+///////////////////////// ESTADOS /////////////////////////
 
 typedef enum { //posibles estados del ESI
 	NUEVO,
@@ -33,14 +30,19 @@ typedef enum { //posibles estados del ESI
 	EJECUTANDO
 } estado;
 
+//////////////////////////// PROCESOS ////////////////////////////
+
+typedef enum{			//PARA LA COMMONS
+	PLANIFICADOR,
+	COORDINADOR,
+	INSTANCIA,
+	ESI
+}proceso;
 
 //////////////////////////// MENSAJES ////////////////////////////
 
 //ESI-COORDINADOR
-typedef struct{ //mensaje que manda el ESI al Coordinador
-	InstruccionAtomica instruccion;
-	Clave clave;
-} MenasajeEsi;
+
 
 //ESI-PLANIFICADOR
 typedef struct {
@@ -51,16 +53,12 @@ typedef struct {
 	int ultimaEstimacion;
 } pcb;
 
-//PLANIFICADOR-ESI
+
 typedef enum{
 	EJECUTAR,
 	BLOQUEARSE,
 	DESBLOQUEARSE
 } AccionESI;
-
-typedef struct{ //mensaje que manda Planificador a ESI
-	AccionESI instruccion;
-} InstruccionESI;
 
 //INSTANCIA-COORDINADOR
 typedef struct{
@@ -74,26 +72,6 @@ typedef struct{
 	t_esi_operacion instruccion;
 }pedido_esi;
 
-//TRES TIPOS DE MENSAJES
-typedef struct {
-	char instruccion[40];
-	uint32_t intruccion_long;
-	int clave;
-	uint32_t clave_long;
-}__attribute__((packed)) Mensaje_tipo1;
-
-typedef struct {
-	char instruccion[40];
-	uint32_t instruccon_long;
-	int clave;
-	uint32_t clave_long;
-	int value;
-	uint32_t value_long;
-}__attribute__((packed)) Mensaje_tipo2;
-
-typedef struct {
-	char instruccion[40];
-}__attribute__((packed)) Mensaje_tipo3;
 
 /////////////////////////// CONEXIONES ///////////////////////////
 
