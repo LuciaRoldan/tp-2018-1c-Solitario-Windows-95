@@ -115,17 +115,6 @@ int aceptar_conexion(int* socket_escucha, t_log* logger);
 int enviar(int* socket_destino, void* envio,int tamanio_del_envio, t_log* logger);
 int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger);
 
-//funciones de recv() y send()
-void send_string(int socket, char* mensaje);
-void wait_string(int socket, int len);
-int recv_string(int socket, char* mensaje_recibido [10]);
-
-//funciones de recv() y send() variables para despues de serializacion
-void send_mensaje(int socket, Mensaje mensaje, t_log *logger);//envia un struct tipo Mensaje
-void wait_mensaje(int socket);
-int wait_content(int socket, char *buffer, t_log * logger);//espera contenido de tamaño variable
-void send_content(int socket, void * content, int id, t_log * logger);//envia contenido de tamaño variable
-
 //funciones de serializacion, una por tipo de mensaje?
 
 #endif /* COMMONS_PROPIAS_H_ */

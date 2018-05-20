@@ -6,6 +6,7 @@ O sea:
 	Coordinador		del 20 al 39
 	Planificador	del 40 al 59
 	ESI				del 60 al 79
+	Todos?			del 80 al 99
 
 Entonces cada uno va agregando los mensajes que RECIBE en su propio proceso.
 Y los mensajes que ENVIAN (que van a ser recibidos por otro poceso), en el otro porceso.
@@ -30,6 +31,7 @@ El mensaje consiste del tipo de dato que van a enviar.
 
 
 
-
+///////////////// TODOS /////////////////
+80 t_handshake
 
 
