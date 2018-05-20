@@ -60,22 +60,28 @@ return servidor;
 
 //Funciones para enviar y recibir cosas serializadas
 
-int enviar(int* socket_destino, void* envio,int tamanio_del_envio, t_log* logger){
-	int payload_enviado, bytes_enviados;
-	bytes_enviados=send(*socket_destino,envio,tamanio_del_envio,0);
+int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
+	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+
+	memcpy(buffer, &id, sizeof(int));
+	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+
+	int bytes_enviados = send(*socket_destino, buffer, sizeof(buffer), 0);
+
 	if(bytes_enviados <= 0){
 		_exit_with_error(*socket_destino, "No se pudo enviar el mensaje", NULL, logger);
 	}
-	return payload_enviado;
+	free(buffer);
+	return bytes_enviados;
 }
 
-int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger){
-	int payload_recibido, bytes_recibidos;
-	bytes_recibidos=recv(*socket_receptor,buffer_receptor,tamanio_que_recibo,MSG_WAITALL);
+int recibir(int* socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
+
+	int bytes_recibidos = recv(*socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
 	if (bytes_recibidos <= 0) {
 			_exit_with_error(*socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}
-	return payload_recibido;
+	return bytes_recibidos;
 }
 
 void _exit_with_error(int socket, char* error_msg, void * buffer, t_log* logger) {

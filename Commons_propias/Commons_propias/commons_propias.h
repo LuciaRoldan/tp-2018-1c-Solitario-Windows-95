@@ -77,6 +77,11 @@ typedef struct{
 	t_esi_operacion instruccion;
 }pedido_esi;
 
+typedef struct{
+	char* clave;
+	int id_instancia;
+	char* contenido;
+}status_clave;
 
 /////////////////////////// CONEXIONES ///////////////////////////
 
@@ -112,7 +117,7 @@ int connect_to_server(char* ip, char * port, t_log * logger);//devuelve el socke
 int aceptar_conexion(int* socket_escucha, t_log* logger);
 
 //funciones de send() y recv()
-int enviar(int* socket_destino, void* envio,int tamanio_del_envio, t_log* logger);
+int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger);
 int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger);
 
 //funciones de serializacion, una por tipo de mensaje?

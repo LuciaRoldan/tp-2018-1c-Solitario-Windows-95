@@ -27,6 +27,7 @@ void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log*
 	int resultado = handshake(&socket_cliente, logger);
 	if(resultado >= 0){
 		*socket_planificador = socket_cliente;
+		log_info(logger, "Se establecio la conexion con el Planificdor");
 	} else {
 		log_info(logger, "Fallo en la conexion con el Planificdor");
 	}
@@ -34,26 +35,59 @@ void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log*
 
 /////////////////////// COMUNICACION ///////////////////////
 
-void enviar_configuracion_instancia(info_archivo_config configuracion, t_log* logger){
+void enviar_configuracion_instancia(int* socket, info_archivo_config configuracion, t_log* logger){
 	datos_configuracion mensaje = {*configuracion.tamano_entrada, *configuracion.cantidad_entradas};
-	send_content(4, &mensaje, 1, logger); //Que socket le pongo??
+	enviar(socket, &mensaje, sizeof(datos_configuracion), 00, logger);
 }
 
 void enviar_pedido_esi(int esi_id, int* socket, t_esi_operacion instruccion, t_log* logger){
 	pedido_esi pedido = {esi_id, instruccion};
-	enviar(socket, &pedido, sizeof(pedido), logger);
+	enviar(socket, &pedido, sizeof(pedido), 43, logger);
 }
 
+void enviar_status_clase(int* socket, status_clave* status, t_log* logger){
+	enviar(socket, status, sizeof(status_clave), 44, logger);
+}
+
+void enviar_pedido_valor(int* socket, char* clave, t_log* logger){
+	enviar(socket, clave, sizeof(clave), 01, logger);
+}
+
+int recibir_confirmacion(int* socket, t_log* logger){
+	int confirmacion;
+	recibir(socket, &confirmacion, sizeof(int), logger);
+	return confirmacion;
+}
+
+char* recibir_pedido_clave(int* socket, t_log* logger){
+	char* clave;
+	recibir(socket, clave, sizeof(clave), logger);
+	return clave;
+}
+
+char* recibir_valor(int* socket, t_log* logger){
+	char* valor;
+	recibir(socket, valor, sizeof(valor), logger);
+	return valor;
+}
+
+
 /////////////////////// FUNCIONAMIENTO INTERNO ///////////////////////
-
-
 
 int handshake(int* socket, t_log* logger){
 	int conexion_hecha = 0;
 
 	t_handshake proceso_recibido;
 	t_handshake yo = {COORDINADOR, 0};
-	enviar(socket, &yo, sizeof(t_handshake), logger);
+	int id_recibido;
+
+	enviar(socket, &yo, sizeof(t_handshake), 80, logger);
+	recibir(socket, &id_recibido, sizeof(int), logger);
+
+	if(id_recibido != 80){
+		return -1;
+	}
+
 	recibir(socket, &proceso_recibido, sizeof(t_handshake), logger);
 
 	switch(proceso_recibido.proceso){
