@@ -35,14 +35,15 @@
 		//deserializar?
 	}
 
-	void procesar_instruccion(t_esi_operacion instruccion) {
+	void procesar_instruccion(int* socket_coordinador, t_esi_operacion instruccion) {
 
 		switch (instruccion) {
 		case (GET):
 			break;
 		case (SET):
-			char* value = strcpy(instruccion->_raw, value); //no se si me devuelve solo el value
-			void guardar_archivo(value);
+			char* value = strcpy(instruccion->_raw, value); //no se si me esta devolviendo lo que quiero
+			char* clave = strcpy(instruccion->_raw, value);
+ 			void guardar_archivo(clave,value);
 			break;
 		case (STORE):
 			char* clave = strcpy(instruccion->_raw, clave);
@@ -55,7 +56,7 @@
 			fwrite(&informacion, sizeof(informacion), 1, archivo);
 			fclose (archivo);
 
-			void enviar_a_desbloquear_clave(int* socket_coordinador, clave);
+			void enviar_a_desbloquear_clave(socket_coordinador, clave);
 
 			break;
 		}

@@ -22,7 +22,7 @@ int main() {
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 	leer_configuracion_propia();
 	int socket_coordinador = connect_to_server(ipCoordinador, puertoCoordinador);
-	inicializar_instancia();
+	inicializar_instancia(socket_coordinador,logger);
 
 	return 0;
 }
