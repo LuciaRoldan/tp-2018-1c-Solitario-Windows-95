@@ -14,12 +14,14 @@ char* memoria;
 FILE* archivo_configuracion;
 FILE*archivo;
 t_log * logger;
+int socket_coordinador;
 
 
 int main() {
 
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 	leer_configuracion_propia();
+	int socket_coordinador = connect_to_server(ipCoordinador, puertoCoordinador);
 	inicializar_instancia();
 
 	return 0;
