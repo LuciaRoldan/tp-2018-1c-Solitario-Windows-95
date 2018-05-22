@@ -170,6 +170,13 @@ void ejecutarEsi(esi){
 	//send(script); /mandarle el script al esi ??
 }
 /*
+   int ID;
+    int arrival_time;
+    int time_to_completion;
+    int wait_time;
+    int turn_around;
+    int active;
+
 void sjf (struct process array[MAX_PROCESS], int num_pid){
     printf("Shortest Job First\n");//for the output so we know what algorithm
     //create an array of pids that are valid to search.
