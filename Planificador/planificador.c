@@ -8,7 +8,7 @@ char* puertoCoordinador;
 char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
 FILE* configuracion;
 t_conexion conexion;
-logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
+logger = log_create("planificador.log", "PLANIFICADOR", TRUE, LOG_LEVEL_INFO);
 
 struct ColaDeEsi *colaDeReadyEsis;
 struct ColaDeEsi *colaDeBloqueadoEsis;
@@ -169,5 +169,47 @@ void ejecutarEsi(esi){
 							//que ejecute
 	//send(script); /mandarle el script al esi ??
 }
+/*
+void sjf (struct process array[MAX_PROCESS], int num_pid){
+    printf("Shortest Job First\n");//for the output so we know what algorithm
+    //create an array of pids that are valid to search.
+    int num_valid_processes = 0, current_time=0, i,j, next_process, counter = 0;//declarations
+    process to_sort[MAX_PROCESS];
 
+    //we want to do this next loop for as many processes as we have, or num_pid
+    for(j=0; j<num_pid; j++){
+        //adds all the available processes to the to sort array to be sorted
+        //available means that it has arrived, which means it is <= current_time
+        //after it gets all the processes, it breaks out of the for loop
+        for(i=counter; i<num_pid; i++){
+            if(array[i].arrival_time<=current_time){
+                to_sort[i]=array[i];
+                num_valid_processes++;
+                counter++;
+            }
+            else
+                break;
+        }
+        //sort the to_sort array by the time_to_completion
+        sort_by_time(to_sort,num_valid_processes);
 
+        //set the wait time and turnaround time for the next process
+        next_process = to_sort[0].ID;
+        array[next_process].wait_time = current_time-array[next_process].arrival_time;
+        array[next_process].turn_around = array[next_process].wait_time + array[next_process].time_to_completion;
+        //change the current_time and continue
+        //current time = current time + wait time + time to completion
+        current_time= current_time + array[next_process].time_to_completion;
+
+        //delete the process we just worked on so we don't get duplicates.
+        num_valid_processes--;
+        for(i=0;i<num_valid_processes;i++){
+            to_sort[i]=to_sort[i+1];
+        }
+    }
+    //loop back up to get available processes
+    //now all the info in out first array is filled out, print it out.
+    print_info(array, num_pid);
+}
+
+*/
