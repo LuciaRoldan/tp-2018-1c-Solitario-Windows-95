@@ -1,5 +1,12 @@
 #include "planificador_funciones.c"
 
+/* COSAS POR HACER
+ *
+ *
+ * 1) VER ṔORQUE ROMPE EL PTHREAD
+ *
+ */
+
 char* puertoEscucha;
 AlgoritmoPlanificacion algoritmoPlanificacion;
 int estimacionInicial;
@@ -32,8 +39,8 @@ int main() {
 	pthread_t hiloConsola;
 
 
-	pthread_create(&hiloEscuchaEsis, NULL, recibir_esis, (void*) socketEsis);
-	pthread_create(&hiloCoordinador, NULL, manejar_coordinador, ((void*) &socketCoordinador));
+	pthread_create(&hiloEscuchaEsis, 0, recibir_esis, (void*) socketEsis);
+	pthread_create(&hiloCoordinador, 0, manejar_coordinador, ((void*) &socketCoordinador));
 
 	return 0;
 }
@@ -46,11 +53,11 @@ void recibir_esis(int socketEsis){
 
 		log_info(logger, "Conexion aceptada del Esi: "); //imprimir el id del Esi que se me conecto
 		pthread_t hiloEscuchaEsi;
-		if( pthread_create(&hiloEscuchaEsi, NULL ,  manejar_esi, (void*) &conexionEsi) < 0){
+		if( pthread_create(&hiloEscuchaEsi, 0 ,  manejar_esi, (void*) &conexionEsi) < 0){
 			perror("No se pudo crear el hilo");
 		}
 		    //Now join the thread , so that we dont terminate before the thread
-		pthread_join(hiloEscuchaEsi , NULL);
+		pthread_join(hiloEscuchaEsi , 0);
 		log_info(logger, "Esi asignado");
 	}
 
