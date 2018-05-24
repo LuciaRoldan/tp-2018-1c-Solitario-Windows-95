@@ -1,13 +1,13 @@
-#include "planificador_funciones.h"
+#include "planificador_funciones.c"
 
 char* puertoEscucha;
 AlgoritmoPlanificacion algoritmoPlanificacion;
 int estimacionInicial;
 char* ipCoordinador[10]; //es una cadena de caracteres, es char*??????
-char* puertoCoordinador;
+char* puertoCoordinador[5];
 char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
-FILE* configuracion;
-t_conexion conexion;
+//FILE* configuracion; no sirve
+
 logger = log_create("planificador.log", "PLANIFICADOR", TRUE, LOG_LEVEL_INFO);
 
 struct ColaDeEsi *colaDeReadyEsis;

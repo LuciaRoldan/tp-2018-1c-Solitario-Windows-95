@@ -1,5 +1,6 @@
 #ifndef PLANIFICADOR_H_
 #define PLANIFICADOR_H_
+
 #include <Commons_propias/commons_propias.h>
 
 //STRUCTS
