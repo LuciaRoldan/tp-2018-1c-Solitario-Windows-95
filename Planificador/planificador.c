@@ -7,11 +7,14 @@
  *
  */
 
-char* puertoEscucha;
+char* puertoEscucha; //CREO que no es necesario, el puerto de escucha esta implicito
+// en el socket de escucha, lo retorna la funcion int listen();
+
+
 AlgoritmoPlanificacion algoritmoPlanificacion;
 int estimacionInicial;
-char* ipCoordinador[10]; //es una cadena de caracteres, es char*??????
-char* puertoCoordinador[5];
+char* ipCoordinador[10]; //no es necesario
+char* puertoCoordinador[5];// no es necesario
 char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
 //FILE* configuracion; no sirve
 
