@@ -8,7 +8,7 @@ char* puertoCoordinador[5];
 char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
 //FILE* configuracion; no sirve
 
-logger = log_create("planificador.log", "PLANIFICADOR", TRUE, LOG_LEVEL_INFO);
+logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 
 struct ColaDeEsi *colaDeReadyEsis;
 struct ColaDeEsi *colaDeBloqueadoEsis;
@@ -24,7 +24,7 @@ struct ClavesBloqueadas *clavesBloqueadas;
 int main() {
 	int socketCoordinador;
 	int socketEsis;
-	logger = log_create("planificador.log", "PLANIFICADOR", true, LOG_LEVEL_INFO);
+	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	inicializar_planificador(*socketCoordinador, *socketEsis); //leyendo archivo configuracion
 
 	pthread_t hiloEscuchaEsis;
