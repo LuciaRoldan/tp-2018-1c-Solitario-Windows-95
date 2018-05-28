@@ -10,23 +10,22 @@
 		memoria = malloc(espacio_para_memoria);
 	}
 
-	datos_configuracion recibir_configuracion(int* socket_coordinador) {
+	datos_configuracion recibir_configuracion(int* socket_coordinador,t_log* logger) {
 		datos_configuracion configuracion;
 		recibir(socket_coordinador, &configuracion, sizeof(datos_configuracion), logger);
 		return configuracion;
 		//deserializar?
 	}
 
-	void leer_configuracion_propia() {
-		fscanf(archivo_configuracion, "%d %s %d", &ipCoordinador,
-				&puertoCoordinador, &nombreInstancia, &intervaloDump);
-		fclose (archivo_configuracion);
-	}
+	configuracion_propia leer_configuracion_propia(FILE* archivo) {
+			configuracion_propia configuracion_propia;
+			archivo = fopen("Configuracion instancia.txt", "r");
+			fscanf(archivo, "%s %s %s %d", configuracion_propia.ipCoordinador,
+					configuracion_propia.puertoCoordinador, configuracion_propia.nombreInstancia, configuracion_propia.intervaloDump);
+			fclose (archivo);
+			return configuracion_propia;
+		}
 
-	void leer_archivo_configuracion() {
-		fscanf(configuracion, "%d %d", &cantidad_entradas, &tamano_entrada);
-		fclose (configuracion);
-	}
 
 	t_esi_operacion recibir_instruccion(int* socket_coordinador) {
 		t_esi_operacion instruccion;
