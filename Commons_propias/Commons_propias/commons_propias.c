@@ -98,7 +98,7 @@ void exit_gracefully(int return_nr, t_log* logger) {
 	exit(return_nr);
 }
 
-int aceptar_conexion(int* socket_escucha, t_log* logger){
+int aceptar_conexion(int* socket_escucha){
 	struct sockaddr_in cliente;
 	socklen_t tamanio = sizeof(cliente);
 	int socket_cliente = accept(*socket_escucha, (struct sockaddr *) &cliente, &tamanio);

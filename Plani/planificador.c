@@ -1,4 +1,4 @@
-#include "planificador_funciones.c"
+#include "planificador.h"
 
 /* COSAS POR HACER
  *
@@ -7,6 +7,8 @@
  *
  */
 
+
+t_log* logger;
 char* puertoEscucha; //CREO que no es necesario, el puerto de escucha esta implicito
 // en el socket de escucha, lo retorna la funcion int listen();
 
@@ -31,17 +33,17 @@ struct ClavesBloqueadas *clavesBloqueadas;
 //void agregarEsiAColaDeReady(...){}
 
 int main() {
-	int socketCoordinador;
-	int socketEsis;
+	int * socketCoordinador;
+	int * socketEsis;
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
-	inicializar_planificador(*socketCoordinador, *socketEsis, logger); //leyendo archivo configuracion
+	inicializar_planificador(socketCoordinador, socketEsis, logger); //leyendo archivo configuracion
 
 	pthread_t hiloEscuchaEsis;
 	pthread_t hiloCoordinador;
 	pthread_t hiloConsola;
 
 
-	pthread_create(&hiloEscuchaEsis, 0, recibir_esis, (void*) socketEsis);
+	pthread_create(&hiloEscuchaEsis, 0, recibir_esis, (void*) &socketEsis);
 	pthread_create(&hiloCoordinador, 0, manejar_coordinador, ((void*) &socketCoordinador));
 
 	return 0;
@@ -115,23 +117,23 @@ void pausarPlanificador(){
 
 //para que un usuario bloquee al planificador y no de mas ordenes a esis ni nada
 void bloquearEsi(int clave, int idEsi){
-	mover_esi_a_bloqueados(colaDeBloqueadoEsis, idEsi, clave); //encola al Esi en la lista de bloqueados con la clave
+	//mover_esi_a_bloqueados(colaDeBloqueadoEsis, idEsi, clave); //encola al Esi en la lista de bloqueados con la clave
 	//que corresponda
 }
-
+/*
 void encolar(ColaDeEsi cola, claveYesi){ //hacer el encolar como en Algoritmos.. y claveYesi es como
 	//las dos cosas que se van a guardar en un nodo pero no se como seria la estructura
 }
-
+*/
 void desbloquearEsi(clave){
 	mover_esi_a_ready(clave);
 }
-
+/*
 ColaDeEsi listar(Clave clave){ //recurso == clave?
 	return "claveBloqueada.esisEnEspera"; //busca en su lista de Claves bloqueadas, la clave que se le pide,
 	//y devuelve la cola de esis bloqueados.
 }
-
+*/
 void kill(idEsi){
 	mover_esi_a_finalizado(idEsi);
 	//liberar los recursos. Fijarse que clave estaba ocupando y desocuparla.
@@ -166,19 +168,122 @@ int clave_tomada(int clave){
 	int tomada = ";";//buscar en la estructura que tenga las claves a ver si esta bloqueada
 	return tomada;
 }
-
+/*
 void asignar_esi_a_clave(Clave clave, int idEsi){
 	//buscar en donde sea que tenga las claves con los esis y asignarle el esi.
 }
-
+*/
 void ejecutar_proximo_esi(){}
 
+/*
 void ejecutarEsi(esi){
 	solicitarEjecucion(esi); //le va a mandar al ESI un mensaje diciéndole que quiere
 							//que ejecute
 	//send(script); /mandarle el script al esi ??
 }
-/*
+*/
+
+void inicializar_planificador(int* socketCoordinador, int* socketEsis, t_log* logger){ //como hago para decir que recibo puntero?
+	leer_archivo_configuracion();
+	socketCoordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
+
+
+	//lo agrego para no tener una fucnion de pasamanos ^^^^
+	//socketCoordinador = conectarse_al_coordinador();
+
+	socketEsis = inicializar_servidor(conexion_planificador.ip, conexion_planificador.puerto, logger);
+}
+
+void leer_archivo_configuracion(){
+	//Supongo que en el archivo el orden es: puertoEscucha, algoritmoPlanificacion, estimacionInicial, ipCoordinador, puertoCoordinador y clavesInicialmenteBloqueadas
+	t_config* configuracion=config_create("/home/utnso/tp-2018-1c-Solitario-Windows-95/Planificador/config_planificador");
+		strcpy(conexion_planificador.ip,config_get_string_value(configuracion,"IP_PLANIFICADOR"));
+		strcpy(conexion_planificador.puerto,config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
+		strcpy(conexion_coordinador.ip,config_get_string_value(configuracion,"IP_COORDINADOR"));
+		strcpy(conexion_coordinador.puerto,config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
+
+
+	//ver como levantar el resto, puerto escucha, algoritmo, etc
+
+
+	//configuracion = fopen("archivo_configuracion_planificador.txt", "r");
+	//fscanf(configuracion, "%s %d %d %s %s %s", &puertoEscucha, &algoritmoPlanificacion, &estimacionInicial , &ipCoordinador, &puertoCoordinador, &clavesInicialmenteBloqueadas);
+	//fclose(configuracion);
+
+
+}
+
+int conectarse_al_coordinador(){
+	int socketCoordinador;
+	//t_config* configuracion=config_create("/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Config");
+	//strcpy(conexion.ip,config_get_string_value(configuracion,"IP_COORDINADOR"));
+	//strcpy(conexion.puerto,config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
+	socketCoordinador = connect_to_server(conexion_planificador.ip, conexion_planificador.puerto, logger);
+	return socketCoordinador;
+}
+
+void manejar_esi(){
+
+	/*
+	int resultado_esi = malloc(sizeof(resultado_esi)); //no entiendo. Problema con si es un puntero a void
+	//y como lo paso a un struct pcb. Puedo guardar un puntero a void en un puntero a pcb ???
+	mensaje = wait_content(atoi(*puertoEscucha)); //espera a que le llegue algo del puerto por el
+												  //que le hablan los Esis
+												  //el ESI le manda la PCB
+	//switch (mensaje->id){ //no se como obtener el id del esi que me llega. AYUDA
+				//case (!esi_existente()):
+				//		pthread_t hilo_ESI; //creo hilo para el nuevo ESI
+				//		agregar_a_cola_de_ready(mensaje->id); //saco el ID de la PCB
+				//		pthread_create(&hilo_ESI, NULL, planificar_ESI(), NULL);
+				//break;
+				//case(esi_existente()):
+				procesar_exito_o_error(resultado_esi);
+				ejecutar_proximo_esi();
+				//break;
+}
+
+void procesar_exito_o_error(int resultado_esi){
+	switch(resultado_esi){
+	case(EXITO):
+				actualizar_pcb_esi();
+				ejecutar_proximo_esi();
+	case(PEDIUNACLAVEMUYLARGA):
+				bloquear;
+	}
+*/
+}
+
+
+// Commons
+// typedef enum{
+// 	EXITO,
+// 	MEBLOQUIE, (y manda clave)
+// 	PEDIUNACLAVEMUYLARGA,
+// 	PEDIUNACLAVENOID,
+// 	PEDIUNACLAVEINACC,
+// } resultados_esi;
+
+
+
+
+void manejar_coordinador(){
+
+
+	/*switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
+				//me estan preguntando esta tomada o no
+				case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
+						//que retorna true o false
+						mover_esi_a_bloqueado(idEsi);
+						asignar_esi_a_clave(mensaje->clave, idEsi);
+						return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
+				break;
+				case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
+						asignar_esi_a_clave(mensaje->clave, idEsi);
+						return 1; //exito
+				break;
+				}
+				} */
+}/*
    int ID;
     int arrival_time;
     int time_to_completion;

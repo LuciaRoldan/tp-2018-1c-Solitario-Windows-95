@@ -114,7 +114,7 @@ void exit_gracefully(int return_nr, t_log* logger);
 //funciones de conexion
 int inicializar_servidor(char* ip, char* puerto, t_log * logger);//inicializa un servidor y espera conexiones
 int connect_to_server(char* ip, char * port, t_log * logger);//devuelve el socket con el que se establece la conexion a un servidor
-int aceptar_conexion(int* socket_escucha, t_log* logger);
+int aceptar_conexion(int* socket_escucha);
 
 //funciones de send() y recv()
 int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger);

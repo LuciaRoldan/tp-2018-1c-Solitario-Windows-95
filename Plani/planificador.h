@@ -5,6 +5,13 @@
 
 //STRUCTS
 typedef struct{
+	int PID;
+	int context;
+
+}resultado_esi;
+
+
+typedef struct{
 	int IDEsi;
 	struct Esi* sgte;
 } ColaDeEsi; //esto es una cola o un esi ???
@@ -31,7 +38,17 @@ typedef enum{
 //FUNCIONES
 
 
-t_log logger;
+void inicializar_planificador(int* socketCoordinador, int* socketEsis, t_log * logger);
+void leer_archivo_configuracion();
+int conectarse_al_coordinador();
+void manejar_esi();
+void procesar_exito_o_error(resultado_esi * mensaje);
+void manejar_coordinador();
+void recibir_esis(int socketEsis);
+
+
+t_conexion conexion_planificador;
+t_conexion conexion_coordinador;
 
 
 

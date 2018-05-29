@@ -4,16 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../planificador.c \
-../planificador_funciones.c 
+../planificador.c 
 
 OBJS += \
-./planificador.o \
-./planificador_funciones.o 
+./planificador.o 
 
 C_DEPS += \
-./planificador.d \
-./planificador_funciones.d 
+./planificador.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
