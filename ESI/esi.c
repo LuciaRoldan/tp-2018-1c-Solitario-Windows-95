@@ -1,45 +1,46 @@
 #include "esi_funciones.h"
 
-
-int main(){
-
 	int idEsi;
-
-	char* puerto_escucha;
 	/*int cantidad_entradas;
 	int tamano_entrada;
 	int retardo;*/
-	FILE* configuracion;
-	char* ip;
-	char* puerto;
-	t_conexion conexion;
-
+	FILE* arch_configuracion;
+	t_conexion conexion_plani, conexion_coordi;
+	t_log * logger_esi;
 
 
 	int main(){
-		t_log* log_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
-		int socket_Planificador = connect_to_server("IP_PLANIFICADOR", "PUERTO_PLANIFICADOR", log_esi);
+		logger_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
+		info_arch_config arch_configuracion = leer_arch_configuracion(arch_configuracion, &conexion_plani, &conexion_coordi);
+
+
+		int socket_Planificador = connect_to_server(conexion_plani.ip, conexion_plani.puerto, logger_esi);
+		int socket_Coordinador = connect_to_server(conexion_coordi.ip, conexion_coordi.puerto, logger_esi);
+
+		int codigo_plani, exito;
+
 		char* line;
-		Mensaje mensaje;
-		mensaje.instruccion = parse(line); //Parsea y devuelve instrucción de ESI
+		t_esi_operacion mensaje = parse(line); //Parsea y devuelve instrucción de ESI
 
 		while(1){
-				int mensaje = wait_content(socket_Planificador); //el planificador devuelve la proxima linea a ejecutar
-					switch (mensaje){
-					case ("PUERTO_PLANIFICADOR"): //chequeo que el puerto sea por el que me comunico con el Plani
-						struct InstruccionESI accionESI = listen();
-						switch (accionESI->intruccion){
-						case ("EJECUTAR"): //deberian ser consts definidas en el protocolo.
-							traducirYEjecutar();
-						break;
-						case ("BLOQUEARSE"):
-							bloquearse_esi();
-						break;
-						case ("DESBLOQUEARSE"):
-						break;
+				recibir(&socket_Planificador, &codigo_plani, sizeof(int), logger_esi);
+				switch(codigo_plani){
+					case 43:
+						exito = buscar_instruccion(socket_Planificador, logger_esi);
+						if(!exito){
+							enviar(&socket_Planificador, 60, sizeof(int), logger_esi);
 						}
-					}
-					case ("PUERTOCOORDINADOR"):
+						break;
+					case 40:
+						recibir(&socket_Planificador, &mensaje, sizeof(mensaje), logger_esi);
+						exito = enviar_instruccion_a_ejecutar(socket_Coordinador, &mensaje, logger_esi);
+						if(!exito){
+							enviar(&socket_Planificador, 60, sizeof(int), logger_esi);
+						}
+						break;
+					default:
+						break;
+				}
 
 
 			}
