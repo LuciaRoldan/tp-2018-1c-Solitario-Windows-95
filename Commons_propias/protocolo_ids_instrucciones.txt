@@ -25,6 +25,7 @@ El mensaje consiste del tipo de dato que van a enviar.
 21 char* (clave)
 22 char* (valor clave)
 23 desconexion instancia
+24 t_esi_operacion
 
 
 

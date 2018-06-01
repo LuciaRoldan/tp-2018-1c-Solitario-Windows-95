@@ -40,11 +40,17 @@ typedef enum{
 }proceso;
 
 //////////////////////////// MENSAJES ////////////////////////////
-//HANDSHAKE
+//TODOS o CASI TODOS
 typedef struct{
 	proceso proceso;
 	int id_proceso;
 }t_handshake;
+
+typedef struct{
+	char* clave;
+	int id_instancia;
+	char* contenido;
+}status_clave;
 
 //ESI-COORDINADOR
 
@@ -76,12 +82,6 @@ typedef struct{
 	int esi_id;
 	t_esi_operacion instruccion;
 }pedido_esi;
-
-typedef struct{
-	char* clave;
-	int id_instancia;
-	char* contenido;
-}status_clave;
 
 /////////////////////////// CONEXIONES ///////////////////////////
 

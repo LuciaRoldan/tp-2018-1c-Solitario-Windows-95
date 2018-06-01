@@ -43,6 +43,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="Commons"/>
 									<listOptionValue builtIn="false" value="commons"/>
 								</option>
+								<option id="gnu.c.link.option.pthread.1757869174" superClass="gnu.c.link.option.pthread" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.215643369" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

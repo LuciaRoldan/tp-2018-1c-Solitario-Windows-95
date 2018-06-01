@@ -23,7 +23,7 @@ int inicializar_coordinador(info_archivo_config configuracion, t_log* logger){
 }
 
 void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log* logger){
-	int socket_cliente = aceptar_conexion(socket_escucha, logger);
+	int socket_cliente = aceptar_conexion(socket_escucha);
 	int resultado = handshake(&socket_cliente, logger);
 	if(resultado >= 0){
 		*socket_planificador = socket_cliente;
@@ -35,31 +35,36 @@ void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log*
 
 /////////////////////// COMUNICACION ///////////////////////
 
-void enviar_configuracion_instancia(int* socket, info_archivo_config configuracion, t_log* logger){
+int enviar_configuracion_instancia(int* socket, info_archivo_config configuracion, t_log* logger){
 	datos_configuracion mensaje = {*configuracion.tamano_entrada, *configuracion.cantidad_entradas};
 	//serializar
-	enviar(socket, &mensaje, sizeof(datos_configuracion), 00, logger);
+	int bytes_enviados = enviar(socket, &mensaje, sizeof(datos_configuracion), 00, logger);
+	return bytes_enviados;
 }
 
-void enviar_pedido_esi(int esi_id, int* socket, t_esi_operacion instruccion, t_log* logger){
+int enviar_pedido_esi(int esi_id, int* socket, t_esi_operacion instruccion, t_log* logger){
 	pedido_esi pedido = {esi_id, instruccion};
 	//serializar
-	enviar(socket, &pedido, sizeof(pedido), 43, logger);
+	int bytes_enviados = enviar(socket, &pedido, sizeof(pedido), 43, logger);
+	return bytes_enviados;
 }
 
-void enviar_status_clase(int* socket, status_clave* status, t_log* logger){
+int enviar_status_clave(int* socket, status_clave* status, t_log* logger){
 	//serializar
-	enviar(socket, status, sizeof(status_clave), 44, logger);
+	int bytes_enviados = enviar(socket, status, sizeof(status_clave), 44, logger);
+	return bytes_enviados;
 }
 
-void enviar_pedido_valor(int* socket, char* clave, t_log* logger){
+int enviar_pedido_valor(int* socket, char* clave, t_log* logger){
 	//serializar
-	enviar(socket, clave, sizeof(clave), 01, logger);
+	int bytes_enviados = enviar(socket, clave, sizeof(clave), 01, logger);
+	return bytes_enviados;
 }
 
-void enviar_confirmacion(int* socket, int* confirmacion, int id, t_log* logger){
+int enviar_confirmacion(int* socket, int* confirmacion, int id, t_log* logger){
 	//serializa
-	enviar(socket, confirmacion, sizeof(int), id, logger);
+	int bytes_enviados = enviar(socket, confirmacion, sizeof(int), id, logger);
+	return bytes_enviados;
 }
 
 int recibir_confirmacion(int* socket, t_log* logger){
@@ -76,11 +81,11 @@ char* recibir_pedido_clave(int* socket, t_log* logger){
 	return clave;
 }
 
-char* recibir_valor(int* socket, t_log* logger){
-	char* valor;
-	recibir(socket, valor, sizeof(valor), logger);
+status_clave recibir_status(int* socket, t_log* logger){
+	status_clave status;
+	recibir(socket, &status, sizeof(status_clave), logger);
 	//deserializar?
-	return valor;
+	return status;
 }
 
 t_esi_operacion recibir_instruccion(int* socket, t_log* logger){
@@ -98,19 +103,12 @@ int handshake(int* socket_cliente, t_log* logger){
 
 	t_handshake proceso_recibido;
 	t_handshake yo = {COORDINADOR, 0};
-	int id_recibido;
-
-	enviar(socket_cliente, &yo, sizeof(t_handshake), 80, logger);
-	recibir(socket_cliente, &id_recibido, sizeof(int), logger);
-
-	if(id_recibido != 80){
-		log_info(logger, "Conexion invalida");
-		return -1;
-	}
 
 	recibir(socket_cliente, &proceso_recibido, sizeof(t_handshake), logger);
+	enviar(socket_cliente, &yo, sizeof(t_handshake), 80, logger);
 
 	switch(proceso_recibido.proceso){
+
 	case PLANIFICADOR:
 		if(!conexion_hecha){
 			conexion_hecha = 1;
@@ -119,27 +117,37 @@ int handshake(int* socket_cliente, t_log* logger){
 			return -1;
 		}
 		break;
+
 	case INSTANCIA:
-		conectar_instancia(socket_cliente, id_recibido, logger);
+		conectar_instancia(socket_cliente, proceso_recibido.id_proceso, logger);
 		return 1;
 		break;
+
 	case ESI:
-		conectar_esi(socket_cliente, id_recibido, logger);
+		conectar_esi(socket_cliente, proceso_recibido.id_proceso, logger);
 		return 1;
 		break;
-	case COORDINADOR:
+
+	default:
 		return -1;
 		break;
-	default:
-			return -1;
-			break;
 	}
 
 }
 
 void procesar_conexion(int* socket_escucha, t_log* logger){
-	int socket_cliente = aceptar_conexion(socket_escucha, logger);
-	handshake(&socket_cliente, logger);
+	while(1){
+		int socket_cliente = aceptar_conexion(socket_escucha, logger);
+		handshake(&socket_cliente, logger);
+	}
+}
+
+void atender_planificador(int* socket_planificador, t_log* logger){
+	int id_mensaje;
+	while(1){
+		recibir(socket_planificador, &id_mensaje, sizeof(int), logger);
+		procesar_mensaje(id_mensaje, socket, logger);
+	}
 }
 
 void conectar_esi(int* socket, int id_recibido, t_log* logger){
@@ -147,7 +155,7 @@ void conectar_esi(int* socket, int id_recibido, t_log* logger){
 	int id_mensaje;
 	while(1){
 		recibir(socket, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje);
+		procesar_mensaje(id_mensaje, socket, logger);
 	}
 }
 
@@ -156,28 +164,61 @@ void conectar_instancia(int* socket, int id_recibido, t_log* logger){
 	int id_mensaje;
 	while(1){
 		recibir(socket, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje);
+		procesar_mensaje(id_mensaje, socket, logger);
 	}
 }
 
-void procesar_mensaje(int id){
+int procesar_mensaje(int id, int* socket, t_log* logger){
+	int resultado;
+	char* clave;
+	int* socket_instancia;
+	t_esi_operacion instruccion;
+	status_clave status;
+
 	switch(id){
 		case 20:
-
-		break;
+			resultado = recibir_confirmacion(socket, logger);
+			return resultado;
+			break;
 		case 21:
-
-		break;
+			clave = recibir_pedido_clave(socket, logger);
+			socket_instancia = buscar_instancia(clave); //falta
+			resultado = enviar_pedido_valor(socket_instancia, clave, logger);
+			return resultado;
+			break;
 		case 22:
-
-		break;
+			status = recibir_status(socket, logger);
+			resultado = enviar_status_clave(socket, &status, logger);
+			return resultado;
+			break;
 		case 23:
-
-		break;
+			desconectar_instancia(); //falta
+			return 1;
+			break;
+		case 24:
+			instruccion = recibir_instruccion(socket, logger);
+			resultado = procesar_instruccion(instruccion, socket, logger); // falta
+			return resultado;
+			break;
 		default:
-
-		break;
+			return -1;
+			break;
 	}
+}
+
+void desconectar_instancia(){
+	//modificar tabla
+	//terminar el hilo
+}
+
+int* buscar_instancia(char* clave){
+	int y = 1;
+	int* x = &y;
+	return x;
+}
+
+int procesar_instruccion(t_esi_operacion instruccion, int* socket, t_log* logger){
+	return 1;
 }
 
 /*int atender_conexion_esi(clave){ //recibe la solicitud del esi con la clave que quiere
