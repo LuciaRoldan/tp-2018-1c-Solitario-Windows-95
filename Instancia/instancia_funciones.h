@@ -4,12 +4,6 @@
 
 /////////////////////// INICIALIZACION ///////////////////////
 
-	void inicializar_instancia() {
-		datos_configuracion configuracion = recibir_configuracion();
-		leer_archivo_configuracion(configuracion);
-		memoria = malloc(espacio_para_memoria);
-	}
-
 	datos_configuracion recibir_configuracion(int* socket_coordinador,t_log* logger) {
 		datos_configuracion configuracion;
 		recibir(socket_coordinador, &configuracion, sizeof(datos_configuracion), logger);
@@ -95,7 +89,6 @@
 		} else {
 			return -1;
 		}
-
 	}
 
 #endif /* INSTANCIA_FUNCIONES_H_ */

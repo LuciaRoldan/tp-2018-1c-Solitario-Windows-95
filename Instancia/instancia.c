@@ -1,4 +1,3 @@
-#include <Commons_propias/commons_propias.h>
 #include "instancia_funciones.h"
 
 char* ipCoordinador;
@@ -38,3 +37,4 @@ int main() {
 
 	return 0;
 }
+
