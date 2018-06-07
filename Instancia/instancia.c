@@ -7,8 +7,6 @@ char* nombreInstancia;
 int intervaloDump;
 int cantidad_entradas;
 int tamano_entrada;
-int matriz_memoria[cantidad_entradas][3];
-int espacio_para_memoria = cantidad_entradas * tamano_entrada;
 char* memoria;
 FILE* archivo_configuracion;
 FILE*archivo;
@@ -21,10 +19,10 @@ int main() {
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 
 	configuracion_propia configuracion_propia = leer_configuracion_propia(archivo);
-	strcpy(configuracion_propia.ipCoordinador,ipCoordinador);
-	strcpy(configuracion_propia.puertoCoordinador,puertoCoordinador);
-	strcpy(configuracion_propia.nombreInstancia,nombreInstancia);
-	strcpy(configuracion_propia.intervaloDump,intervaloDump);
+	strcpy(ipCoordinador,configuracion_propia.ipCoordinador);
+	strcpy(puertoCoordinador,configuracion_propia.puertoCoordinador);
+	strcpy(nombreInstancia,configuracion_propia.nombreInstancia);
+	strcpy(intervaloDump,configuracion_propia.intervaloDump);
 
 	socket_coordinador = connect_to_server(ipCoordinador, puertoCoordinador, logger);
 
