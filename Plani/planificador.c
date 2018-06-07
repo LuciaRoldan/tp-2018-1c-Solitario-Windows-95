@@ -1,4 +1,4 @@
-#include "planificador.h"
+#include "planificador_funciones.h"
 
 /* COSAS POR HACER
  *
@@ -34,42 +34,80 @@ struct ClavesBloqueadas *clavesBloqueadas;
 
 int main() {
 	int * socketCoordinador;
-	int * socketEsis;
+	int * socket_esis;
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
-	inicializar_planificador(socketCoordinador, socketEsis, logger); //leyendo archivo configuracion
+	inicializar_planificador(socketCoordinador, socket_esis, logger); //leyendo archivo configuracion
 
 	pthread_t hiloEscuchaEsis;
 	pthread_t hiloCoordinador;
 	pthread_t hiloConsola;
 
 
-	pthread_create(&hiloEscuchaEsis, 0, recibir_esis, (void*) &socketEsis);
-	pthread_create(&hiloCoordinador, 0, manejar_coordinador, ((void*) &socketCoordinador));
+	pthread_create(&hiloEscuchaEsis, 0, recibir_esis, (void*) &socket_esis);
+	pthread_create(&hiloCoordinador, 0, manejar_coordinador, (void*) &socketCoordinador);
 
 	return 0;
 }
 
-void recibir_esis(int socketEsis){
-	int conexionEsi;
-	while(conexionEsi = aceptar_conexion(socketEsis)){ //es como una funcion con un accept basicamente
+void recibir_esis(void* socket_esis){
+	int socket_esi_nuevo = aceptar_conexion(socket_esis);
+	while(socket_esi_nuevo){ //es como una funcion con un accept basicamente
 													//que devuelve lo que me devuelve el accept. Now
 													//en las commons!
-
-		log_info(logger, "Conexion aceptada del Esi: "); //imprimir el id del Esi que se me conecto
+		pcb pcb_esi_nuevo;
+		pcb_esi_nuevo = handshake((int*) &socket_esis, &logger); //aca se crea la PCB
+		log_info(logger, "Conexion aceptada del Esi: (%d bytes)", pcb_esi_nuevo.id);
+		agregar_a_cola_ready(pcb_esi_nuevo.id);
 		pthread_t hiloEscuchaEsi;
-		if( pthread_create(&hiloEscuchaEsi, 0 ,  manejar_esi, (void*) &conexionEsi) < 0){
+		if (pthread_create(&hiloEscuchaEsi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
 			perror("No se pudo crear el hilo");
 		}
-		    //Now join the thread , so that we dont terminate before the thread
 		pthread_join(hiloEscuchaEsi , 0);
 		log_info(logger, "Esi asignado");
 	}
 
-		if (conexionEsi < 0){
-	        perror("accept failed");
+		if (socket_esi_nuevo < 0){
+	        perror("Fallo en el accept");
 		}
 }
 
+int handshake(int* socket_cliente, t_log* logger){
+	int conexion_hecha = 0;
+
+	t_handshake proceso_recibido;
+	t_handshake yo = {PLANIFICADOR, 0};
+
+	recibir(socket_cliente, &proceso_recibido, sizeof(t_handshake), logger);
+	enviar(socket_cliente, &yo, sizeof(t_handshake), 80, logger);
+
+	switch(proceso_recibido.proceso){
+
+	case COORDINADOR:
+		if(!conexion_hecha){
+			conexion_hecha = 1;
+			return 1;
+		}else{
+			return -1;
+		}
+		break;
+
+	case ESI:
+		pcb pcb_esi = crear_pcb_esi(socket_cliente, proceso_recibido.id_proceso, logger);
+		return proceso_recibido.id_proceso;
+		break;
+
+	default:
+		return -1;
+		break;
+	}
+
+}
+
+pcb crear_pcb_esi(int* socket_cliente, int id_esi, t_log* logger){ //guardar socket y ID en PCB
+	//crear la PCB
+	pcb pcb_esi;
+	return pcb_esi;
+}
 
 
 	//pthread_create(&hiloEscuchaCoordinador, NULL, escucharCoordinador(), NULL);
@@ -222,27 +260,31 @@ int conectarse_al_coordinador(){
 	return socketCoordinador;
 }
 
-void manejar_esi(){
+void manejar_esi(pcb pcb_esi){
 
-	/*
+
 	int resultado_esi = malloc(sizeof(resultado_esi)); //no entiendo. Problema con si es un puntero a void
 	//y como lo paso a un struct pcb. Puedo guardar un puntero a void en un puntero a pcb ???
-	mensaje = wait_content(atoi(*puertoEscucha)); //espera a que le llegue algo del puerto por el
-												  //que le hablan los Esis
-												  //el ESI le manda la PCB
-	//switch (mensaje->id){ //no se como obtener el id del esi que me llega. AYUDA
-				//case (!esi_existente()):
-				//		pthread_t hilo_ESI; //creo hilo para el nuevo ESI
-				//		agregar_a_cola_de_ready(mensaje->id); //saco el ID de la PCB
-				//		pthread_create(&hilo_ESI, NULL, planificar_ESI(), NULL);
-				//break;
-				//case(esi_existente()):
-				procesar_exito_o_error(resultado_esi);
-				ejecutar_proximo_esi();
-				//break;
+	struct resultado_esi resultado = recibir_resultado_esi(pcb_esi.socket, logger);
+	switch (resultado){
+				case (EXITO):
+						registrar_exito_en_pcb(pcb_esi.id);
+				break;
+				case(FALLO):
+				abortar(pcb_esi);
+				break;
+	}
+	ejecutar_proximo_esi();
 }
 
-void procesar_exito_o_error(int resultado_esi){
+resultado_esi recibir_resultado_esi(int* socket_esi, t_log* logger){
+	resultado_esi resultado;
+	recibir(socket_esi, resultado, sizeof(resultado), logger);
+		//deserializar?
+	return resultado;
+}
+
+/*void procesar_exito_o_error(int resultado_esi){
 	switch(resultado_esi){
 	case(EXITO):
 				actualizar_pcb_esi();
@@ -250,24 +292,10 @@ void procesar_exito_o_error(int resultado_esi){
 	case(PEDIUNACLAVEMUYLARGA):
 				bloquear;
 	}
-*/
-}
 
-
-// Commons
-// typedef enum{
-// 	EXITO,
-// 	MEBLOQUIE, (y manda clave)
-// 	PEDIUNACLAVEMUYLARGA,
-// 	PEDIUNACLAVENOID,
-// 	PEDIUNACLAVEINACC,
-// } resultados_esi;
-
-
-
+}*/       //NO SIRVE
 
 void manejar_coordinador(){
-
 
 	/*switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
 				//me estan preguntando esta tomada o no

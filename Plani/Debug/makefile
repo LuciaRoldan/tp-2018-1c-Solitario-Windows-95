@@ -24,15 +24,12 @@ endif
 # All Target
 all: Plani
 
-dependents:
-	-cd /home/utnso/tp-2018-1c-Solitario-Windows-95/Commons/Debug && $(MAKE) all
-	-cd /home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Debug && $(MAKE) all
 
 # Tool invocations
-Plani: $(OBJS) $(USER_OBJS) /home/utnso/tp-2018-1c-Solitario-Windows-95/Commons/Debug/libCommons.so /home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Debug/libCommons_propias.so
+Plani: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Debug" -L"/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons/Debug" -pthread -o "Plani" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -pthread -o "Plani" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -42,7 +39,5 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons/Debug/libCommons.so:
-/home/utnso/tp-2018-1c-Solitario-Windows-95/Commons_propias/Debug/libCommons_propias.so:
 
 -include ../makefile.targets

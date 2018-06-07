@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lCommons_propias -lCommons
+LIBS :=
 

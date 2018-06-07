@@ -62,6 +62,7 @@ typedef struct {
 	int retardo; //tiempo en ser atendido el esi la ultima vez que ejecuto
 	int ultimaRafaga; //con el retardo y la ultimaRafaga se calcula la estimacion ?
 	int ultimaEstimacion;
+	int socket;
 } pcb;
 
 
@@ -73,11 +74,11 @@ typedef enum{
 
  typedef enum{
  	EXITO,
- 	MEBLOQUIE, //(y manda clave)
- 	PEDIUNACLAVEMUYLARGA,
- 	PEDIUNACLAVENOID,
- 	PEDIUNACLAVEINACC,
-} resultados_esi;
+	FALLO
+ 	//PEDIUNACLAVEMUYLARGA,
+ 	//PEDIUNACLAVENOID,
+ 	//PEDIUNACLAVEINACC,
+} resultado_esi;
 
 //INSTANCIA-COORDINADOR
 typedef struct{
