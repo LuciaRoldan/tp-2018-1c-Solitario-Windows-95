@@ -12,10 +12,6 @@ typedef struct {
 	char* puerto_planificador;
 } info_arch_config;
 
-// Archivos
-FILE* script1 = fopen("script1.txt", "r");
-FILE* script2 = fopen("script2.txt", "r");
-
 // Lectura de archivo
 info_arch_config leer_arch_configuracion(FILE* arch_configuracion, t_conexion conexion_plani, t_conexion conexion_coordi);
 
@@ -24,6 +20,7 @@ int handshake(int* socket_servidor, t_log* logger);
 
 // Acciones
 int buscar_instruccion(int socket_Planificador, t_log* logger_esi);
+int enviar_instruccion_sgte(int socket_destino, FILE* archivo);
 int enviar_instruccion_a_ejecutar(int socket_Coordinador, t_log* logger_esi);
 
 #endif /* ESI_H_ */
