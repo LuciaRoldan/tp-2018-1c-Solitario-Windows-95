@@ -71,6 +71,14 @@ typedef enum{
 	DESBLOQUEARSE
 } AccionESI;
 
+ typedef enum{
+ 	EXITO,
+ 	MEBLOQUIE, //(y manda clave)
+ 	PEDIUNACLAVEMUYLARGA,
+ 	PEDIUNACLAVENOID,
+ 	PEDIUNACLAVEINACC,
+} resultados_esi;
+
 //INSTANCIA-COORDINADOR
 typedef struct{
 	int cantidad_entradas;

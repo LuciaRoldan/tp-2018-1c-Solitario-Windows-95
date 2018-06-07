@@ -30,15 +30,17 @@ El mensaje consiste del tipo de dato que van a enviar.
 
 
 ///////////////// PLANIFICADOR /////////////////
-40 solicitud_ejecucion (Esi Nuevo)
-41 resultado_ejecucion_finalizada (Esi que finalizo)
-42 resultado_ ejecucion_bloqueo (Esi que termino de ejecutar porque se bloqueo)
+DE ESI A PLANIFICADOR
+41 resultado_ejecucion_esi
+
+DE COORDINADOR A PLANIFICADOR
 43 pedido_esi
 44 status_clave
 
 ///////////////// ESI /////////////////
-60 int (exito o fallo)
 
+DE PLANIFICADOR A ESI
+61 solicitud_ejecutar_instruccion
 
 ///////////////// TODOS /////////////////
 80 t_handshake
