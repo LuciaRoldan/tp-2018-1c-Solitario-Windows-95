@@ -15,7 +15,7 @@ t_log * logger;
 int socket_coordinador;
 
 
-int mainA() {
+int main() {
 
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 
@@ -37,9 +37,3 @@ int mainA() {
 	return 0;
 }
 
-int main() {
-
-	puts("Arranca.. Hola");
-
-	return 0;
-}
