@@ -1,2 +1,0 @@
-GET materias:K3001
-GET materias:K2001 

@@ -1,6 +1,0 @@
-127.0.0.1 // IP de conexion al Coordinador
-8000 // Puerto de conexion al Coordinador
-BSU/LRU/CIRC // Algoritmos de reemplazo
-home/utnso/instancia1 // path absoluto - ejemplo de punto de montaje
-Instancia1 // Ejemplo de nombre de instancia
-10 // Ejemplo de intervalo de dump
