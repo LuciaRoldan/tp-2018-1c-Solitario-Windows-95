@@ -3,9 +3,7 @@
 	<name>Coordinador</name>
 	<comment></comment>
 	<projects>
-		<project>Commons</project>
 		<project>Commons_propias</project>
-		<project>Coordinador</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

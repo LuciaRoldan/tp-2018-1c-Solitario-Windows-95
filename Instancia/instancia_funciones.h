@@ -1,7 +1,7 @@
 #ifndef INSTANCIA_FUNCIONES_H_
 #define INSTANCIA_FUNCIONES_H_
 
-#include <Commons_propias/commons_propias.h>
+#include "../Commons_propias/Commons_propias/commons_propias.h"
 
 typedef enum {
 	LRU, CIRC, BSU
