@@ -17,7 +17,6 @@ int main(){
 
 	puts("Se paso a archivo");
 	int socket_escucha = inicializar_coordinador(configuracion, logger);
-	puts("Creo socket");
 	conectar_planificador(&socket_escucha, &socket_planificador, logger);
 	puts("Me conecte");
 

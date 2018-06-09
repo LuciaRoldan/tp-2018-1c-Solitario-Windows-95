@@ -24,6 +24,7 @@ int main() {
 
 	socket_coordinador = connect_to_server(configuracion_propia.ipCoordinador, configuracion_propia.puertoCoordinador, logger);
 
+	handshake(&socket_coordinador,logger);
 
 //	datos_configuracion configuracion = recibir_configuracion(socket_coordinador,logger);
 //	strcpy(configuracion.cantidad_entradas,cantidad_entradas);

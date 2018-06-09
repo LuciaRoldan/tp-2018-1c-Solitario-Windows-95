@@ -87,21 +87,17 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 		int id_recibido;
 
 		enviar(socket_coordinador, &yo, sizeof(t_handshake), 80, logger);
-		recibir(socket_coordinador, &id_recibido, sizeof(int), logger);
-
-		if (id_recibido != 80) {
-			log_info(logger, "Conexion invalida");
-			return -1;
-		}
-
 		recibir(socket_coordinador, &proceso_recibido, sizeof(t_handshake), logger);
 
-		if (!conexion_hecha) {
-			conexion_hecha = 1;
-			return 1;
-		} else {
-			return -1;
+		if (proceso_recibido.proceso != COORDINADOR) {
+
+			log_info(logger, "Conexion invalida");
+			exit(-1);
 		}
+
+		log_info(logger, "Conectado al COORDINADOR ", proceso_recibido.id_proceso);
+
+		return 1;
 
 	 /*algoritmo_distribucion(){
 

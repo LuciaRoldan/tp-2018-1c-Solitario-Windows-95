@@ -165,6 +165,8 @@ void conectar_esi(int* socket, int id_recibido, t_log* logger){
 }
 
 void conectar_instancia(int* socket, int id_recibido, t_log* logger){
+
+	log_info(logger, "Conectado a la INSTANCIA");
 	int id_proceso = id_recibido;
 	int id_mensaje;
 	while(1){
