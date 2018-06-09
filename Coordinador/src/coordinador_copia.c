@@ -10,15 +10,15 @@ int socket_planificador;
 int main(){
 	puts("Arrancamos...");
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
-	puts("Logger creado");
+	log_info(logger,"Logger creado");
 
 	info_archivo_config configuracion;
 	leer_archivo_configuracion(&configuracion, logger);
 
-	puts("Se paso a archivo");
+	log_info(logger,"Se paso a archivo");
 	int socket_escucha = inicializar_coordinador(configuracion, logger);
 	conectar_planificador(&socket_escucha, &socket_planificador, logger);
-	puts("Me conecte");
+	log_info(logger,"Me conecte");
 
 	// pthread_t hilo_escucha;
 	// pthread_t hilo_planificador;
