@@ -9,18 +9,18 @@
 typedef enum {LSU, EL, KE} tipo_algoritmo_distribucion;
 
 typedef struct{
-	char* ip;
-	char* puerto_escucha;
-	int* algoritmo_distribucion;
-	int* cantidad_entradas;
-	int* tamano_entrada;
-	int* retardo;
+	char ip[16];
+	char puerto_escucha[5];
+	char algoritmo_distribucion[4];
+	int cantidad_entradas;
+	int tamano_entrada;
+	int retardo;
 }info_archivo_config;
 
 ///////////////////////// FUNCIONES /////////////////////////
 
 //INICIALIZACION
-info_archivo_config leer_archivo_configuracion(FILE* archivo);
+void leer_archivo_configuracion(info_archivo_config* configuracion);
 int inicializar_coordinador(info_archivo_config configuracion, t_log* logger);
 void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log* logger);
 

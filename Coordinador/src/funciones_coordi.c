@@ -3,16 +3,17 @@
 
 /////////////////////// INICIALIZACION ///////////////////////
 
-info_archivo_config leer_archivo_configuracion(FILE* archivo){
+void leer_archivo_configuracion(info_archivo_config* configuracion){
 	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
-	info_archivo_config datos_configuracion;
-	archivo = fopen("Configuracion_coordinador.txt", "r");
-	fscanf(archivo, "%s %s %d %d %d %d", datos_configuracion.ip,
-			datos_configuracion.puerto_escucha, datos_configuracion.algoritmo_distribucion ,
-			datos_configuracion.cantidad_entradas, datos_configuracion.tamano_entrada,
-			datos_configuracion.retardo);
+	FILE* archivo = fopen("Configuracion_coordinador.txt", "r");
+	fscanf(archivo, "%s %s %s %d %d %d",
+			configuracion->ip,
+			configuracion->puerto_escucha,
+			configuracion->algoritmo_distribucion,
+			&(configuracion->cantidad_entradas),
+			&(configuracion->tamano_entrada),
+			&(configuracion->retardo));
 	fclose(archivo);
-	return datos_configuracion;
 }
 
 int inicializar_coordinador(info_archivo_config configuracion, t_log* logger){
@@ -34,7 +35,7 @@ void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log*
 /////////////////////// COMUNICACION ///////////////////////
 
 int enviar_configuracion_instancia(int* socket, info_archivo_config configuracion, t_log* logger){
-	datos_configuracion mensaje = {*configuracion.tamano_entrada, *configuracion.cantidad_entradas};
+	datos_configuracion mensaje = {configuracion.tamano_entrada, configuracion.cantidad_entradas};
 	//serializar
 	int bytes_enviados = enviar(socket, &mensaje, sizeof(datos_configuracion), 00, logger);
 	return bytes_enviados;

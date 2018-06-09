@@ -5,14 +5,16 @@
 
 t_log * logger;
 t_conexion conexionInstancia;
-FILE* archivo_configuracion;
 int socket_planificador;
 
 int main(){
 	puts("Arrancamos...");
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
 	puts("Logger creado");
-	info_archivo_config configuracion = leer_archivo_configuracion(archivo_configuracion);
+
+	info_archivo_config configuracion;
+	leer_archivo_configuracion(&configuracion);
+
 	puts("Se paso a archivo");
 	int socket_escucha = inicializar_coordinador(configuracion, logger);
 	puts("Creo socket");
