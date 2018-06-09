@@ -1,6 +1,10 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=./Shared_Libraries/commons_propias/Debug
+export LD_LIBRARY_PATH=$PWD/Shared_Libraries/commons_propias/Debug
 
-./Instancia/Debug/instancia 
+cd Instancia/Debug
 
+make clean
+make all
+
+./instancia 

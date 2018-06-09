@@ -19,12 +19,12 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 		exit(1);
 	}
 
-	fscanf(archivo, "%s %s %s %s %s %d",
+	fscanf(archivo, "%s %s %s %s %d %d",
 			configuracion->ipCoordinador,
 			configuracion->puertoCoordinador,
 			configuracion->algoritmoDeReemplazo,
 			configuracion->puntoDeMontaje,
-			configuracion->nombreInstancia,
+			&(configuracion->nombreInstancia),
 			&(configuracion->intervaloDump));
 	fclose(archivo);
 }

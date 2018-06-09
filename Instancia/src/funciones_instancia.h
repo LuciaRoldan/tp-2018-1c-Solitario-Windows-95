@@ -12,7 +12,7 @@ typedef struct{
 	char puertoCoordinador[5];
 	char algoritmoDeReemplazo[6];
 	char puntoDeMontaje[100];
-	char nombreInstancia[100];
+	int nombreInstancia;
 	int intervaloDump;
 }configuracion_propia;
 
