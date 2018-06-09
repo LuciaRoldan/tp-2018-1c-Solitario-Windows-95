@@ -8,16 +8,18 @@ typedef enum {
 } tipo_algoritmo_reemplazo;
 
 typedef struct{
-	char* ipCoordinador;
-	int puertoCoordinador;
-	char* nombreInstancia;
+	char ipCoordinador[20];
+	char puertoCoordinador[5];
+	char algoritmoDeReemplazo[6];
+	char puntoDeMontaje[100];
+	char nombreInstancia[100];
 	int intervaloDump;
 }configuracion_propia;
 
 ///////////////////////// FUNCIONES /////////////////////////
 datos_configuracion recibir_configuracion(int* socket_coordinador,t_log* logger);
 void inicializar_instancia();
-configuracion_propia leer_configuracion_propia(FILE* archivo);
+void leer_configuracion_propia(configuracion_propia* configuracion);
 t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger);
 void procesar_instruccion(int* socket_coordinador, t_esi_operacion instruccion);
 void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger);

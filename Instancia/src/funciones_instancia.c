@@ -10,27 +10,31 @@
 		//deserializar?
 	}
 
-	configuracion_propia leer_configuracion_propia(FILE* archivo) {
-			configuracion_propia configuracion_propia;
-			archivo = fopen("Configuracion instancia.txt", "r");
-			fscanf(archivo, "%s %s %s %d", configuracion_propia.ipCoordinador,
-					configuracion_propia.puertoCoordinador, configuracion_propia.nombreInstancia, configuracion_propia.intervaloDump);
+	void leer_configuracion_propia(configuracion_propia* configuracion) {
+
+			FILE* archivo = fopen("Configuracion_instancia.txt", "r");
+			fscanf(archivo, "%s %s %s %s %s %d",
+					configuracion->ipCoordinador,
+					configuracion->puertoCoordinador,
+					configuracion->algoritmoDeReemplazo,
+					configuracion->puntoDeMontaje,
+					configuracion->nombreInstancia,
+					&(configuracion->intervaloDump));
 			fclose (archivo);
-			return configuracion_propia;
-		}
-
-
-	t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger) {
-		t_esi_operacion instruccion;
-		recibir(socket_coordinador, &instruccion, sizeof(t_esi_operacion), logger);
-		return instruccion;
-		//deserializar?
 	}
 
-	void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger) {
-		enviar(socket_coordinador, clave, sizeof(clave), 03, logger);
-		//serializar?
-	}
+
+//	t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger) {
+//		t_esi_operacion instruccion;
+//		recibir(socket_coordinador, &instruccion, sizeof(t_esi_operacion), logger);
+//		return instruccion;
+//		//deserializar?
+//	}
+//
+//	void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger) {
+//		enviar(socket_coordinador, clave, sizeof(clave), 03, logger);
+//		//serializar?
+//	}
 
 	/*void guardar_archivo(char* clave, char* valor) {
 
