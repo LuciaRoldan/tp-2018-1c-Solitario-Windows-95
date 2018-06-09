@@ -14,17 +14,17 @@ FILE*archivo;
 t_log * logger;
 int socket_coordinador;
 
-
 int main() {
 
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
-	configuracion_propia configuracion_propia;
+	configuracion_propia mi_configuracion; //la podria hacer variable global
 
-	leer_configuracion_propia(&configuracion_propia,logger);
 
-	socket_coordinador = connect_to_server(configuracion_propia.ipCoordinador, configuracion_propia.puertoCoordinador, logger);
+	leer_configuracion_propia(&mi_configuracion,logger);
 
-	handshake(&socket_coordinador,logger);
+	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
+
+	handshake(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
 
 //	datos_configuracion configuracion = recibir_configuracion(socket_coordinador,logger);
 //	strcpy(configuracion.cantidad_entradas,cantidad_entradas);

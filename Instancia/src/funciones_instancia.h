@@ -24,6 +24,6 @@ t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger);
 void procesar_instruccion(int* socket_coordinador, t_esi_operacion instruccion);
 void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger);
 void guardar_archivo(char* clave, char* value);
-int handshake(int* socket_coordinador, t_log* logger);
+int handshake(int* socket_coordinador, t_log* logger, int id_proceso);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

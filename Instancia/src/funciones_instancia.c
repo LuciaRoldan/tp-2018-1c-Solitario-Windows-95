@@ -79,11 +79,12 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 	}
 */
 
-	int handshake(int* socket_coordinador, t_log* logger) {
+	int handshake(int* socket_coordinador, t_log* logger, int id) {
 		int conexion_hecha = 0;
 
 		t_handshake proceso_recibido;
-		t_handshake yo = { PLANIFICADOR, 0 };
+//		t_handshake yo = { PLANIFICADOR, 0 };
+		t_handshake yo = {INSTANCIA, id};
 		int id_recibido;
 		void* buffer = malloc(sizeof(int)*2);
 		int leido;
