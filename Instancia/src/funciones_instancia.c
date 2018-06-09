@@ -10,18 +10,24 @@
 		//deserializar?
 	}
 
-	void leer_configuracion_propia(configuracion_propia* configuracion) {
+void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logger) {
 
-			FILE* archivo = fopen("Configuracion_instancia.txt", "r");
-			fscanf(archivo, "%s %s %s %s %s %d",
-					configuracion->ipCoordinador,
-					configuracion->puertoCoordinador,
-					configuracion->algoritmoDeReemplazo,
-					configuracion->puntoDeMontaje,
-					configuracion->nombreInstancia,
-					&(configuracion->intervaloDump));
-			fclose (archivo);
+	FILE* archivo = fopen("Configuracion_instancia.txt", "r");
+
+	if (archivo < 1) {
+		log_info(logger,"No se puede abrir el archivo Configuracion_instancia.txt");
+		exit(1);
 	}
+
+	fscanf(archivo, "%s %s %s %s %s %d",
+			configuracion->ipCoordinador,
+			configuracion->puertoCoordinador,
+			configuracion->algoritmoDeReemplazo,
+			configuracion->puntoDeMontaje,
+			configuracion->nombreInstancia,
+			&(configuracion->intervaloDump));
+	fclose(archivo);
+}
 
 
 //	t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger) {

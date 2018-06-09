@@ -20,7 +20,7 @@ int main() {
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 	configuracion_propia configuracion_propia;
 
-	leer_configuracion_propia(&configuracion_propia);
+	leer_configuracion_propia(&configuracion_propia,logger);
 
 	socket_coordinador = connect_to_server(configuracion_propia.ipCoordinador, configuracion_propia.puertoCoordinador, logger);
 

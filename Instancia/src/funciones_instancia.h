@@ -19,7 +19,7 @@ typedef struct{
 ///////////////////////// FUNCIONES /////////////////////////
 datos_configuracion recibir_configuracion(int* socket_coordinador,t_log* logger);
 void inicializar_instancia();
-void leer_configuracion_propia(configuracion_propia* configuracion);
+void leer_configuracion_propia(configuracion_propia* configuracion,t_log* logger);
 t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger);
 void procesar_instruccion(int* socket_coordinador, t_esi_operacion instruccion);
 void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger);
