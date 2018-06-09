@@ -3,9 +3,15 @@
 
 /////////////////////// INICIALIZACION ///////////////////////
 
-void leer_archivo_configuracion(info_archivo_config* configuracion){
+void leer_archivo_configuracion(info_archivo_config* configuracion, t_log* logger){
 	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
 	FILE* archivo = fopen("Configuracion_coordinador.txt", "r");
+
+	if (archivo < 1) {
+		log_info(logger, "No se puede abrir el archivo Configuracion_coordinador.txt");
+		exit(1);
+	}
+
 	fscanf(archivo, "%s %d %s %d %d %d",
 			configuracion->ip,
 			&(configuracion->puerto_escucha),

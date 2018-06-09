@@ -20,7 +20,7 @@ typedef struct{
 ///////////////////////// FUNCIONES /////////////////////////
 
 //INICIALIZACION
-void leer_archivo_configuracion(info_archivo_config* configuracion);
+void leer_archivo_configuracion(info_archivo_config* configuracion, t_log* logger);
 int inicializar_coordinador(info_archivo_config configuracion, t_log* logger);
 void conectar_planificador(int* socket_escucha, int* socket_planificador, t_log* logger);
 

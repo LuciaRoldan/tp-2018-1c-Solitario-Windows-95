@@ -13,7 +13,7 @@ int main(){
 	puts("Logger creado");
 
 	info_archivo_config configuracion;
-	leer_archivo_configuracion(&configuracion);
+	leer_archivo_configuracion(&configuracion, logger);
 
 	puts("Se paso a archivo");
 	int socket_escucha = inicializar_coordinador(configuracion, logger);
