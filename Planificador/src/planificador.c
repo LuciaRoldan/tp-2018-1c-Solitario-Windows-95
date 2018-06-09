@@ -8,10 +8,9 @@
  */
 
 int main() {
-	int* socket_coordinador;
-	int* socket_esis;
+	sockets sockets_planificador;
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
-	inicializar_planificador(&socket_coordinador, &socket_esis, logger); //leyendo archivo configuracion
+	inicializar_planificador(sockets_planificador, logger); //leyendo archivo configuracion
 
 	pthread_t hilo_escucha_esis;
 	pthread_t hilo_coordinador;

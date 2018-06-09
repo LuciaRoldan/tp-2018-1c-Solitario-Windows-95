@@ -2,12 +2,12 @@
 
 //inicializando
 
-void inicializar_planificador(int* socket_coordinador, int* socket_esis, t_log* logger){ //como hago para decir que recibo puntero?
+void inicializar_planificador(sockets sockets_planificador, t_log* logger){ //como hago para decir que recibo puntero?
 	leer_archivo_configuracion();
 	//devolver una estructura
-	socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
-	socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
-	conectarse_al_coordinador(&socket_coordinador);
+	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
+	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
+	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 }
 
 void leer_archivo_configuracion(){
@@ -23,11 +23,11 @@ void leer_archivo_configuracion(){
 
 }
 
-void conectarse_al_coordinador(int* socket_coordinador){
-	handshake_coordinador(&socket_coordinador, logger);
+void conectarse_al_coordinador(int socket_coordinador){
+	handshake_coordinador(socket_coordinador);
 }
 
-void handshake_coordinador(int* socket_coordinador, t_log* logger){
+void handshake_coordinador(int socket_coordinador){
 	t_handshake proceso_recibido;
 	t_handshake yo = {PLANIFICADOR, 0};
 
@@ -121,7 +121,7 @@ void recibir_esis(void* socket_esis){
 		int id_esi_nuevo;
 		if (id_esi_nuevo = handshake_esi((int*) socket_esis)){ //aca se crea la PCB, devuelde id
 			pcb pcb_esi_nuevo;
-			pcb_esi_nuevo = crear_pcb_esi(&socket_esi_nuevo, id_esi_nuevo, &logger);
+			pcb_esi_nuevo = crear_pcb_esi(&socket_esi_nuevo, id_esi_nuevo);
 			log_info(logger, "Conexion aceptada del Esi: (%d bytes)", pcb_esi_nuevo.id);
 			agregar_a_cola_ready(pcb_esi_nuevo.id);
 			pthread_t hilo_escucha_esi;
@@ -139,9 +139,8 @@ void recibir_esis(void* socket_esis){
 }
 
 void manejar_esi(pcb pcb_esi){
-	int resultado_esi = malloc(sizeof(resultado_esi)); //no entiendo. Problema con si es un puntero a void
-	//y como lo paso a un struct pcb. Puedo guardar un puntero a void en un puntero a pcb ???
-	struct resultado_esi resultado = recibir_resultado_esi(pcb_esi.socket, logger);
+	//recibir el tipo y fijarme si es valido y seguir
+	resultado_esi resultado = recibir_resultado_esi(pcb_esi.socket);
 	switch (resultado){
 				case (EXITO):
 						registrar_exito_en_pcb(pcb_esi.id);
@@ -181,14 +180,14 @@ void manejar_coordinador(void* socket_coordinador){
 
 	int tipo_mensaje = recibir_tipo_mensaje_coordinador(socket_coordinador);
 	if (tipo_mensaje == 10){ //el 10 seria un nuevo pedido
-		int tamano_pedido_esi = malloc(sizeof(pedido_esi));
-		struct pedido_esi pedido = recibir_pedido_coordinador(socket_coordinador);
-		responder_a_pedido_coordinador(socket_coordinador, pedido);
+		//int tamano_pedido_esi = malloc(sizeof(pedido_esi));
+		//struct pedido_esi* pedido = recibir_pedido_coordinador(socket_coordinador);
+		//responder_a_pedido_coordinador(socket_coordinador, pedido);
 	}
 	else if (tipo_mensaje == 11){ //el 11 es una respuesta a un estado que pedi
-		int tamano_status_clave = malloc(sizeof(struct status_clave));
-		struct status_clave status = recibir_status_clave(socket_coordinador);
-		mostrar_status_clave(status);
+		//int tamano_status_clave = malloc(sizeof(struct status_clave));
+		//struct status_clave status = recibir_status_clave(socket_coordinador);
+		//mostrar_status_clave(status);
 	}
 	else {
 		log_info(logger, "Pedido invalido del Coordinador");
@@ -198,7 +197,8 @@ void manejar_coordinador(void* socket_coordinador){
 
 void responder_a_pedido_coordinador(int socket_coordinador, pedido_esi pedido){
 	switch(pedido.instruccion.keyword){
-	case(GET, STORE):
+	case(GET):
+	case(STORE):
 			if(clave_tomada_por_otro_esi(pedido.esi_id)){
 				mover_esi_a_bloqueado(pedido.esi_id);
 				actualizar_pcb_esi_bloqueado(pedido.esi_id); //hace falta ?
@@ -222,7 +222,7 @@ void responder_a_pedido_coordinador(int socket_coordinador, pedido_esi pedido){
 	}
 }
 
-void mostrar_status_clave(char* clave){
+void mostrar_status_clave(status_clave clave){
 
 }
 
@@ -246,15 +246,16 @@ void mostrar_status_clave(char* clave){
 
 */
 //MENSAJES
-resultado_esi recibir_resultado_esi(int* socket_esi, t_log* logger){
-	resultado_esi* resultado;
+resultado_esi recibir_resultado_esi(int socket_esi){
+	resultado_esi resultado;
 	recibir(socket_esi, &resultado, sizeof(resultado), logger);
 		//deserializar?
+
 	return resultado;
 }
 
-pedido_esi recibir_pedido_coordinador(int* socket_coordinador){
-	pedido_esi* pedido;
+pedido_esi recibir_pedido_coordinador(int socket_coordinador){
+	pedido_esi pedido;
 	recibir(socket_coordinador, &pedido, sizeof(pedido), logger);
 		//deserializar?
 	return pedido;
@@ -267,7 +268,6 @@ int recibir_tipo_mensaje_coordinador(int socket_coordinador){
 	return tipo_mensaje;
 }
 
-pedido_esi recibir_pedido_coordinador(int socket_coordiandor);
 status_clave recibir_status_clave(int socket_coordinador, status_clave status);
 void informar_bloqueo_coordinador(int socket_coordinador, int id_esi){
 
@@ -283,8 +283,20 @@ void informar_exito_coordinador(int socket_coordinador, int id_esi){
 
 //EN EL ESI
 
-void enviar_resultado_esi(int* socket_planificador, resultado_esi resultado, t_log* logger){
-	void* buffer = malloc(sizeof(resultado_esi));
-	serializar_enum(&buffer, resultado);
-	enviar(&socket_planificar, buffer, )
+void enviar_resultado_esi(int socket_planificador, resultado_esi resultado, t_log* logger){
+	void* buffer = malloc(sizeof(enum));
+	memcpy(buffer, &resultado, sizeof(enum));
+	enviar(socket_planificador, buffer, sizeof(enum), 41, logger);
+	//enviar(socket_planificador, buffer, sizeof(enum), logger);
 }
+
+
+/*void serializar_enum(void * buffer, int id, int resultado){
+	size_t offset =0;
+
+	memcpy(buffer + offset, id ,sizeof(int));
+
+	offset =+ sizeof(int);
+
+	memcpy(buffer + offset, resultado, sizeof(int));
+}*/

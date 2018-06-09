@@ -55,15 +55,21 @@ typedef enum{
 	HRRN
 } AlgoritmoPlanificacion;
 
+typedef struct{
+	int socket_coordinador;
+	int socket_esis;
+} sockets;
+
 
 //FUNCIONES
 
 //inicializando
 int handshake_esi(int* socket_esi);
+void handshake_coordinador(int socket_coordinador);
 pcb crear_pcb_esi(int socket_cliente, int id_esi);
-void inicializar_planificador(int* socket_coordinador, int* socket_esis, t_log* logger);
+void inicializar_planificador(sockets sockets_planificador, t_log* logger);
 void leer_archivo_configuracion();
-void conectarse_al_coordinador(int* socket_coordinador);
+void conectarse_al_coordinador(int socket_coordinador);
 
 
 
@@ -108,10 +114,10 @@ void mostrar_status_clave(status_clave status);
 
 //MENSAJES
 //del esi
-resultado_esi recibir_resultado_esi(int* socket_esi, t_log* logger);
+resultado_esi recibir_resultado_esi(int socket_esi);
 int recibir_tipo_mensaje_coordinador(int socket_coordinador);
 pedido_esi recibir_pedido_coordinador(int socket_coordiandor);
-status_clave recibir_status_clave(int socket_coordinador, status_clave status);
+status_clave recibir_stastus_clave(int socket_coordinador, status_clave status);
 void informar_bloqueo_coordinador(int socket_coordinador, int id_esi);
 void informar_exito_coordinador(int socket_coordinador, int id_esi);
 
