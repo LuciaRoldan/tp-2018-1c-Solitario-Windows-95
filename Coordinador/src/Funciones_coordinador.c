@@ -108,9 +108,21 @@ int handshake(int* socket_cliente){
 
 	t_handshake proceso_recibido;
 	t_handshake yo = {COORDINADOR, 0};
+	void* buffer = malloc(sizeof(int)*2);
+	serializar_handshake(buffer, yo);
+	int leido;
 
-	recibir(socket_cliente, &proceso_recibido, sizeof(t_handshake), logger);
-	enviar(socket_cliente, &yo, sizeof(t_handshake), 80, logger);
+	recibir(socket_cliente, &leido, sizeof(int), logger);
+	proceso_recibido.proceso = leido;
+	recibir(socket_cliente, &leido, sizeof(int), logger);
+	proceso_recibido.id_proceso = leido;
+
+	printf("%d\n", proceso_recibido.proceso);
+	printf("%d\n", proceso_recibido.id_proceso);
+
+	enviar(socket_cliente, buffer, sizeof(buffer), 80, logger);
+
+
 
 	switch(proceso_recibido.proceso){
 

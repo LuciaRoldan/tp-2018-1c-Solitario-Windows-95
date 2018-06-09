@@ -97,8 +97,10 @@ int aceptar_conexion(int* socket_escucha){
 
 //revisar bien el mensaje que recibe
 
-
-
+void serializar_handshake(void* buffer, t_handshake handshake){
+	memcpy(buffer, &handshake.proceso, sizeof(int));
+	memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
+}
 
 
 

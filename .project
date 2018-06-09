@@ -3,6 +3,8 @@
 	<name>tp-2018-1c-Solitario-Windows-95</name>
 	<comment></comment>
 	<projects>
+		<project>commons</project>
+		<project>commons_propias</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
