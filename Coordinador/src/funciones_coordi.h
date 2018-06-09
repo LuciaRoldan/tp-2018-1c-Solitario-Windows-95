@@ -10,7 +10,7 @@ typedef enum {LSU, EL, KE} tipo_algoritmo_distribucion;
 
 typedef struct{
 	char ip[16];
-	char puerto_escucha[5];
+	int puerto_escucha;
 	char algoritmo_distribucion[4];
 	int cantidad_entradas;
 	int tamano_entrada;

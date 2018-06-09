@@ -6,9 +6,9 @@
 void leer_archivo_configuracion(info_archivo_config* configuracion){
 	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
 	FILE* archivo = fopen("Configuracion_coordinador.txt", "r");
-	fscanf(archivo, "%s %s %s %d %d %d",
+	fscanf(archivo, "%s %d %s %d %d %d",
 			configuracion->ip,
-			configuracion->puerto_escucha,
+			&(configuracion->puerto_escucha),
 			configuracion->algoritmo_distribucion,
 			&(configuracion->cantidad_entradas),
 			&(configuracion->tamano_entrada),
@@ -17,7 +17,7 @@ void leer_archivo_configuracion(info_archivo_config* configuracion){
 }
 
 int inicializar_coordinador(info_archivo_config configuracion, t_log* logger){
-	int socket_escucha = inicializar_servidor(configuracion.ip, configuracion.puerto_escucha, logger);
+	int socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
 	return socket_escucha;
 }
 

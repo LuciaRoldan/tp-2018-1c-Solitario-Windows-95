@@ -25,38 +25,27 @@ int connect_to_server(char * ip, char * port, t_log *  logger){
 		return server_socket;
 }
 
-int inicializar_servidor(char* ip, char* puerto, t_log * logger){
-	struct addrinfo hints, *res;
+int inicializar_servidor(int puerto, t_log * logger){
 
-	memset(&hints,0,sizeof hints);
+	struct sockaddr_in configuracion;
+	int servidor;
 
-	hints.ai_family = AF_UNSPEC; //que se fije solon si es IPv4 o IPv6
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = 0;
+	servidor = socket(AF_INET, SOCK_STREAM, 0);
 
-	getaddrinfo(ip, puerto, &hints, &res);
-	int servidor = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (servidor == -1){
-        log_info(logger, "No se pudo crear el socket");
-    }
-    log_info(logger, "Socket creado");
+	configuracion.sin_family = AF_INET;
+	configuracion.sin_addr.s_addr = INADDR_ANY;
+	configuracion.sin_port = htons( puerto );
 
+	if( bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0) {
+		_exit_with_error(servidor, "Fallo el bind", NULL, logger);
+	}
 
-	int activado = 1;
-		setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
+	listen(servidor, 100);
+	printf("estoy escuchando\n");
+	log_info(logger, "Escuchando!");
 
-		if(bind(servidor, (void*) &hints, sizeof(hints)) != 0){
-			_exit_with_error(servidor, "Fallo el bind", NULL, logger);
-
-		}
-
-		printf("estoy escuchando\n");
-		log_info(logger, "Escuchando!");
-		listen(servidor, 100);
-
-return servidor;
-
-		}
+	return servidor;
+}
 
 //Funciones para enviar y recibir cosas serializadas
 

@@ -120,7 +120,7 @@ void _exit_with_error(int socket, char* error_msg, void * buffer, t_log * logger
 void exit_gracefully(int return_nr, t_log* logger);
 
 //funciones de conexion
-int inicializar_servidor(char* ip, char* puerto, t_log * logger);//inicializa un servidor y espera conexiones
+int inicializar_servidor(int puerto, t_log * logger);//inicializa un servidor y espera conexiones
 int connect_to_server(char* ip, char * port, t_log * logger);//devuelve el socket con el que se establece la conexion a un servidor
 int aceptar_conexion(int* socket_escucha);
 
