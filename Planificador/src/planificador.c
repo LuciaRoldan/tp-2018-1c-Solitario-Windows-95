@@ -3,15 +3,17 @@
 /* COSAS POR HACER
  *
  *
- * 1) VER ṔORQUE ROMPE EL PTHREAD
  *
  */
 
 int main() {
 	sockets sockets_planificador;
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
-	inicializar_planificador(sockets_planificador, logger); //leyendo archivo configuracion
+	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
 
+	printf("%d\n", sockets_planificador.socket_coordinador);
+
+	/*
 	pthread_t hilo_escucha_esis;
 	pthread_t hilo_coordinador;
 	pthread_t hilo_consola;
@@ -21,6 +23,7 @@ int main() {
 	pthread_create(&hilo_coordinador, 0, manejar_coordinador, (void*) &socket_coordinador);
 	pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
 
+	*/
 	return 0;
 }
 

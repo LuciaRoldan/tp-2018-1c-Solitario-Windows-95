@@ -3,32 +3,6 @@
 
 #include "commons_propias/commons_propias.h"
 
-//VARIABLES
-t_log * logger;
-char* puertoEscucha; //CREO que no es necesario, el puerto de escucha esta implicito
-// en el socket de escucha, lo retorna la funcion int listen();
-AlgoritmoPlanificacion algoritmoPlanificacion;
-int estimacionInicial;
-char* ipCoordinador[10]; //no es necesario
-char* puertoCoordinador[5];// no es necesario
-char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
-//FILE* configuracion; no sirve
-
-
-struct ColaDeEsi *colaDeReadyEsis;
-struct ColaDeEsi *colaDeBloqueadoEsis;
-struct ColaDeEsi *colaDeFinalizadoEsis;
-
-struct ClavesBloqueadas *clavesBloqueadas;
-
-t_conexion conexion_planificador;
-t_conexion conexion_coordinador;
-
-
-
-
-
-
 
 //STRUCTS
 
@@ -53,7 +27,7 @@ typedef enum{
 	SJF_CD,
 	SJF_SD,
 	HRRN
-} AlgoritmoPlanificacion;
+} algoritmo_planificacion;
 
 typedef struct{
 	int socket_coordinador;
@@ -61,13 +35,44 @@ typedef struct{
 } sockets;
 
 
+//VARIABLES
+t_log * logger;
+char* puertoEscucha; //CREO que no es necesario, el puerto de escucha esta implicito
+// en el socket de escucha, lo retorna la funcion int listen();
+algoritmo_planificacion algoritmoPlanificacion;
+int estimacionInicial;
+char* ipCoordinador[10]; //no es necesario
+char* puertoCoordinador[5];// no es necesario
+char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
+//FILE* configuracion; no sirve
+
+
+struct ColaDeEsi *colaDeReadyEsis;
+struct ColaDeEsi *colaDeBloqueadoEsis;
+struct ColaDeEsi *colaDeFinalizadoEsis;
+
+struct ClavesBloqueadas *clavesBloqueadas;
+
+t_conexion conexion_planificador;
+t_conexion conexion_coordinador;
+
+
 //FUNCIONES
+
+
+//testing
+int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger);
+
+int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger);
+
+
+
 
 //inicializando
 int handshake_esi(int* socket_esi);
 void handshake_coordinador(int socket_coordinador);
 pcb crear_pcb_esi(int socket_cliente, int id_esi);
-void inicializar_planificador(sockets sockets_planificador, t_log* logger);
+sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
 
@@ -75,14 +80,14 @@ void conectarse_al_coordinador(int socket_coordinador);
 
 //consola
 void manejar_consola();
-void pausarPlanificador();
-void bloquearEsi(int clave, int id_esi);
+void pausar_planificador();
+void bloquear_esi(char* clave, int esi_id);
 void desbloquearEsi(char* clave);
 //ColaDeEsi listar(Clave clave);
 void kill(int id_esi);
 int status(char* clave);
 int* deadlock();
-void killEsis(ColaDeEsi esis);
+void kill_esis(ColaDeEsi esis);
 
 
 

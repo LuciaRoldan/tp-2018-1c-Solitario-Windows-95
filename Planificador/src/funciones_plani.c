@@ -2,12 +2,13 @@
 
 //inicializando
 
-void inicializar_planificador(sockets sockets_planificador, t_log* logger){ //como hago para decir que recibo puntero?
+sockets inicializar_planificador(){
+	sockets sockets_planificador;
 	leer_archivo_configuracion();
-	//devolver una estructura
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
+	return sockets_planificador;
 }
 
 void leer_archivo_configuracion(){
@@ -31,15 +32,47 @@ void handshake_coordinador(int socket_coordinador){
 	t_handshake proceso_recibido;
 	t_handshake yo = {PLANIFICADOR, 0};
 
-	enviar(socket_coordinador, &yo, sizeof(t_handshake), 80, logger);
-	recibir(socket_coordinador, &proceso_recibido, sizeof(t_handshake), logger);
+	env(socket_coordinador, &yo, sizeof(t_handshake), 80, logger);
+	rec(socket_coordinador, &proceso_recibido, sizeof(t_handshake), logger);
 
 	if (proceso_recibido.proceso == COORDINADOR){
 		log_info(logger, "Se establecio la conexion con el Coordinador");
 	} else {
-		log_info(logger, "Error al conectarse con el Coordinador");
+		log_info(logger, "Error en el handshake con el Coordinador");
 	}
 }
+
+
+
+//testing
+int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
+	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+
+	memcpy(buffer, &id, sizeof(int));
+	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+
+	int bytes_enviados = send(socket_destino, buffer, sizeof(buffer), 0);
+
+ 	if(bytes_enviados <= 0){
+ 		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
+ 	}
+	free(buffer);
+ 	return bytes_enviados;
+ }
+
+int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
+
+	int bytes_recibidos = recv(socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
+	if (bytes_recibidos <= 0) {
+			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
+		}
+	return bytes_recibidos;
+}
+
+
+
+
+/*
 
 int handshake_esi(int* socket_esi){
 
@@ -52,6 +85,7 @@ int handshake_esi(int* socket_esi){
 	if (proceso_recibido.proceso == ESI){
 		return proceso_recibido.id_proceso;
 	} else {
+		log_info(logger, "Error en el handshake con un ESI");
 		return -1;
 	}
 }
@@ -74,21 +108,21 @@ void pausar_planificador(){
 	//syscall bloqueante ?????
 }
 
-void bloquear_esi(int clave, int idEsi){
+void bloquear_esi(char* clave, int esi_id){
 	//mover_esi_a_bloqueados(colaDeBloqueadoEsis, idEsi, clave); //encola al Esi en la lista de bloqueados con la clave
 	//que corresponda
 }
 
-void desbloquearEsi(char* clave){
+void desbloquear_esi(char* clave){
 	mover_esi_a_ready(clave);
 }
 
-/*
-ColaDeEsi listar(Clave clave){ //recurso == clave?
-	return "claveBloqueada.esisEnEspera"; //busca en su lista de Claves bloqueadas, la clave que se le pide,
-	//y devuelve la cola de esis bloqueados.
-}
-*/
+
+//ColaDeEsi listar(Clave clave){ //recurso == clave?
+//	return "claveBloqueada.esisEnEspera"; //busca en su lista de Claves bloqueadas, la clave que se le pide,
+//	//y devuelve la cola de esis bloqueados.
+//}
+
 
 void kill(int id_esi){
 	mover_esi_a_finalizado(id_esi);
@@ -160,19 +194,19 @@ int clave_tomada_por_otro_esi(int clave){
 	int tomada = ";";//buscar en la estructura que tenga las claves a ver si esta bloqueada
 	return tomada;
 }
-/*
-void asignar_esi_a_clave(Clave clave, int idEsi){
-	//buscar en donde sea que tenga las claves con los esis y asignarle el esi.
-}
-*/
+
+//void asignar_esi_a_clave(Clave clave, int idEsi){
+//	//buscar en donde sea que tenga las claves con los esis y asignarle el esi.
+//}
+
 
 void ejecutar_proximo_esi(){}
 
-/*
-void ejecutarEsi(esi){
-	solicitarEjecucion(esi); //le va a mandar al ESI un mensaje diciéndole que quiere
-							//que ejecute}
-*/
+//
+//void ejecutarEsi(esi){
+//	solicitarEjecucion(esi); //le va a mandar al ESI un mensaje diciéndole que quiere
+//							//que ejecute}
+
 
 
 //hablar con coordinador
@@ -228,23 +262,23 @@ void mostrar_status_clave(status_clave clave){
 
 
 
-/*	switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
-				//me estan preguntando esta tomada o no
-				case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
-						//que retorna true o false
-						mover_esi_a_bloqueado(idEsi);
-						asignar_esi_a_clave(mensaje->clave, idEsi);
-						return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
-				break;
-				case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
-						asignar_esi_a_clave(mensaje->clave, idEsi);
-						return 1; //exito
-				break;
-				}
-				}
-}
+//	switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
+//				//me estan preguntando esta tomada o no
+//				case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
+//						//que retorna true o false
+//						mover_esi_a_bloqueado(idEsi);
+//						asignar_esi_a_clave(mensaje->clave, idEsi);
+//						return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
+//				break;
+//				case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
+//						asignar_esi_a_clave(mensaje->clave, idEsi);
+//						return 1; //exito
+//				break;
+//				}
+//				}
+//}
 
-*/
+
 //MENSAJES
 resultado_esi recibir_resultado_esi(int socket_esi){
 	resultado_esi resultado;
@@ -291,12 +325,13 @@ void enviar_resultado_esi(int socket_planificador, resultado_esi resultado, t_lo
 }
 
 
-/*void serializar_enum(void * buffer, int id, int resultado){
-	size_t offset =0;
-
-	memcpy(buffer + offset, id ,sizeof(int));
-
-	offset =+ sizeof(int);
-
-	memcpy(buffer + offset, resultado, sizeof(int));
-}*/
+//void serializar_enum(void * buffer, int id, int resultado){
+//	size_t offset =0;
+//
+//	memcpy(buffer + offset, id ,sizeof(int));
+//
+//	offset =+ sizeof(int);
+//
+//	memcpy(buffer + offset, resultado, sizeof(int));
+}
+*/
