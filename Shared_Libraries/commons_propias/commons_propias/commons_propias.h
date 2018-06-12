@@ -96,8 +96,8 @@ typedef struct{
 
 //PARA EL PLANIFICADOR Y EL COORDINADOR
 typedef struct {
-	char* ip [10];
-	char* puerto [5];
+	char* ip;
+	char* puerto;
 }t_conexion;
 
 
