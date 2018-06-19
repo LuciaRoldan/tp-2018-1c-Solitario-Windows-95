@@ -72,6 +72,7 @@ int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_lo
 	if (bytes_recibidos <= 0) {
 			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}
+	free(buffer_receptor);
 	return bytes_recibidos;
 }
 
