@@ -101,7 +101,12 @@ void serializar_handshake(void* buffer, t_handshake handshake){
 	memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
 }
 
+void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibido){
+	memcpy(buffer, &handshake_recibido.id_proceso, sizeof(int));
+	memcpy((buffer + (sizeof(int))) , &handshake_recibido.proceso, sizeof(int));
 
+
+}
 
 // COMMONS CONEXIONES //
 
