@@ -8,7 +8,7 @@
 
 int main() {
 
-	printf("hola");
+
 
 	sockets sockets_planificador;
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);

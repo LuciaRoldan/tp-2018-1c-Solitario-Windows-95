@@ -3,11 +3,12 @@
 //inicializando
 
 sockets inicializar_planificador(){
-	sockets sockets_planificador;
+	sockets sockets_planificador;//doble declaracion
 	leer_archivo_configuracion();
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
+	handshake_coordinador(sockets_planificador.socket_coordinador);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
-	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
+	//conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	return sockets_planificador;
 }
 void leer_archivo_configuracion(){
