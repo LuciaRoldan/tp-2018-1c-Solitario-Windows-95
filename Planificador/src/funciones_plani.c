@@ -33,11 +33,16 @@ void handshake_coordinador(int socket_coordinador){
 	t_handshake yo = {PLANIFICADOR, 0};
 
 	void* buffer = malloc(sizeof(int)*2);
+	void* bufferRecepcion = malloc(sizeof(int));
+
 	serializar_handshake(buffer, yo);
 
 
-	env(socket_coordinador, buffer, sizeof(buffer), 80, logger);
-	rec(socket_coordinador, &proceso_recibido, sizeof(int), logger);
+
+	env(socket_coordinador, buffer, sizeof(int)*2, 80, logger);
+	rec(socket_coordinador, bufferRecepcion, sizeof(int), logger);
+
+	deserializar_handshake(bufferRecepcion, proceso_recibido);
 
 	if (proceso_recibido.proceso == COORDINADOR){
 		log_info(logger, "Se establecio la conexion con el Coordinador");
