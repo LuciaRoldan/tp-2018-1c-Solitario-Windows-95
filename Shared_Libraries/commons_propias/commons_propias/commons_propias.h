@@ -44,7 +44,7 @@ typedef enum{
 typedef struct{
 	proceso proceso;
 	int id_proceso;
-}t_handshake;
+} __attribute__((packed)) t_handshake;
 
 typedef struct{
 	char* clave;
