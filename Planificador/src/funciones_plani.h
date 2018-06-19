@@ -6,7 +6,7 @@
 
 //STRUCTS
 
-typedef struct{
+/*typedef struct{
 	int IDEsi;
 	struct Esi* sgte;
 } ColaDeEsi; //esto es una cola o un esi ???
@@ -28,7 +28,7 @@ typedef enum{
 	SJF_SD,
 	HRRN
 } algoritmo_planificacion;
-
+*/
 typedef struct{
 	int socket_coordinador;
 	int socket_esis;
@@ -37,22 +37,19 @@ typedef struct{
 
 //VARIABLES
 t_log * logger;
-char* puertoEscucha; //CREO que no es necesario, el puerto de escucha esta implicito
 // en el socket de escucha, lo retorna la funcion int listen();
-algoritmo_planificacion algoritmoPlanificacion;
-int estimacionInicial;
-char* ipCoordinador[10]; //no es necesario
-char* puertoCoordinador[5];// no es necesario
-char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
+//algoritmo_planificacion algoritmoPlanificacion;
+//int estimacionInicial;
+//char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
 //FILE* configuracion; no sirve
 
-
+/*
 struct ColaDeEsi *colaDeReadyEsis;
 struct ColaDeEsi *colaDeBloqueadoEsis;
 struct ColaDeEsi *colaDeFinalizadoEsis;
 
 struct ClavesBloqueadas *clavesBloqueadas;
-
+*/
 t_conexion conexion_planificador;
 t_conexion conexion_coordinador;
 
@@ -69,15 +66,15 @@ int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_lo
 
 
 //inicializando
-int handshake_esi(int* socket_esi);
+//int handshake_esi(int* socket_esi);
 void handshake_coordinador(int socket_coordinador);
-pcb crear_pcb_esi(int socket_cliente, int id_esi);
+//pcb crear_pcb_esi(int socket_cliente, int id_esi);
 sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
 
 
-
+/*
 //consola
 void manejar_consola();
 void pausar_planificador();
@@ -126,5 +123,5 @@ status_clave recibir_stastus_clave(int socket_coordinador, status_clave status);
 void informar_bloqueo_coordinador(int socket_coordinador, int id_esi);
 void informar_exito_coordinador(int socket_coordinador, int id_esi);
 
-
+*/
 #endif /* PLANIFICADOR_FUNCIONES_H_ */

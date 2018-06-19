@@ -10,15 +10,13 @@ sockets inicializar_planificador(){
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	return sockets_planificador;
 }
-
 void leer_archivo_configuracion(){
-	//Supongo que en el archivo el orden es: puertoEscucha, algoritmoPlanificacion, estimacionInicial, ipCoordinador, puertoCoordinador y clavesInicialmenteBloqueadas
-	t_config* configuracion=config_create("/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/config_planificador");
-		strcpy(conexion_planificador.ip, config_get_string_value(configuracion,"IP_PLANIFICADOR"));
-		strcpy(conexion_planificador.puerto, config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
-		strcpy(conexion_coordinador.ip, config_get_string_value(configuracion,"IP_COORDINADOR"));
-		strcpy(conexion_coordinador.puerto, config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
-
+	t_config* configuracion = config_create("config_planificador");
+		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
+		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
+		conexion_coordinador.ip = strdup(config_get_string_value(configuracion,"IP_COORDINADOR"));
+		conexion_coordinador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
+	log_info(logger, "Se leyo el archivo de configuracion correctamente");
 
 	//ver como levantar el resto, puerto escucha, algoritmo, etc
 
@@ -29,11 +27,16 @@ void conectarse_al_coordinador(int socket_coordinador){
 }
 
 void handshake_coordinador(int socket_coordinador){
+
 	t_handshake proceso_recibido;
 	t_handshake yo = {PLANIFICADOR, 0};
 
-	env(socket_coordinador, &yo, sizeof(t_handshake), 80, logger);
-	rec(socket_coordinador, &proceso_recibido, sizeof(t_handshake), logger);
+	void* buffer = malloc(sizeof(int)*2);
+	serializar_handshake(buffer, yo);
+
+
+	env(socket_coordinador, buffer, sizeof(buffer), 80, logger);
+	rec(socket_coordinador, &proceso_recibido, sizeof(int), logger);
 
 	if (proceso_recibido.proceso == COORDINADOR){
 		log_info(logger, "Se establecio la conexion con el Coordinador");
@@ -42,9 +45,6 @@ void handshake_coordinador(int socket_coordinador){
 	}
 }
 
-
-
-//testing
 int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
 	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
 
@@ -69,9 +69,37 @@ int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_lo
 	return bytes_recibidos;
 }
 
+//testing
+/*int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
+	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+
+	memcpy(buffer, &id, sizeof(int));
+	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+
+	printf("holaaaaa");
+
+	int bytes_enviados = send(socket_destino, buffer, sizeof(buffer), 0);
+
+
+ 	if(bytes_enviados <= 0){
+ 		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
+ 	}
+	free(buffer);
+ 	return bytes_enviados;
+ }
+
+int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
+
+	int bytes_recibidos = recv(socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
+	if (bytes_recibidos <= 0) {
+			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
+		}
+	return bytes_recibidos;
+}
 
 
 
+*/
 /*
 
 int handshake_esi(int* socket_esi){

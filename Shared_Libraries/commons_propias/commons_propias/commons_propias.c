@@ -21,7 +21,7 @@ int connect_to_server(char * ip, char * port, t_log *  logger){
 		_exit_with_error(server_socket, "No me pude conectar al servidor", NULL, logger);
 	}
 
-		log_info(logger, "Conectado!"); //logeo exito
+		log_info(logger, "Me conecte al servidor!"); //logeo exito
 		return server_socket;
 }
 
@@ -41,8 +41,7 @@ int inicializar_servidor(int puerto, t_log * logger){
 	}
 
 	listen(servidor, 100);
-	printf("estoy escuchando\n");
-	log_info(logger, "Escuchando!");
+	log_info(logger, "Soy servidor y estoy escuchando!");
 
 	return servidor;
 }
