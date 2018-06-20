@@ -58,7 +58,7 @@ t_conexion conexion_coordinador;
 
 
 //testing
-int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger);
+int env(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger);
 
 int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger);
 

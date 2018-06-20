@@ -30,17 +30,20 @@ void conectarse_al_coordinador(int socket_coordinador){
 void handshake_coordinador(int socket_coordinador){
 
 	t_handshake proceso_recibido;
-	t_handshake yo = {PLANIFICADOR, 0};
+	t_handshake yo;
+	yo.proceso = PLANIFICADOR;
+	yo.id_proceso = 80;
+
 
 	void* buffer = malloc(sizeof(int)*2);
-	void* bufferRecepcion = malloc(sizeof(int));
+	void* bufferRecepcion = malloc(sizeof(int)*2);
 
 	serializar_handshake(buffer, yo);
 
 
 
-	env(socket_coordinador, buffer, sizeof(int)*2, 80, logger);
-	rec(socket_coordinador, bufferRecepcion, sizeof(int), logger);
+	env(socket_coordinador, buffer, sizeof(int)*2, logger);
+	rec(socket_coordinador, bufferRecepcion, sizeof(int)*2, logger);
 
 	deserializar_handshake(bufferRecepcion, proceso_recibido);
 
@@ -51,18 +54,18 @@ void handshake_coordinador(int socket_coordinador){
 	}
 }
 
-int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
-	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+int env(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
+	//void* buffer = malloc(sizeof(int) + tamanio_del_envio);
 
-	memcpy(buffer, &id, sizeof(int));
-	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+	//memcpy(buffer, &id, sizeof(int));
+	//memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
 
-	int bytes_enviados = send(socket_destino, buffer, sizeof(buffer), 0);
+	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
 
  	if(bytes_enviados <= 0){
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
  	}
-	free(buffer);
+	free(envio);
  	return bytes_enviados;
  }
 
@@ -72,7 +75,7 @@ int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_lo
 	if (bytes_recibidos <= 0) {
 			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}
-	free(buffer_receptor);
+
 	return bytes_recibidos;
 }
 
