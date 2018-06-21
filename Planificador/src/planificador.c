@@ -13,7 +13,7 @@ int main() {
 	sockets sockets_planificador;
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
-	printf("%d\n", sockets_planificador.socket_coordinador);
+
 
 
 	/*

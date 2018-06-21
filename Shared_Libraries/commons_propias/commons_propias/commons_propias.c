@@ -97,16 +97,18 @@ int aceptar_conexion(int* socket_escucha){
 //revisar bien el mensaje que recibe
 
 void serializar_handshake(void* buffer, t_handshake handshake){
+
 	memcpy(buffer, &handshake.proceso, sizeof(int));
 	memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
 }
 
 void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibido){
-	memcpy(buffer_recepcion, &(handshake_recibido.id_proceso), sizeof(int));
-	memcpy((buffer_recepcion + (sizeof(int))) , &(handshake_recibido.proceso), sizeof(int));
+	memcpy(&(handshake_recibido.id_proceso),buffer_recepcion, sizeof(int));
+	memcpy( &(handshake_recibido.proceso),(buffer_recepcion + (sizeof(int))), sizeof(int));
 
 
 }
+
 
 // COMMONS CONEXIONES //
 

@@ -30,9 +30,8 @@ void conectarse_al_coordinador(int socket_coordinador){
 void handshake_coordinador(int socket_coordinador){
 
 	t_handshake proceso_recibido;
-	t_handshake yo;
-	yo.proceso = PLANIFICADOR;
-	yo.id_proceso = 80;
+	t_handshake yo = { PLANIFICADOR, 80};
+
 
 
 	void* buffer = malloc(sizeof(int)*2);
@@ -46,6 +45,9 @@ void handshake_coordinador(int socket_coordinador){
 	rec(socket_coordinador, bufferRecepcion, sizeof(int)*2, logger);
 
 	deserializar_handshake(bufferRecepcion, proceso_recibido);
+
+
+
 
 
 	if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
