@@ -49,17 +49,17 @@ int inicializar_servidor(int puerto, t_log * logger){
 //Funciones para enviar y recibir cosas serializadas
 
 int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
-	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+	//void* buffer = malloc(sizeof(int) + tamanio_del_envio);
 
-	memcpy(buffer, &id, sizeof(int));
-	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+	//memcpy(buffer, &id, sizeof(int));
+	//memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
 
-	int bytes_enviados = send(*socket_destino, buffer, sizeof(buffer), 0);
+	int bytes_enviados = send(*socket_destino, envio, tamanio_del_envio, 0);
 
  	if(bytes_enviados <= 0){
  		_exit_with_error(*socket_destino, "No se pudo enviar el mensaje", NULL, logger);
  	}
-	free(buffer);
+	free(envio);
  	return bytes_enviados;
  }
 
@@ -102,8 +102,8 @@ void serializar_handshake(void* buffer, t_handshake handshake){
 }
 
 void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibido){
-	memcpy(buffer_recepcion, &handshake_recibido.id_proceso, sizeof(int));
-	memcpy((buffer_recepcion + (sizeof(int))) , &handshake_recibido.proceso, sizeof(int));
+	memcpy(buffer_recepcion, &(handshake_recibido.id_proceso), sizeof(int));
+	memcpy((buffer_recepcion + (sizeof(int))) , &(handshake_recibido.proceso), sizeof(int));
 
 
 }

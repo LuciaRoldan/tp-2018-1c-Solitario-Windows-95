@@ -47,9 +47,12 @@ void handshake_coordinador(int socket_coordinador){
 
 	deserializar_handshake(bufferRecepcion, proceso_recibido);
 
-	if (proceso_recibido.proceso == COORDINADOR){
+
+	if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
+
 		log_info(logger, "Se establecio la conexion con el Coordinador");
 	} else {
+
 		log_info(logger, "Error en el handshake con el Coordinador");
 	}
 }
