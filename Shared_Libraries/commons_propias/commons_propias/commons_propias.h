@@ -21,6 +21,14 @@
 #include <parsi/parser.h>
 
 
+
+typedef struct{
+	int id_mensaje;
+	int largo_mensaje;
+
+
+} t_header;
+
 ///////////////////////// ESTADOS /////////////////////////
 
 typedef enum { //posibles estados del ESI
@@ -133,5 +141,5 @@ int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, 
 
 void serializar_handshake(void* buffer, t_handshake handshake);
 void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibido);
-
+t_header deserializarHeader(void* buffer);
 #endif /* COMMONS_PROPIAS_H_ */

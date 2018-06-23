@@ -35,6 +35,9 @@ typedef struct{
 } sockets;
 
 
+
+
+
 //VARIABLES
 t_log * logger;
 // en el socket de escucha, lo retorna la funcion int listen();
@@ -52,6 +55,7 @@ struct ClavesBloqueadas *clavesBloqueadas;
 */
 t_conexion conexion_planificador;
 t_conexion conexion_coordinador;
+
 
 
 //FUNCIONES
@@ -72,7 +76,7 @@ void handshake_coordinador(int socket_coordinador);
 sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
-
+void manejar_coordinador(void* socket_coordinador);
 
 /*
 //consola

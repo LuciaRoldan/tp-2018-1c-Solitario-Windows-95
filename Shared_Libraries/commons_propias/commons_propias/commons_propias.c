@@ -109,7 +109,14 @@ void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibid
 
 }
 
+t_header deserializarHeader(void* bufferHeader){
+	t_header header;
 
+	memcpy(&(header.id_mensaje),bufferHeader, sizeof(int));
+	memcpy( &(header.largo_mensaje),(bufferHeader + (sizeof(int))), sizeof(int));
+
+	return header;
+}
 // COMMONS CONEXIONES //
 
 /*

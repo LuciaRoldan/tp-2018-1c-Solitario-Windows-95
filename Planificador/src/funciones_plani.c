@@ -84,6 +84,29 @@ int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_lo
 	return bytes_recibidos;
 }
 
+
+void manejar_coordinador(void* socket_coordinador){
+
+	t_header header;
+
+	void* buffer_header = malloc(sizeof(int)*2);
+
+	rec(socket_coordinador,buffer_header, sizeof(int), logger);
+
+	header = deserializarHeader(buffer_header);
+
+	free(buffer_header);
+
+	void* body = malloc(header.largo_mensaje);
+
+	rec(socket_coordinador, body, header.largo_mensaje, logger);
+
+	free(body);
+
+	//comportamiento posterior
+
+
+}
 //testing
 /*int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
 	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
