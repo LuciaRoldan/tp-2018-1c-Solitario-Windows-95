@@ -49,9 +49,12 @@ int inicializar_servidor(int puerto, t_log * logger){
 //Funciones para enviar y recibir cosas serializadas
 
 int enviar(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
-	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
 
-	memcpy(buffer, &id, sizeof(int));
+	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+	void* el_id = malloc(sizeof(int));
+	*((int*)el_id) = id;
+
+	memcpy(buffer, el_id, sizeof(int));
 	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
 
 	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
@@ -106,6 +109,11 @@ int recibir_int(int socket, t_log* logger){
 //////////-----PARA TODOS-----//////////
 
 void serializar_handshake(void* buffer, t_handshake handshake){
+
+	void* id = malloc(sizeof(int));
+	void* proceso = malloc(sizeof(int));
+	*((int*)id) = handshake.id_proceso;
+	*((int*)proceso) = handshake.proceso;
 
 	memcpy(buffer, &handshake.proceso, sizeof(int));
 	memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
