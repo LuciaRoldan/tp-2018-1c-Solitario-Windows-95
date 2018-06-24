@@ -135,11 +135,16 @@ int aceptar_conexion(int* socket_escucha);
 
 //funciones de send() y recv()
 int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger);
-int recibir(int* socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger);
+int recibir(int socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger);
+int recibir_int(int socket, t_log* logger);
 
 //funciones de serializacion, una por tipo de mensaje?
 
+//serializar
 void serializar_handshake(void* buffer, t_handshake handshake);
-void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibido);
-t_header deserializarHeader(void* buffer);
+
+
+//deserealizar
+t_handshake deserializar_handshake(void *buffer_recepcion);
+pedido_esi deserealizar_pedido_coordinador(void* buffer);
 #endif /* COMMONS_PROPIAS_H_ */

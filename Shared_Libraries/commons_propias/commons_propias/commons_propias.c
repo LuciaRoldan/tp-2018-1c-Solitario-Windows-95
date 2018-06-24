@@ -49,10 +49,10 @@ int inicializar_servidor(int puerto, t_log * logger){
 //Funciones para enviar y recibir cosas serializadas
 
 int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
-	//void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
 
-	//memcpy(buffer, &id, sizeof(int));
-	//memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+	memcpy(buffer, &id, sizeof(int));
+	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
 
 	int bytes_enviados = send(*socket_destino, envio, tamanio_del_envio, 0);
 
@@ -63,12 +63,13 @@ int enviar(int* socket_destino, void* envio, int tamanio_del_envio, int id, t_lo
  	return bytes_enviados;
  }
 
-int recibir(int* socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
+int recibir(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
 
-	int bytes_recibidos = recv(*socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
+	int bytes_recibidos = recv(socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
 	if (bytes_recibidos <= 0) {
-			_exit_with_error(*socket_receptor, "Error recibiendo el contenido", NULL, logger);
+			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}
+
 	return bytes_recibidos;
 }
 
@@ -93,6 +94,14 @@ int aceptar_conexion(int* socket_escucha){
 	return socket_cliente;
 }
 
+int recibir_int(int socket, t_log* logger){
+	int id;
+	recibir(socket, &id, sizeof(int), logger);
+	return id;
+}
+
+
+
 
 //revisar bien el mensaje que recibe
 
@@ -102,11 +111,11 @@ void serializar_handshake(void* buffer, t_handshake handshake){
 	memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
 }
 
-void deserializar_handshake(void *buffer_recepcion,t_handshake handshake_recibido){
-	memcpy(&(handshake_recibido.id_proceso),buffer_recepcion, sizeof(int));
-	memcpy( &(handshake_recibido.proceso),(buffer_recepcion + (sizeof(int))), sizeof(int));
-
-
+t_handshake deserializar_handshake(void *buffer_recepcion){
+	t_handshake handshake_recibido;
+	memcpy(&(handshake_recibido.proceso),buffer_recepcion, sizeof(int));
+	memcpy( &(handshake_recibido.id_proceso),(buffer_recepcion + (sizeof(int))), sizeof(int));
+	return handshake_recibido;
 }
 
 t_header deserializarHeader(void* bufferHeader){
