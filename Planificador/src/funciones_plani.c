@@ -30,33 +30,33 @@ void conectarse_al_coordinador(int socket_coordinador){
 void handshake_coordinador(int socket_coordinador){
 
 	t_handshake proceso_recibido;
-	t_handshake yo = { PLANIFICADOR, 80};
-
+	t_handshake yo = { PLANIFICADOR, 0};
 
 
 	void* buffer = malloc(sizeof(int)*2);
-	void* bufferRecepcion = malloc(sizeof(int)*2);
 
 	serializar_handshake(buffer, yo);
+	enviar(sockets_planificador.socket_coordinador, buffer, sizeof(int)*2, 80, logger);
 
+	free(buffer);
 
+	int id_protocolo;
+	recibir(socket_coordinador, &id_protocolo, sizeof(int), logger);
 
-	env(socket_coordinador, buffer, sizeof(int)*2, logger);
-	rec(socket_coordinador, bufferRecepcion, sizeof(int)*2, logger);
-
-	deserializar_handshake(bufferRecepcion, proceso_recibido);
-
-
-
-
-
-	if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
-
-		log_info(logger, "Se establecio la conexion con el Coordinador");
+	//verificar que sea 80
+	if(id_protocolo == 80){
+		void* buffer = malloc(sizeof(int)*2);
+		recibir(socket_coordinador, buffer, sizeof(int), logger);
+		proceso_recibido = deserializar_handshake(buffer);
+		if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
+				log_info(logger, "Se establecio la conexion con el Coordinador");
+			} else {
+				log_info(logger, "Se recibio el Handshake del Coordinador pero fallo");
+			}
 	} else {
-
-		log_info(logger, "Error en el handshake con el Coordinador");
+		log_info(logger, "Error al recibir Handshake del Coordinador");
 	}
+
 }
 
 int env(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
@@ -74,34 +74,26 @@ int env(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
  	return bytes_enviados;
  }
 
-int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
-
-	int bytes_recibidos = recv(socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
-	if (bytes_recibidos <= 0) {
-			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
-		}
-
-	return bytes_recibidos;
-}
-
 
 void manejar_coordinador(void* socket_coordinador){
 
-	t_header header;
+	int id = recibir_int(sockets_planificador.socket_coordinador, logger);
+	pedido_esi pedido;
 
-	void* buffer_header = malloc(sizeof(int)*2);
+	switch(id){
+		case (10): //nuevo pedido
+				pedido = recibir_pedido_coordinador(sockets_planificador.socket_coordinador);
 
-	rec(socket_coordinador,buffer_header, sizeof(int), logger);
 
-	header = deserializarHeader(buffer_header);
-
-	free(buffer_header);
-
-	void* body = malloc(header.largo_mensaje);
-
-	rec(socket_coordinador, body, header.largo_mensaje, logger);
-
-	free(body);
+				//responder_a_pedido_coordinador(socket_coordinador, pedido);
+		break;
+		case (11): //respuesta de un estado que pedi
+				//int tamano_status_clave = malloc(sizeof(struct status_clave));
+				//struct status_clave status = recibir_status_clave(socket_coordinador);
+				//mostrar_status_clave(status);
+		break;
+		log_info(logger, "Pedido invalido del Coordinador");
+}
 
 	//comportamiento posterior
 
@@ -354,13 +346,19 @@ resultado_esi recibir_resultado_esi(int socket_esi){
 	return resultado;
 }
 
+*/
 pedido_esi recibir_pedido_coordinador(int socket_coordinador){
-	pedido_esi pedido;
-	recibir(socket_coordinador, &pedido, sizeof(pedido), logger);
-		//deserializar?
-	return pedido;
+
+	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
+	void* buffer = malloc(tamanio);
+	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
+	pedido_esi* pedido;
+	deserializar_pedido_coordinador(buffer, &pedido);
+	return *pedido;
 }
 
+
+/*
 int recibir_tipo_mensaje_coordinador(int socket_coordinador){
 	int tipo_mensaje;
 	recibir(socket_coordinador, &tipo_mensaje, sizeof(tipo_mensaje), logger);

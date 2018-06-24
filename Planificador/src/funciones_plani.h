@@ -23,28 +23,29 @@ typedef struct{
 	ClaveBloqueada* sgte;
 } ClavesBloqueadas;
 
+*/
 typedef enum{
 	SJF_CD,
 	SJF_SD,
 	HRRN
 } algoritmo_planificacion;
-*/
+
+
 typedef struct{
 	int socket_coordinador;
 	int socket_esis;
 } sockets;
 
+//////////-----VARIABLES GLOBALES-----//////////
 
-
-
-
-//VARIABLES
+sockets sockets_planificador;
+t_conexion conexion_planificador;
+t_conexion conexion_coordinador;
 t_log * logger;
-// en el socket de escucha, lo retorna la funcion int listen();
-//algoritmo_planificacion algoritmoPlanificacion;
-//int estimacionInicial;
-//char* clavesInicialmenteBloqueadas; //es una lista //va a haber que parsearlo. paja.
-//FILE* configuracion; no sirve
+algoritmo_planificacion algoritmoPlanificacion; //FALTA LEER DE ARCHIVO
+int estimacionInicial; //FALTA LEER DE ARCHIVO
+
+//char* clavesInicialmenteBloqueadas; //es una lista
 
 /*
 struct ColaDeEsi *colaDeReadyEsis;
@@ -53,8 +54,6 @@ struct ColaDeEsi *colaDeFinalizadoEsis;
 
 struct ClavesBloqueadas *clavesBloqueadas;
 */
-t_conexion conexion_planificador;
-t_conexion conexion_coordinador;
 
 
 
@@ -62,21 +61,15 @@ t_conexion conexion_coordinador;
 
 
 //testing
-int env(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger);
 
-int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger);
-
-
-
-
-//inicializando
+//////////-----INICIALIZACION-----//////////
 //int handshake_esi(int* socket_esi);
 void handshake_coordinador(int socket_coordinador);
 //pcb crear_pcb_esi(int socket_cliente, int id_esi);
 sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
-void manejar_coordinador(void* socket_coordinador);
+
 
 /*
 //consola
@@ -110,22 +103,31 @@ void actualizar_pcb_esi_asignado(int id_esi); //atomico. siempre de a uno
 
 
 
-//hablar con coordinador
+//////////-----HABLAR CON COORDINADOR-----//////////
+*/
 void manejar_coordinador();
+/*
 void responder_a_pedido_coordinador(int socket_coodinador, pedido_esi pedido);
 void mostrar_status_clave(status_clave status);
 
+//////////MENSAJES CON COORDINADOR//////////
+//RECIBIR COORDINADOR */
+pedido_esi recibir_pedido_coordinador(int socket_coordinador);
+/*
+status_clave recibir_status_clave(int socket_coordinador, status_clave status);
 
-
-
-//MENSAJES
-//del esi
-resultado_esi recibir_resultado_esi(int socket_esi);
-int recibir_tipo_mensaje_coordinador(int socket_coordinador);
-pedido_esi recibir_pedido_coordinador(int socket_coordiandor);
-status_clave recibir_stastus_clave(int socket_coordinador, status_clave status);
+//ENVIAR COORDINADOR
 void informar_bloqueo_coordinador(int socket_coordinador, int id_esi);
 void informar_exito_coordinador(int socket_coordinador, int id_esi);
 
+
+//////////MENSAJES CON ESIS//////////
+//RECIBIR ESIS
+resultado_esi recibir_resultado_esi(int socket_esi);
+
+
+//ENVIAR ESIS
+
 */
+
 #endif /* PLANIFICADOR_FUNCIONES_H_ */
