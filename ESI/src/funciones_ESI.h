@@ -6,6 +6,7 @@
 
 //variables globales
 int idEsi;
+estado estado_ESI;
 
 // Lectura de archivo
 t_config* leer_arch_configuracion();

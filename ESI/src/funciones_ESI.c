@@ -73,8 +73,14 @@ resultado_esi deserializar_confirmacion(void* buffer_receptor){
 
 void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger_esi){
 	resultado_esi confirmacion = deserializar_confirmacion(msj_recibido);
-	if(confirmacion == EXITO) log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
-	else log_info(logger_esi, "Fallo al ejecutar la instruccion.");
+	switch(confirmacion){
+		case EXITO:
+			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
+			break;
+		case FALLO:
+			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
+			break;
+	}
 	enviar(socket_destino, &confirmacion, sizeof(resultado_esi), 41, logger_esi);
 }
 
