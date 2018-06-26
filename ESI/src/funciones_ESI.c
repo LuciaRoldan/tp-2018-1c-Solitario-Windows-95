@@ -5,16 +5,8 @@
 #include <commons/bitarray.h>
 
 t_config* leer_arch_configuracion(){
-	t_config* configuracion_esi = config_create("ESI/Configuracion_ESI.cfg");
+	t_config* configuracion_esi = config_create("Configuracion_ESI.cfg");
 	idEsi = config_get_int_value(configuracion_esi, "ID");
-	/*info_arch_config datos_config;
-	FILE* archivo = fopen("../Configuracion_ESI.txt", "r");
-	fscanf(archivo, "%d %s %s %s %s",
-			&(datos_config.id_esi),
-			datos_config.ip_coordinador,
-			datos_config.puerto_coordinador, datos_config.ip_planificador,
-			datos_config.puerto_planificador);
-	fclose(archivo);*/
 
 	return configuracion_esi;
 }
@@ -29,42 +21,61 @@ int conectarse_al_Planificador(t_config * arch_config, t_log* logger){
 	return socket;
 }
 
-int handshake(int* socket_servidor, t_log* logger) {
+int handshake(int socket_servidor, t_log* logger) {
 
-		t_handshake yo = { ESI, idEsi };
-		int id_recibido;
+	t_handshake yo = { ESI, idEsi };
+	void* buffer = malloc(sizeof(int)*2);
+	int id_recibido = 0;
 
-		enviar(socket_servidor, &yo, sizeof(t_handshake), 80, logger);
-		recibir(socket_servidor, &id_recibido, sizeof(int), logger);
+	serializar_handshake(buffer, yo);
 
-		if (id_recibido != 80) {
-			log_info(logger, "Conexion invalida");
-			return -1;
-		} else return 1;
-	}
+	enviar(socket_servidor, buffer, sizeof(t_handshake), 80, logger);
+	recibir(socket_servidor, &id_recibido, sizeof(int), logger);
 
-int enviar_instruccion_sgte(int* socket_Coordinador, FILE* archivo, t_log* logger_esi){
-	char* line;
-	fscanf(archivo, "%s", line);
+	free(buffer);
+
+	if (id_recibido != 80) {
+		log_info(logger, "Conexion invalida");
+		return -1;
+	} else return 1;
+}
+
+int enviar_instruccion_sgte(FILE* archivo, int socket_Coordinador, t_log* logger_esi){
+	char* line = "";
+	fgets(line, 0, archivo);
 	t_esi_operacion instruccion = parse(line); //Parsea y devuelve instrucción de ESI
 	free(line);
 	int exito = enviar(socket_Coordinador,&instruccion, sizeof(t_esi_operacion), 24, logger_esi);
 	return exito;
 }
 
-int ejecutar_instruccion(FILE* script, int* socket_Coordinador, t_log* logger_esi){
-			if(!feof(script)){
-				if(enviar_instruccion_sgte(socket_Coordinador, script, logger_esi) > 0){
-					log_info(logger_esi, "Se ha enviado correctamente a instruccion al Planificador \n ");
-					return 1;
-					} else {
-						log_info(logger_esi, "No se pudo enviar la instruccion al Planificador \n");
-						return 0;
-					}
-				} else {
-					log_info(logger_esi, "No hay instrucciones disponibles. \n");
-					return 0;
-				}
+int ejecutar_instruccion(FILE* script, int socket_Coordinador, t_log* logger){
+	if(!feof(script)){
+		if(enviar_instruccion_sgte(script, socket_Coordinador, logger) > 0){
+			log_info(logger, "Se ha enviado correctamente a instruccion al Planificador \n ");
+			return 1;
+			} else {
+				log_info(logger, "No se pudo enviar la instruccion al Planificador \n");
+				return 0;
+			}
+		} else {
+			log_info(logger, "No hay instrucciones disponibles. \n");
+			return 0;
+		}
+}
+
+resultado_esi deserializar_confirmacion(void* buffer_receptor){
+	resultado_esi confirmacion;
+	memcpy(&confirmacion, (buffer_receptor + (sizeof(int))), sizeof(resultado_esi));
+	free(buffer_receptor);
+	return confirmacion;
+}
+
+void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger_esi){
+	resultado_esi confirmacion = deserializar_confirmacion(msj_recibido);
+	if(confirmacion == EXITO) log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
+	else log_info(logger_esi, "Fallo al ejecutar la instruccion.");
+	enviar(socket_destino, &confirmacion, sizeof(resultado_esi), 41, logger_esi);
 }
 
 #endif /* ESI_FUNCIONES_H_ */
