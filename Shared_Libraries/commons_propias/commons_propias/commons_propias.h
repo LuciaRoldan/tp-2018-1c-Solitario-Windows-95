@@ -25,8 +25,6 @@
 typedef struct{
 	int id_mensaje;
 	int largo_mensaje;
-
-
 } t_header;
 
 ///////////////////////// ESTADOS /////////////////////////
@@ -51,7 +49,6 @@ typedef enum{
 //TODOS o CASI TODOS
 typedef struct{
 	proceso proceso;
-	int id_proceso;
 } __attribute__((packed)) t_handshake;
 
 typedef struct{
@@ -59,9 +56,6 @@ typedef struct{
 	int id_instancia;
 	char* contenido;
 }status_clave;
-
-//ESI-COORDINADOR
-
 
 //ESI-PLANIFICADOR
 typedef struct {
@@ -73,19 +67,19 @@ typedef struct {
 	int socket;
 } pcb;
 
-
 typedef enum{
 	EJECUTAR,
 	BLOQUEARSE,
 	DESBLOQUEARSE
 } AccionESI;
 
+//ESI-COORDINADOR
  typedef enum{
  	EXITO,
-	FALLO
- 	//PEDIUNACLAVEMUYLARGA,
- 	//PEDIUNACLAVENOID,
- 	//PEDIUNACLAVEINACC,
+	FALLO,
+ 	PEDIUNACLAVEMUYLARGA,
+ 	PEDIUNACLAVENOID,
+ 	PEDIUNACLAVEINACC,
 } resultado_esi;
 
 //INSTANCIA-COORDINADOR
@@ -145,6 +139,7 @@ void serializar_handshake(void* buffer, t_handshake handshake);
 
 
 //deserealizar
+int deserializar_id(void* buffer_mensaje);
 t_handshake deserializar_handshake(void *buffer_recepcion);
 void deserializar_pedido_coordinador(void* buffer, pedido_esi* pedido);
 

@@ -108,21 +108,27 @@ int recibir_int(int socket, t_log* logger){
 
 //////////-----PARA TODOS-----//////////
 
+int deserializar_id(void* buffer_mensaje){
+	int id;
+	memcpy(&id, buffer_mensaje, sizeof(int));
+	return id;
+}
+
 void serializar_handshake(void* buffer, t_handshake handshake){
 
-	void* id = malloc(sizeof(int));
+	//void* id = malloc(sizeof(int));
 	void* proceso = malloc(sizeof(int));
-	*((int*)id) = handshake.id_proceso;
+	//*((int*)id) = handshake.id_proceso;
 	*((int*)proceso) = handshake.proceso;
 
 	memcpy(buffer, &handshake.proceso, sizeof(int));
-	memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
+	//memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
 }
 
 t_handshake deserializar_handshake(void *buffer_recepcion){
 	t_handshake handshake_recibido;
-	memcpy(&(handshake_recibido.proceso),buffer_recepcion, sizeof(int));
-	memcpy( &(handshake_recibido.id_proceso),(buffer_recepcion + (sizeof(int))), sizeof(int));
+	memcpy(&(handshake_recibido.proceso),buffer_recepcion + sizeof(int), sizeof(int));
+	//memcpy( &(handshake_recibido.id_proceso),(buffer_recepcion + (sizeof(int))), sizeof(int));
 	return handshake_recibido;
 }
 

@@ -41,6 +41,7 @@ DE COORDINADOR A PLANIFICADOR
 
 DE PLANIFICADOR A ESI
 61 solicitud_ejecutar_instruccion
+62 aborto
 
 ///////////////// TODOS /////////////////
 80 t_handshake
