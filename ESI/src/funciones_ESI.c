@@ -23,16 +23,17 @@ int conectarse_al_Planificador(t_config * arch_config, t_log* logger){
 
 int handshake(int socket_servidor, t_log* logger) {
 
-	t_handshake yo = { ESI, idEsi };
-	void* buffer = malloc(sizeof(int)*2);
-	int id_recibido = 0;
+	t_handshake yo = { ESI };
+	void* buffer = malloc(sizeof(int));
+	void *hs_recibido = malloc(sizeof(int)*2);
 
 	serializar_handshake(buffer, yo);
 
-	enviar(socket_servidor, buffer, sizeof(t_handshake), 80, logger);
-	recibir(socket_servidor, &id_recibido, sizeof(int), logger);
-
+	enviar(socket_servidor, buffer, sizeof(int), 80, logger);
 	free(buffer);
+	recibir(socket_servidor, hs_recibido, sizeof(int)*2, logger);
+	int id_recibido = deserializar_id(hs_recibido);
+	free(hs_recibido);
 
 	if (id_recibido != 80) {
 		log_info(logger, "Conexion invalida");
@@ -67,7 +68,6 @@ int ejecutar_instruccion(FILE* script, int socket_Coordinador, t_log* logger){
 resultado_esi deserializar_confirmacion(void* buffer_receptor){
 	resultado_esi confirmacion;
 	memcpy(&confirmacion, (buffer_receptor + (sizeof(int))), sizeof(resultado_esi));
-	free(buffer_receptor);
 	return confirmacion;
 }
 
@@ -80,8 +80,66 @@ void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger
 		case FALLO:
 			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
 			break;
+		case PEDIUNACLAVEMUYLARGA:
+			log_info(logger_esi, "Error de clave muy larga.");
+			break;
+		case PEDIUNACLAVENOID:
+			log_info(logger_esi, "Error de clave no identificada.");
+			break;
+		case PEDIUNACLAVEINACC:
+			log_info(logger_esi, "Error de clave inaccesible.");
+			break;
 	}
 	enviar(socket_destino, &confirmacion, sizeof(resultado_esi), 41, logger_esi);
 }
+
+/*esi_bloqueado salvar_info_bloqueado(FILE* script){
+	esi_bloqueado nuevo_bloqueado;
+	nuevo_bloqueado.idESI = idEsi;
+	nuevo_bloqueado.script = script;
+	nuevo_bloqueado.ultima_posicion = ftell(script);
+	return nuevo_bloqueado;
+}
+
+nodo_bloqueado *buscar_segun_id(int id, nodo_bloqueado *raiz){
+	nodo_bloqueado *aux = raiz;
+	while (aux->esi->idESI != id){
+		aux = aux->sgte;
+	}
+	return aux;
+}
+
+nodo_bloqueado *buscar_fin_de_lista(nodo_bloqueado * raiz){
+	nodo_bloqueado *aux = raiz;
+	while (aux->sgte != NULL){
+		aux = aux->sgte;
+	}
+	return aux;
+}
+
+void agregar_a_lista(nodo_bloqueado *raiz, esi_bloqueado info){
+	nodo_bloqueado *ptr = buscar_fin_de_lista(raiz);
+	ptr->sgte = malloc(sizeof(nodo_bloqueado));
+	*ptr->sgte->esi = info;
+	*ptr->sgte->sgte = NULL;
+}
+
+void eliminar_lista_bloqueados(nodo_bloqueado *raiz){
+	nodo_bloqueado *aux1 = raiz;
+	nodo_bloqueado *aux2 = raiz->sgte;
+	while (aux1->sgte != NULL){
+		free(aux1->sgte);
+		aux1 = aux2;
+		aux2 = aux1->sgte;
+	}
+	free(aux1);
+	free(aux2);
+	free(raiz);
+}
+
+esi_bloqueado desbloquearse(int id, nodo_bloqueado *lista_bloq){
+	nodo_bloqueado *ptr = buscar_segun_id(id, lista_bloq);
+	return ptr->esi;
+}*/
 
 #endif /* ESI_FUNCIONES_H_ */

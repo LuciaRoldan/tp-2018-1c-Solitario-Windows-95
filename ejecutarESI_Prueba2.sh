@@ -1,20 +1,20 @@
 #!/bin/bash
 
 cd ESI/Debug/
-
 make clean
 make all
+cd ../../
 
 export LD_LIBRARY_PATH=./Shared_Libraries/commons_propias/Debug
 
-./ESI "ESI/Prubeas-ESI/ESI_1.txt"
+./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt"
 
-./ESI "ESI/Prubeas-ESI/ESI_1.txt"
+./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt"
 
-./ESI "ESI/Prubeas-ESI/ESI_1.txt"
+./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt"
 
-./ESI "ESI/Prubeas-ESI/ESI_Largo.txt"
+./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_Largo.txt"
 
-./ESI "ESI/Prubeas-ESI/ESI_1.txt"
+./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt"
 
-./ESI "ESI/Prubeas-ESI/ESI_1.txt"
+./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt"
