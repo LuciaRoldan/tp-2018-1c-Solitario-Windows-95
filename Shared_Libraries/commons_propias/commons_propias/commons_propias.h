@@ -48,6 +48,7 @@ typedef enum{
 //////////////////////////// MENSAJES ////////////////////////////
 //TODOS o CASI TODOS
 typedef struct{
+	int id;
 	proceso proceso;
 } __attribute__((packed)) t_handshake;
 

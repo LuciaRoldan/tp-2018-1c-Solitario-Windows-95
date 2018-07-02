@@ -115,20 +115,19 @@ int deserializar_id(void* buffer_mensaje){
 }
 
 void serializar_handshake(void* buffer, t_handshake handshake){
-
-	//void* id = malloc(sizeof(int));
-	void* proceso = malloc(sizeof(int));
-	//*((int*)id) = handshake.id_proceso;
-	*((int*)proceso) = handshake.proceso;
-
-	memcpy(buffer, &handshake.proceso, sizeof(int));
-	//memcpy((buffer + (sizeof(int))) , &handshake.id_proceso, sizeof(int));
+	int* id_protocolo = malloc(sizeof(int));
+	*id_protocolo = 80;
+	t_handshake *info_handshake = malloc(sizeof(t_handshake));
+	*info_handshake = handshake;
+	memcpy(buffer, id_protocolo, sizeof(int));
+	memcpy((buffer + (sizeof(int))), info_handshake, sizeof(t_handshake));
+	free(info_handshake);
+	free(id_protocolo);
 }
 
 t_handshake deserializar_handshake(void *buffer_recepcion){
 	t_handshake handshake_recibido;
-	memcpy(&(handshake_recibido.proceso),buffer_recepcion + sizeof(int), sizeof(int));
-	//memcpy( &(handshake_recibido.id_proceso),(buffer_recepcion + (sizeof(int))), sizeof(int));
+	memcpy(&handshake_recibido, (buffer_recepcion + sizeof(int)), sizeof(t_handshake));
 	return handshake_recibido;
 }
 
