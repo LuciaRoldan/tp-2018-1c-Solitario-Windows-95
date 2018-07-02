@@ -5,9 +5,7 @@
 #include <commons/bitarray.h>
 
 t_config* leer_arch_configuracion(){
-	t_config* configuracion_esi = config_create("Configuracion_ESI.cfg");
-	idEsi = config_get_int_value(configuracion_esi, "ID");
-
+	t_config* configuracion_esi = config_create("ESI/Configuracion_ESI.cfg");
 	return configuracion_esi;
 }
 
@@ -21,17 +19,17 @@ int conectarse_al_Planificador(t_config * arch_config, t_log* logger){
 	return socket;
 }
 
-int handshake(int socket_servidor, t_log* logger) {
+int handshake(int socket_servidor, int idProceso, t_log* logger) {
 
-	t_handshake yo = { ESI };
-	void* buffer = malloc(sizeof(int));
-	void *hs_recibido = malloc(sizeof(int)*2);
+	t_handshake yo = { idProceso, ESI };
+	void* buffer = malloc(sizeof(t_handshake));
+	void *hs_recibido = malloc(sizeof(t_handshake) + sizeof(int));
 
 	serializar_handshake(buffer, yo);
 
-	enviar(socket_servidor, buffer, sizeof(int), 80, logger);
+	enviar(socket_servidor, buffer, sizeof(t_handshake), 80, logger);
 	free(buffer);
-	recibir(socket_servidor, hs_recibido, sizeof(int)*2, logger);
+	recibir(socket_servidor, hs_recibido, sizeof(t_handshake), logger);
 	int id_recibido = deserializar_id(hs_recibido);
 	free(hs_recibido);
 
@@ -42,7 +40,7 @@ int handshake(int socket_servidor, t_log* logger) {
 }
 
 int enviar_instruccion_sgte(FILE* archivo, int socket_Coordinador, t_log* logger_esi){
-	char* line = "";
+	char* line;
 	fgets(line, 0, archivo);
 	t_esi_operacion instruccion = parse(line); //Parsea y devuelve instrucción de ESI
 	free(line);
@@ -92,54 +90,5 @@ void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger
 	}
 	enviar(socket_destino, &confirmacion, sizeof(resultado_esi), 41, logger_esi);
 }
-
-/*esi_bloqueado salvar_info_bloqueado(FILE* script){
-	esi_bloqueado nuevo_bloqueado;
-	nuevo_bloqueado.idESI = idEsi;
-	nuevo_bloqueado.script = script;
-	nuevo_bloqueado.ultima_posicion = ftell(script);
-	return nuevo_bloqueado;
-}
-
-nodo_bloqueado *buscar_segun_id(int id, nodo_bloqueado *raiz){
-	nodo_bloqueado *aux = raiz;
-	while (aux->esi->idESI != id){
-		aux = aux->sgte;
-	}
-	return aux;
-}
-
-nodo_bloqueado *buscar_fin_de_lista(nodo_bloqueado * raiz){
-	nodo_bloqueado *aux = raiz;
-	while (aux->sgte != NULL){
-		aux = aux->sgte;
-	}
-	return aux;
-}
-
-void agregar_a_lista(nodo_bloqueado *raiz, esi_bloqueado info){
-	nodo_bloqueado *ptr = buscar_fin_de_lista(raiz);
-	ptr->sgte = malloc(sizeof(nodo_bloqueado));
-	*ptr->sgte->esi = info;
-	*ptr->sgte->sgte = NULL;
-}
-
-void eliminar_lista_bloqueados(nodo_bloqueado *raiz){
-	nodo_bloqueado *aux1 = raiz;
-	nodo_bloqueado *aux2 = raiz->sgte;
-	while (aux1->sgte != NULL){
-		free(aux1->sgte);
-		aux1 = aux2;
-		aux2 = aux1->sgte;
-	}
-	free(aux1);
-	free(aux2);
-	free(raiz);
-}
-
-esi_bloqueado desbloquearse(int id, nodo_bloqueado *lista_bloq){
-	nodo_bloqueado *ptr = buscar_segun_id(id, lista_bloq);
-	return ptr->esi;
-}*/
 
 #endif /* ESI_FUNCIONES_H_ */
