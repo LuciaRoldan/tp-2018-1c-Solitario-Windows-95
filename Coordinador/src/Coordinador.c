@@ -23,6 +23,7 @@ int main(){
 	//pthread_create(&hilo_escucha, 0, procesar_conexion, (int*)&socket_escucha, (t_log*) logger);
 	//pthread_create(&hilo_planificador, 0, atender_planificador, (&socket_planificador, logger));
 
+	close(socket_escucha);
 
 	return 0;
 }

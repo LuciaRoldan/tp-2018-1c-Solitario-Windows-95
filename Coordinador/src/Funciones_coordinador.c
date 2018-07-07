@@ -30,7 +30,7 @@ int inicializar_coordinador(info_archivo_config configuracion){
 void conectar_planificador(int* socket_escucha){
 	int socket_cliente = aceptar_conexion(socket_escucha);
 	int resultado = handshake(&socket_cliente);
-	if(resultado >= 0){
+	if(socket_cliente >= 0){
 		socket_planificador = socket_cliente;
 		log_info(logger, "Se establecio la conexion con el Planificdor");
 	} else {
