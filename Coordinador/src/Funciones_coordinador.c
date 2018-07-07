@@ -115,10 +115,10 @@ int handshake(int* socket_cliente){
 	recibir(socket_cliente, &leido, sizeof(int), logger);
 	proceso_recibido.proceso = leido;
 	recibir(socket_cliente, &leido, sizeof(int), logger);
-	proceso_recibido.id_proceso = leido;
+	proceso_recibido.id = leido;
 
 	printf("%d\n", proceso_recibido.proceso);
-	printf("%d\n", proceso_recibido.id_proceso);
+	printf("%d\n", proceso_recibido.id);
 
 	enviar(socket_cliente, buffer, sizeof(buffer), 80, logger);
 
@@ -136,12 +136,12 @@ int handshake(int* socket_cliente){
 		break;
 
 	case INSTANCIA:
-		conectar_instancia(socket_cliente, proceso_recibido.id_proceso);
+		conectar_instancia(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
 	case ESI:
-		conectar_esi(socket_cliente, proceso_recibido.id_proceso);
+		conectar_esi(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
