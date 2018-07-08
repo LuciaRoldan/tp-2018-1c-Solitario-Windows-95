@@ -22,21 +22,40 @@ int conectarse_al_Planificador(t_config * arch_config, t_log* logger){
 int handshake(int socket_servidor, int idProceso, t_log* logger) {
 
 	t_handshake yo = { idProceso, ESI };
+	t_handshake proceso_recibido;
 	void* buffer = malloc(sizeof(t_handshake));
 	void *hs_recibido = malloc(sizeof(t_handshake) + sizeof(int));
 
 	serializar_handshake(buffer, yo);
-
 	enviar(socket_servidor, buffer, sizeof(t_handshake), 80, logger);
 	free(buffer);
-	recibir(socket_servidor, hs_recibido, sizeof(t_handshake), logger);
-	int id_recibido = deserializar_id(hs_recibido);
+
+	int protocolo;
+	protocolo = recibir_int(socket_servidor, logger);
+
+	recibir(socket_servidor, hs_recibido, sizeof(int)*2, logger);
+	//int id_recibido = deserializar_id(hs_recibido);
+	proceso_recibido = deserializar_handshake(hs_recibido);
 	free(hs_recibido);
 
-	if (id_recibido != 80) {
+	if (protocolo != 80) {
 		log_info(logger, "Conexion invalida");
 		return -1;
-	} else return 1;
+	}
+	switch(proceso_recibido.id){
+		case PLANIFICADOR:
+			log_info(logger, "Me conecte con el Planificador");
+			return 1;
+			break;
+		case COORDINADOR:
+			log_info(logger, "Me conecte con el Coordinador");
+			return 1;
+			break;
+		default:
+			log_info(logger, "Conexion invalida");
+			return -1;
+			break;
+	}
 }
 
 int enviar_instruccion_sgte(FILE* archivo, int socket_Coordinador, t_log* logger_esi){
