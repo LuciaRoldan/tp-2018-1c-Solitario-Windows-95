@@ -49,20 +49,11 @@ int inicializar_servidor(int puerto, t_log * logger){
 //Funciones para enviar y recibir cosas serializadas
 
 int enviar(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
-
-	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
-	void* el_id = malloc(sizeof(int));
-	*((int*)el_id) = id;
-
-	memcpy(buffer, el_id, sizeof(int));
-	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
-
 	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
-
  	if(bytes_enviados <= 0){
+ 		printf("Bytes_enviados: %d\n", bytes_enviados);
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
  	}
-	free(envio);
  	return bytes_enviados;
  }
 
