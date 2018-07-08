@@ -23,25 +23,25 @@ int handshake(int socket_servidor, int idProceso, t_log* logger) {
 
 	t_handshake yo = { idProceso, ESI };
 	t_handshake proceso_recibido;
-	void* buffer = malloc(sizeof(t_handshake));
-	void *hs_recibido = malloc(sizeof(t_handshake) + sizeof(int));
+	void* buffer = malloc(sizeof(int)*3);
+	void *hs_recibido = malloc(sizeof(int)*2);
+	int protocolo;
 
 	serializar_handshake(buffer, yo);
-	enviar(socket_servidor, buffer, sizeof(t_handshake), 80, logger);
+	enviar(socket_servidor, buffer, sizeof(int)*3, 80, logger);
+	log_info(logger, "Envie");
 	free(buffer);
 
-	int protocolo;
 	protocolo = recibir_int(socket_servidor, logger);
-
-	recibir(socket_servidor, hs_recibido, sizeof(int)*2, logger);
-	//int id_recibido = deserializar_id(hs_recibido);
-	proceso_recibido = deserializar_handshake(hs_recibido);
-	free(hs_recibido);
-
 	if (protocolo != 80) {
 		log_info(logger, "Conexion invalida");
 		return -1;
 	}
+
+	recibir(socket_servidor, hs_recibido, sizeof(int)*2, logger);
+	proceso_recibido = deserializar_handshake(hs_recibido);
+	free(hs_recibido);
+
 	switch(proceso_recibido.id){
 		case PLANIFICADOR:
 			log_info(logger, "Me conecte con el Planificador");

@@ -29,10 +29,17 @@ int inicializar_coordinador(info_archivo_config configuracion){
 
 void conectar_planificador(int socket_escucha){
 	int socket_cliente = aceptar_conexion(socket_escucha);
-	int resultado = handshake(socket_cliente);
-	if(resultado >= 0){
-		socket_planificador = socket_cliente;
-		log_info(logger, "Se establecio la conexion con el Planificdor");
+	int protocolo;
+
+	recibir(socket_cliente, &protocolo, sizeof(int), logger);
+	if(protocolo == 80){
+		int resultado = handshake(socket_cliente);
+		if(resultado >= 0){
+			socket_planificador = socket_cliente;
+			log_info(logger, "Se establecio la conexion con el Planificdor");
+		} else{
+			log_info(logger, "Fallo en la conexion con el Planificdor");
+		}
 	} else{
 		log_info(logger, "Fallo en la conexion con el Planificdor");
 	}
@@ -107,14 +114,22 @@ int handshake(int socket_cliente){
 	int conexion_hecha = 0;
 
 	t_handshake proceso_recibido;
-	t_handshake yo = {COORDINADOR, 0};
-	void* buffer = malloc(sizeof(int)*3);
-	serializar_handshake(buffer, yo);
+	t_handshake yo = {0, 1};
+	void* buffer_recepcion = malloc(sizeof(int)*2);
+	void* buffer_envio = malloc(sizeof(int)*3);
 
-	recibir(socket_cliente, buffer, sizeof(int)*3, logger);
-	proceso_recibido = deserializar_handshake(buffer);
+	recibir(socket_cliente, buffer_recepcion, sizeof(int)*2, logger);
+	proceso_recibido = deserializar_handshake(buffer_recepcion);
 
-	enviar(socket_cliente, buffer, sizeof(int)*3, 80, logger);
+	printf("proceso recibido %d \n", proceso_recibido.proceso);
+	printf("id proceso recibido %d \n", proceso_recibido.id);
+
+	free(buffer_recepcion);
+
+	serializar_handshake(buffer_envio, yo);
+	enviar(socket_cliente, buffer_envio, sizeof(int)*3, 80, logger);
+
+	free(buffer_envio);
 
 	switch(proceso_recibido.proceso){
 

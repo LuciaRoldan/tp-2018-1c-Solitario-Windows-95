@@ -7,4 +7,6 @@ cd ESI/Debug/
 make clean
 make all
 
+cd ../../
+
 ./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt" 1

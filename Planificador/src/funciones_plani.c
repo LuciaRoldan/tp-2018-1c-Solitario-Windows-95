@@ -38,7 +38,7 @@ void handshake_coordinador(int socket_coordinador){
 
 	enviar(socket_coordinador, buffer, sizeof(int)*3, 80, logger);
 
-	log_info(logger, "Envie aHndshake al Coordinador");
+	log_info(logger, "Envie Handshake al Coordinador");
 
 	free(buffer);
 
@@ -47,8 +47,12 @@ void handshake_coordinador(int socket_coordinador){
 
 	if(id_protocolo == 80){
 		void* buffer = malloc(sizeof(int)*2);
-		recibir(socket_coordinador, buffer, sizeof(int), logger);
+		recibir(socket_coordinador, buffer, sizeof(int)*2, logger);
 		proceso_recibido = deserializar_handshake(buffer);
+
+		printf("proceso recibido %d \n", proceso_recibido.proceso);
+		printf("id proceso recibido %d \n", proceso_recibido.id);
+
 		if (proceso_recibido.proceso ==  COORDINADOR){
 				log_info(logger, "Se establecio la conexion con el Coordinador");
 			} else {

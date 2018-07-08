@@ -16,8 +16,11 @@ int main(int argc, char* argv[]){
 	log_info(logger_esi, "Archivo de configuracion leido para ESI %d", idEsi);
 
 	int socket_Coordinador = conectarse_al_Coordinador(datos_configuracion, logger_esi);
+	handshake(socket_Coordinador, idEsi, logger_esi);
 	log_info(logger_esi, "ESI %d conectado a COORDINADOR", idEsi);
+
 	int socket_Planificador = conectarse_al_Planificador(datos_configuracion, logger_esi);
+	handshake(socket_Planificador, idEsi, logger_esi);
 	log_info(logger_esi, "ESI %d conectado a PLANIFICADOR", idEsi);
 
 	int codigo_plani;
@@ -25,8 +28,6 @@ int main(int argc, char* argv[]){
 	void* mensaje_coordi = malloc((sizeof(int)) + (sizeof(resultado_esi)));
 
 	FILE* script_prueba = fopen(argv[1], "r");
-	handshake(socket_Coordinador, idEsi, logger_esi);
-	handshake(socket_Planificador, idEsi, logger_esi);
 	while(!feof(script_prueba) || abortoESI == 0) {
 		codigo_plani = recibir_int(socket_Planificador, logger_esi);
 		switch(codigo_plani){

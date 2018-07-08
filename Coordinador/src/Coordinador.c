@@ -23,9 +23,12 @@ int main(){
 	//pthread_create(&hilo_escucha, 0, procesar_conexion, (int*)&socket_escucha, (t_log*) logger);
 	//pthread_create(&hilo_planificador, 0, atender_planificador, (&socket_planificador, logger));
 
+	int protocolo_prueba;
 	int socket_esi = aceptar_conexion(socket_escucha);
+	recibir(socket_esi, &protocolo_prueba, sizeof(int), logger);
 	handshake(socket_esi);
 	int socket_instancia = aceptar_conexion(socket_escucha);
+	recibir(socket_instancia, &protocolo_prueba, sizeof(int), logger);
 	handshake(socket_instancia);
 
 	close(socket_escucha);

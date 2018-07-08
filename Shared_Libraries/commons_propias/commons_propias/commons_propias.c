@@ -118,7 +118,8 @@ void serializar_handshake(void* buffer, t_handshake handshake){
 
 t_handshake deserializar_handshake(void *buffer_recepcion){
 	t_handshake handshake_recibido;
-	memcpy(&handshake_recibido, (buffer_recepcion + sizeof(int)), sizeof(t_handshake));
+	memcpy(&handshake_recibido.id, buffer_recepcion, sizeof(int));
+	memcpy(&handshake_recibido.proceso, buffer_recepcion + sizeof(int), sizeof(int));
 	return handshake_recibido;
 }
 
