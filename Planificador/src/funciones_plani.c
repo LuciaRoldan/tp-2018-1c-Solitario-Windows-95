@@ -6,11 +6,11 @@ sockets inicializar_planificador(){
 	sockets sockets_planificador;//doble declaracion
 	leer_archivo_configuracion();
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
-	handshake_coordinador(sockets_planificador.socket_coordinador);
+	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
-	//conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	return sockets_planificador;
 }
+
 void leer_archivo_configuracion(){
 	t_config* configuracion = config_create("config_planificador");
 		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
@@ -30,13 +30,15 @@ void conectarse_al_coordinador(int socket_coordinador){
 void handshake_coordinador(int socket_coordinador){
 
 	t_handshake proceso_recibido;
-	t_handshake yo = { PLANIFICADOR, 0};
+	t_handshake yo = {0, PLANIFICADOR};
 
-
-	void* buffer = malloc(sizeof(int)*2);
-
+	void* buffer = malloc(sizeof(int)*3);
 	serializar_handshake(buffer, yo);
-	enviar(sockets_planificador.socket_coordinador, buffer, sizeof(int)*2, 80, logger);
+	log_info(logger, "Serialice el handshake!");
+
+	enviar(socket_coordinador, buffer, sizeof(int)*3, 80, logger);
+
+	log_info(logger, "Envie handshake al Coordinador");
 
 	free(buffer);
 
@@ -48,7 +50,7 @@ void handshake_coordinador(int socket_coordinador){
 		void* buffer = malloc(sizeof(int)*2);
 		recibir(socket_coordinador, buffer, sizeof(int), logger);
 		proceso_recibido = deserializar_handshake(buffer);
-		if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
+		if (proceso_recibido.proceso ==  COORDINADOR){ //COORDINADOR, NO RECONOCE EL ENUM
 				log_info(logger, "Se establecio la conexion con el Coordinador");
 			} else {
 				log_info(logger, "Se recibio el Handshake del Coordinador pero fallo");
@@ -59,22 +61,30 @@ void handshake_coordinador(int socket_coordinador){
 
 }
 
-int env(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
-	//void* buffer = malloc(sizeof(int) + tamanio_del_envio);
+void handshake_esi(int socket_esi){
 
-	//memcpy(buffer, &id, sizeof(int));
-	//memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
+	t_handshake proceso_recibido;
+	t_handshake yo = {0, PLANIFICADOR};
 
-	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
+	int protocolo;
+	recibir(socket_esi, &protocolo, sizeof(int), logger);
 
- 	if(bytes_enviados <= 0){
- 		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
- 	}
-	free(envio);
- 	return bytes_enviados;
- }
+	if(protocolo == 80){
+	void* buffer = malloc(sizeof(int)*2);
+		recibir(socket_esi, buffer, sizeof(int), logger);
+		proceso_recibido = deserializar_handshake(buffer);
+		if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
+				log_info(logger, "Se establecio la conexion con el Esi %d\n", proceso_recibido.id);
+			} else {
+				log_info(logger, "Se recibio el Handshake el Esi %d\n pero fallo", proceso_recibido.id);
+			}
+	} else {
+		log_info(logger, "Error al recibir Handshake del Esi");
+	}
+}
 
 
+/*
 void manejar_coordinador(void* socket_coordinador){
 
 	int id = recibir_int(sockets_planificador.socket_coordinador, logger);
@@ -94,6 +104,8 @@ void manejar_coordinador(void* socket_coordinador){
 		break;
 		log_info(logger, "Pedido invalido del Coordinador");
 }
+
+
 
 	//comportamiento posterior
 
@@ -116,15 +128,6 @@ void manejar_coordinador(void* socket_coordinador){
  	}
 	free(buffer);
  	return bytes_enviados;
- }
-
-int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
-
-	int bytes_recibidos = recv(socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
-	if (bytes_recibidos <= 0) {
-			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
-		}
-	return bytes_recibidos;
 }
 
 
@@ -132,21 +135,6 @@ int rec(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_lo
 */
 /*
 
-int handshake_esi(int* socket_esi){
-
-	t_handshake proceso_recibido;
-	t_handshake yo = {PLANIFICADOR, 0};
-
-	recibir(socket_esi, &proceso_recibido, sizeof(t_handshake), logger);
-	enviar(socket_esi, &yo, sizeof(t_handshake), 80, logger);
-
-	if (proceso_recibido.proceso == ESI){
-		return proceso_recibido.id_proceso;
-	} else {
-		log_info(logger, "Error en el handshake con un ESI");
-		return -1;
-	}
-}
 
 pcb crear_pcb_esi(int socket_cliente, int id_esi){ //guardar socket y ID en PCB
 	pcb pcb_esi;
@@ -347,13 +335,14 @@ resultado_esi recibir_resultado_esi(int socket_esi){
 }
 
 */
+/*
 pedido_esi recibir_pedido_coordinador(int socket_coordinador){
 
 	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
 	void* buffer = malloc(tamanio);
 	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
 	pedido_esi* pedido;
-	deserializar_pedido_coordinador(buffer, &pedido);
+	deserializar_pedido_coordinador(buffer, pedido);
 	return *pedido;
 }
 

@@ -108,21 +108,13 @@ int handshake(int* socket_cliente){
 
 	t_handshake proceso_recibido;
 	t_handshake yo = {COORDINADOR, 0};
-	void* buffer = malloc(sizeof(int)*2);
+	void* buffer = malloc(sizeof(int)*3);
 	serializar_handshake(buffer, yo);
-	int leido;
 
-	recibir(socket_cliente, &leido, sizeof(int), logger);
-	proceso_recibido.proceso = leido;
-	recibir(socket_cliente, &leido, sizeof(int), logger);
-	proceso_recibido.id = leido;
+	recibir(*socket_cliente, buffer, sizeof(int)*3, logger);
+	proceso_recibido = deserializar_handshake(buffer);
 
-	printf("%d\n", proceso_recibido.proceso);
-	printf("%d\n", proceso_recibido.id);
-
-	enviar(socket_cliente, buffer, sizeof(buffer), 80, logger);
-
-
+	enviar(*socket_cliente, buffer, sizeof(int)*3, 80, logger);
 
 	switch(proceso_recibido.proceso){
 
@@ -136,20 +128,21 @@ int handshake(int* socket_cliente){
 		break;
 
 	case INSTANCIA:
-		conectar_instancia(socket_cliente, proceso_recibido.id);
+		//conectar_instancia(socket_cliente, proceso_recibido.id);
+		log_info(logger, "Me conecte a la instancia");
 		return 1;
 		break;
 
 	case ESI:
-		conectar_esi(socket_cliente, proceso_recibido.id);
+		//conectar_esi(socket_cliente, proceso_recibido.id);
+		log_info(logger, "Me conecte al ESI");
 		return 1;
 		break;
 
-	default:
+		default:
 		return -1;
 		break;
 	}
-
 }
 
 void procesar_conexion(int* socket_escucha){

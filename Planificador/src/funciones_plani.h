@@ -63,7 +63,7 @@ struct ClavesBloqueadas *clavesBloqueadas;
 //testing
 
 //////////-----INICIALIZACION-----//////////
-//int handshake_esi(int* socket_esi);
+void handshake_esi(int socket_esi);
 void handshake_coordinador(int socket_coordinador);
 //pcb crear_pcb_esi(int socket_cliente, int id_esi);
 sockets inicializar_planificador();
