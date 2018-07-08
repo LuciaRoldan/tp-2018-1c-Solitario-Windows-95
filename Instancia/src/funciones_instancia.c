@@ -83,27 +83,22 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 		int conexion_hecha = 0;
 
 		t_handshake proceso_recibido;
-//		t_handshake yo = { PLANIFICADOR, 0 };
 		t_handshake yo = {INSTANCIA, id};
 		int id_recibido;
-		void* buffer = malloc(sizeof(int)*2);
-		int leido;
-		serializar_handshake(buffer, yo);
+		void* buffer_envio = malloc(sizeof(int)*3); //Es de 3 porque tambien se manda el protocolo
 
-		printf("%s\n", buffer);
+		serializar_handshake(buffer_envio, yo);
+		enviar(*socket_coordinador, buffer_envio, sizeof(int)*3, 80, logger);
 
-		int x = enviar(socket_coordinador, buffer, sizeof(buffer), 80, logger);
+		free(buffer_envio);
+		void* buffer_recepcion = malloc(sizeof(int)*2);
 
-		printf("%d\n", x);
-
-		recibir(socket_coordinador, &leido, sizeof(int), logger); //recibe el 80
-		recibir(socket_coordinador, &leido, sizeof(int), logger); //recibe COORDINADOR
-		proceso_recibido.proceso = leido;
-		recibir(socket_coordinador, &leido, sizeof(int), logger); //recibe el id (00)
-		proceso_recibido.id_proceso= leido;
+		recibir(*socket_coordinador, &id_recibido, sizeof(int), logger);
+		recibir(*socket_coordinador, buffer_recepcion, sizeof(int)*2, logger);
+		proceso_recibido = deserializar_handshake(buffer_recepcion);
 
 		printf("%d\n", proceso_recibido.proceso);
-		printf("%d\n", proceso_recibido.id_proceso);
+		printf("%d\n", proceso_recibido.id);
 
 		if (proceso_recibido.proceso != COORDINADOR) {
 
@@ -111,7 +106,7 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 			exit(-1);
 		}
 
-		log_info(logger, "Conectado al COORDINADOR ", proceso_recibido.id_proceso);
+		log_info(logger, "Conectado al COORDINADOR ", proceso_recibido.id);
 
 		return 1;
 
