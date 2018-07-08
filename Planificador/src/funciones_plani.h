@@ -36,6 +36,8 @@ typedef struct{
 	int socket_esis;
 } sockets;
 
+
+
 //////////-----VARIABLES GLOBALES-----//////////
 
 sockets sockets_planificador;
@@ -63,9 +65,9 @@ struct ClavesBloqueadas *clavesBloqueadas;
 //testing
 
 //////////-----INICIALIZACION-----//////////
-void handshake_esi(int socket_esi);
+int handshake_esi(int socket_esi);
 void handshake_coordinador(int socket_coordinador);
-//pcb crear_pcb_esi(int socket_cliente, int id_esi);
+pcb crear_pcb_esi(int socket_cliente, int id_esi);
 sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
@@ -84,9 +86,10 @@ int* deadlock();
 void kill_esis(ColaDeEsi esis);
 
 
-
+*/
 //manejar esis
-void recibir_esis(void* socket_esis);
+void recibir_esis(int socket_esis);
+/*
 void manejar_esi(pcb pcb_esi);
 
 

@@ -1,4 +1,5 @@
 #include "funciones_plani.h"
+#include <pthread.h>
 
 /* COSAS POR HACER
  *
@@ -12,20 +13,22 @@ int main() {
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
 
-	int socket_un_esi = aceptar_conexion(&sockets_planificador.socket_esis);
-	handshake_esi(socket_un_esi);
+	//int socket_un_esi = aceptar_conexion(&sockets_planificador.socket_esis);
+	//handshake_esi(socket_un_esi);
 
-	/*
+
 	pthread_t hilo_escucha_esis;
-	pthread_t hilo_coordinador;
-	pthread_t hilo_consola;
+	//pthread_t hilo_coordinador;
+	//pthread_t hilo_consola;
+
+	int* se = malloc(sizeof(int));
+	//memcpy(se, &sockets_planificador.socket_esis, sizeof(int));
+
+	pthread_create(&hilo_escucha_esis, 0, recibir_esis, (void*) &sockets_planificador.socket_esis);
+	//pthread_create(&hilo_coordinador, 0, manejar_coordinador, (void*) &socket_coordinador);
+	//pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
 
 
-	pthread_create(&hilo_escucha_esis, 0, recibir_esis, (void*) &socket_esis);
-	pthread_create(&hilo_coordinador, 0, manejar_coordinador, (void*) &socket_coordinador);
-	pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
-
-	*/
 	return 0;
 }
 

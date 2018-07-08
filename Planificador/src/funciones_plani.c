@@ -34,37 +34,40 @@ void handshake_coordinador(int socket_coordinador){
 
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_handshake(buffer, yo);
-	log_info(logger, "Serialice el handshake!");
+	log_info(logger, "Serialice el Handshake del Coordinador");
 
 	enviar(socket_coordinador, buffer, sizeof(int)*3, 80, logger);
 
-	log_info(logger, "Envie handshake al Coordinador");
+	log_info(logger, "Envie aHndshake al Coordinador");
 
 	free(buffer);
 
 	int id_protocolo;
 	recibir(socket_coordinador, &id_protocolo, sizeof(int), logger);
 
-	//verificar que sea 80
 	if(id_protocolo == 80){
 		void* buffer = malloc(sizeof(int)*2);
 		recibir(socket_coordinador, buffer, sizeof(int), logger);
 		proceso_recibido = deserializar_handshake(buffer);
-		if (proceso_recibido.proceso ==  COORDINADOR){ //COORDINADOR, NO RECONOCE EL ENUM
+		if (proceso_recibido.proceso ==  COORDINADOR){
 				log_info(logger, "Se establecio la conexion con el Coordinador");
 			} else {
 				log_info(logger, "Se recibio el Handshake del Coordinador pero fallo");
 			}
 	} else {
-		log_info(logger, "Error al recibir Handshake del Coordinador");
+		log_info(logger, "Error en el protocolo del Handshake del Coordinador");
 	}
 
 }
 
-void handshake_esi(int socket_esi){
+int handshake_esi(int socket_esi){
 
 	t_handshake proceso_recibido;
 	t_handshake yo = {0, PLANIFICADOR};
+
+	void* buffer = malloc(sizeof(int)*3);
+	serializar_handshake(buffer, yo);
+	log_info(logger, "Serialice el handshake de un Esi!");
 
 	int protocolo;
 	recibir(socket_esi, &protocolo, sizeof(int), logger);
@@ -73,14 +76,60 @@ void handshake_esi(int socket_esi){
 	void* buffer = malloc(sizeof(int)*2);
 		recibir(socket_esi, buffer, sizeof(int), logger);
 		proceso_recibido = deserializar_handshake(buffer);
-		if (proceso_recibido.proceso ==  0){ //COORDINADOR, NO RECONOCE EL ENUM
-				log_info(logger, "Se establecio la conexion con el Esi %d\n", proceso_recibido.id);
-			} else {
-				log_info(logger, "Se recibio el Handshake el Esi %d\n pero fallo", proceso_recibido.id);
-			}
+		if (proceso_recibido.proceso !=  0){ //validar que no tenía ya al ESI en otra PCB
+			enviar(socket_esi, buffer, sizeof(int)*3, 80, logger);
+			log_info(logger, "Se establecio la conexion con el Esi de id %d\n", proceso_recibido.id);
+			return proceso_recibido.id;
+		} else {
+			log_info(logger, "Se recibio el Handshake el Esi de id %d\n pero fallo", proceso_recibido.id);
+			return -1;
+		}
 	} else {
-		log_info(logger, "Error al recibir Handshake del Esi");
+		log_info(logger, "Error en el protocolo del Handshake del Esi");
+		return -1;
 	}
+}
+
+pcb crear_pcb_esi(int socket_esi_nuevo, int id_esi){
+	pcb pcb_esi;
+	pcb_esi.id = id_esi;
+	pcb_esi.socket = socket_esi_nuevo;
+	return pcb_esi;
+}
+
+
+//manejar esis
+void recibir_esis(int socket_esis){
+	log_info(logger, "Entre al hilo recibir_esis");
+	t_list* pcbs = list_create();
+	t_list* esis_ready = list_create();
+	while(1);
+	int socket_esi_nuevo;
+	socket_esi_nuevo = aceptar_conexion(&socket_esis); //es como una funcion con un accept basicamente
+	if(socket_esi_nuevo > 1){						//que devuelve lo que me devuelve el accept. Now
+		int id_esi_nuevo;								//en las commons!
+		id_esi_nuevo = handshake_esi(socket_esi_nuevo);
+		if (id_esi_nuevo){
+			pcb pcb_esi_nuevo;
+			pcb_esi_nuevo = crear_pcb_esi(socket_esi_nuevo, id_esi_nuevo);
+			list_add(pcbs, &pcb_esi_nuevo); //agrego PCB ESI a mi lista de ESIs
+			list_add(esis_ready, &pcb_esi_nuevo); //agrego PCB ESI a cola ready
+}}}/*
+
+
+
+			pthread_t hilo_escucha_esi;
+			if (pthread_create(&hilo_escucha_esi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
+				perror("No se pudo crear el hilo");
+			}
+			pthread_join(hilo_escucha_esi , 0);
+		log_info(logger, "Esi asignado");
+		}
+	}
+
+		if (socket_esi_nuevo < 0){
+	        perror("Fallo en el accept");
+		}
 }
 
 
@@ -111,39 +160,13 @@ void manejar_coordinador(void* socket_coordinador){
 
 
 }
-//testing
-/*int env(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
-	void* buffer = malloc(sizeof(int) + tamanio_del_envio);
-
-	memcpy(buffer, &id, sizeof(int));
-	memcpy((buffer + (sizeof(int))), envio, tamanio_del_envio);
-
-	printf("holaaaaa");
-
-	int bytes_enviados = send(socket_destino, buffer, sizeof(buffer), 0);
-
-
- 	if(bytes_enviados <= 0){
- 		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
- 	}
-	free(buffer);
- 	return bytes_enviados;
-}
-
 
 
 */
 /*
 
 
-pcb crear_pcb_esi(int socket_cliente, int id_esi){ //guardar socket y ID en PCB
-	pcb pcb_esi;
 
-	pcb_esi.id = id_esi;
-	pcb_esi.socket = socket_cliente;
-
-	return pcb_esi;
-}
 
 
 
@@ -192,31 +215,7 @@ void killEsis(ColaDeEsi esis){
 
 
 
-//manejar esis
-void recibir_esis(void* socket_esis){
-	int socket_esi_nuevo;
-	while(socket_esi_nuevo = aceptar_conexion(socket_esis)){ //es como una funcion con un accept basicamente
-													//que devuelve lo que me devuelve el accept. Now
-													//en las commons!
-		int id_esi_nuevo;
-		if (id_esi_nuevo = handshake_esi((int*) socket_esis)){ //aca se crea la PCB, devuelde id
-			pcb pcb_esi_nuevo;
-			pcb_esi_nuevo = crear_pcb_esi(&socket_esi_nuevo, id_esi_nuevo);
-			log_info(logger, "Conexion aceptada del Esi: (%d bytes)", pcb_esi_nuevo.id);
-			agregar_a_cola_ready(pcb_esi_nuevo.id);
-			pthread_t hilo_escucha_esi;
-			if (pthread_create(&hilo_escucha_esi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
-				perror("No se pudo crear el hilo");
-			}
-			pthread_join(hilo_escucha_esi , 0);
-		log_info(logger, "Esi asignado");
-		}
-	}
 
-		if (socket_esi_nuevo < 0){
-	        perror("Fallo en el accept");
-		}
-}
 
 void manejar_esi(pcb pcb_esi){
 	//recibir el tipo y fijarme si es valido y seguir
