@@ -29,7 +29,7 @@ int handshake(int socket_servidor, int idProceso, t_log* logger) {
 
 	serializar_handshake(buffer, yo);
 	enviar(socket_servidor, buffer, sizeof(int)*3, 80, logger);
-	log_info(logger, "Envie");
+	log_info(logger, "Envie el Handshake");
 	free(buffer);
 
 	protocolo = recibir_int(socket_servidor, logger);
@@ -42,7 +42,7 @@ int handshake(int socket_servidor, int idProceso, t_log* logger) {
 	proceso_recibido = deserializar_handshake(hs_recibido);
 	free(hs_recibido);
 
-	switch(proceso_recibido.id){
+	switch(proceso_recibido.proceso){
 		case PLANIFICADOR:
 			log_info(logger, "Me conecte con el Planificador");
 			return 1;
