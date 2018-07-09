@@ -129,13 +129,14 @@ int connect_to_server(char* ip, char * port, t_log * logger);//devuelve el socke
 int aceptar_conexion(int socket_escucha);
 
 //funciones de enviar y recibir
-int enviar(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger);
+int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger);
 int recibir(int socket_receptor, void* buffer_receptor,int tamanio_que_recibo, t_log* logger);
 int recibir_int(int socket, t_log* logger);
 
 //funciones de serializacion, una por tipo de mensaje
 
 //serializar
+void serializar_id(void* envio, int id);
 void serializar_handshake(void* buffer, t_handshake handshake);
 
 

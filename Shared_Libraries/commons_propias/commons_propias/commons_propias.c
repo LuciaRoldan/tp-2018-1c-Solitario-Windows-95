@@ -48,7 +48,7 @@ int inicializar_servidor(int puerto, t_log * logger){
 
 //Funciones para enviar y recibir cosas serializadas
 
-int enviar(int socket_destino, void* envio, int tamanio_del_envio, int id, t_log* logger){
+int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
 	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
  	if(bytes_enviados <= 0){
  		printf("Bytes_enviados: %d\n", bytes_enviados);
@@ -98,6 +98,11 @@ int recibir_int(int socket, t_log* logger){
 ////////////////////----------SERIALIZAR Y DESEREALIZAR----------////////////////////
 
 //////////-----PARA TODOS-----//////////
+
+void serializar_id(void* envio, int id){
+	memcpy(envio, &id, sizeof(int));
+
+}
 
 int deserializar_id(void* buffer_mensaje){
 	int id;
