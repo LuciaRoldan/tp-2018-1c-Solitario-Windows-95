@@ -27,7 +27,7 @@ typedef struct{
 typedef enum{
 	SJF_CD,
 	SJF_SD,
-	HRRN
+	HRRRN
 } algoritmo_planificacion;
 
 
@@ -46,13 +46,12 @@ t_conexion conexion_coordinador;
 t_log * logger;
 algoritmo_planificacion algoritmoPlanificacion; //FALTA LEER DE ARCHIVO
 int estimacionInicial; //FALTA LEER DE ARCHIVO
+
 t_list* pcbs;
 t_list* esis_ready;
 t_list* esis_bloqueados;
 t_list* esis_finalizados;
-
 t_list* claves_bloqueadas;
-
 //char* claves_inicialmente_bloqueadas; //es una lista
 
 
@@ -86,10 +85,20 @@ void kill_esis(ColaDeEsi esis);
 */
 //manejar esis
 void recibir_esis(void* socket_esis);
+
+void manejar_esi(void* pcb_esi);
+
+//Planificar
+void planificar();
+void ordenar_pcbs();
+void planificacionSJF_CD();
+void planificacionSJF_SD();
+void planificacionHRRN();
+
+bool algoritmo_SJF(void* pcb1, void* pcb2);
+bool algoritmo_HRRN(void* pcb1, void* pcb2);
+
 /*
-void manejar_esi(pcb pcb_esi);
-
-
 
 void mover_esi_a_bloqueado(int id_esi);
 void mover_esi_a_ready(int id_esi);

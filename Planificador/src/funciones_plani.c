@@ -121,22 +121,123 @@ void recibir_esis(void* socket_esis){
 				pcb_esi_nuevo = crear_pcb_esi(socket_esi_nuevo, id_esi_nuevo);
 				list_add(pcbs, &pcb_esi_nuevo); //agrego PCB ESI a mi lista de ESIs
 				list_add(esis_ready, &pcb_esi_nuevo); //agrego PCB ESI a cola ready
-}}}}/*
-
-
-
-			pthread_t hilo_escucha_esi;
-			if (pthread_create(&hilo_escucha_esi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
-				perror("No se pudo crear el hilo");
+				pthread_t hilo_escucha_esi;
+				if (pthread_create(&hilo_escucha_esi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
+					perror("No se pudo crear el hilo");
+				}
+				pthread_join(hilo_escucha_esi , 0);
 			}
-			pthread_join(hilo_escucha_esi , 0);
-		log_info(logger, "Esi asignado");
-		}
-	}
-
-		if (socket_esi_nuevo < 0){
+		} else { //socket_esi_nuevo < 0
 	        perror("Fallo en el accept");
 		}
+	}
+}
+
+void manejar_esi(void* la_pcb){
+	while(1){
+		log_info(logger, "Entre a manjear ESI");
+		pcb pcb_esi = *((pcb*) la_pcb);
+		planificar();
+		resultado_esi resultado = recibir_int(pcb_esi.socket, logger);
+		switch (resultado){
+			case (EXITO):
+				registrar_exito_en_pcb(pcb_esi.id);
+			break;
+			default:
+				abortar(pcb_esi);
+			break;
+		}
+	}
+}
+
+void planificar(){
+	ordenar_pcbs();
+	void* pcbb;
+	pcbb = list_get(esis_ready, 1);
+	pcb esi_a_ejecutar = *((pcb*) pcbb);
+
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 61);
+	enviar(esi_a_ejecutar->socket, buffer, sizeof(int), 0, logger);
+
+}
+
+void registrar_exito_en_pcb(int id_esi){
+
+}
+
+
+void ordenar_pcbs(){
+
+	switch(algoritmoPlanificacion) {
+
+	case SJF_CD:
+	planificacionSJF_CD();
+	break;
+
+
+	case SJF_SD:
+	planificacionSJF_SD();
+	break;
+
+
+	case HRRRN:
+	planificacionHRRN();
+	break;
+	}
+}
+
+void planificacionSJF_CD(){
+	list_sort(esis_ready, algoritmo_SJF);
+}
+
+
+void planificacionSJF_SD(){
+	list_sort(esis_ready, algoritmo_SJF);
+}
+
+void planificacionHRRN(){
+	list_sort(esis_ready, algoritmo_HRRN);
+}
+
+bool algoritmo_SJF(void* pcb_1, void* pcb_2){
+
+	pcb pcb1 = *((pcb*) pcb_1);
+	pcb pcb2 = *((pcb*) pcb_2);
+
+	float proxima_rafaga1;
+	float proxima_rafaga2;
+
+	int alfaSJF = 2;
+
+	proxima_rafaga1 =  (alfaSJF/100) * (pcb1.ultimaRafaga) + (1 - alfaSJF/100)* (pcb1.ultimaEstimacion);
+	proxima_rafaga2 =  (alfaSJF/100) * (pcb2.ultimaRafaga) + (1 - alfaSJF/100)* (pcb2.ultimaEstimacion);
+
+	if ( proxima_rafaga1 <= proxima_rafaga2){
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
+
+	pcb pcb1 = *((pcb*) pcb_1);
+	pcb pcb2 = *((pcb*) pcb_2);
+
+	int alfaHRRN = 2;
+
+	int estimacion1 = (alfaHRRN/100) * (pcb1.ultimaRafaga) + (1 - alfaHRRN/100)* (pcb1.ultimaEstimacion);
+	int tiempo_de_respuesta1 = (pcb1.retardo + estimacion1) / estimacion1;
+
+	int estimacion2 = (alfaHRRN/100) * (pcb2.ultimaRafaga) + (1 - alfaHRRN/100)* (pcb2.ultimaEstimacion);
+	int tiempo_de_respuesta2 = (pcb2.retardo + estimacion2) / estimacion2;
+
+	if(tiempo_de_respuesta1 >= tiempo_de_respuesta2){
+		return 1;
+	}
+
+	return 0;
 }
 
 
@@ -223,21 +324,8 @@ void killEsis(ColaDeEsi esis){
 
 
 
-
-void manejar_esi(pcb pcb_esi){
-	//recibir el tipo y fijarme si es valido y seguir
-	resultado_esi resultado = recibir_resultado_esi(pcb_esi.socket);
-	switch (resultado){
-				case (EXITO):
-						registrar_exito_en_pcb(pcb_esi.id);
-				break;
-				case(FALLO):
-				abortar(pcb_esi);
-				break;
-	}
-	ejecutar_proximo_esi();
-}
-
+*/
+/*
 void mover_esi_a_bloqueado(int idEsi){} //hay que hacer estas funciones de encolar
 void mover_esi_a_ready(int idEsi){}
 void mover_esi_a_finalizado(int idEsi){}
@@ -332,13 +420,6 @@ void mostrar_status_clave(status_clave clave){
 
 
 //MENSAJES
-resultado_esi recibir_resultado_esi(int socket_esi){
-	resultado_esi resultado;
-	recibir(socket_esi, &resultado, sizeof(resultado), logger);
-		//deserializar?
-
-	return resultado;
-}
 
 */
 /*
