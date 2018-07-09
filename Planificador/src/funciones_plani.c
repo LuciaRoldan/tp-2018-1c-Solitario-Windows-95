@@ -1,5 +1,6 @@
 #include "funciones_plani.h"
 
+
 //inicializando
 
 sockets inicializar_planificador(){
@@ -36,7 +37,7 @@ void handshake_coordinador(int socket_coordinador){
 	serializar_handshake(buffer, yo);
 	log_info(logger, "Serialice el Handshake del Coordinador");
 
-	enviar(socket_coordinador, buffer, sizeof(int)*3, 80, logger);
+	enviar(socket_coordinador, buffer, sizeof(int)*3, logger);
 
 	log_info(logger, "Envie Handshake al Coordinador");
 
@@ -67,7 +68,7 @@ void handshake_coordinador(int socket_coordinador){
 int handshake_esi(int socket_esi){
 
 	t_handshake proceso_recibido;
-	t_handshake yo = {0, PLANIFICADOR};
+	t_handshake yo = {0, 0};
 
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_handshake(buffer, yo);
@@ -81,7 +82,7 @@ int handshake_esi(int socket_esi){
 		recibir(socket_esi, buffer, sizeof(int), logger);
 		proceso_recibido = deserializar_handshake(buffer);
 		if (proceso_recibido.proceso !=  0){ //validar que no tenía ya al ESI en otra PCB
-			enviar(socket_esi, buffer, sizeof(int)*3, 80, logger);
+			enviar(socket_esi, buffer, sizeof(int)*3, logger);
 			log_info(logger, "Se establecio la conexion con el Esi de id %d\n", proceso_recibido.id);
 			return proceso_recibido.id;
 		} else {
@@ -137,15 +138,21 @@ void manejar_esi(void* la_pcb){
 	while(1){
 		log_info(logger, "Entre a manjear ESI");
 		pcb pcb_esi = *((pcb*) la_pcb);
-		planificar();
+		log_info(logger, "id dentro de manejar esi es %d", pcb_esi.id);
+		log_info(logger, "socket dentro de manejar esi es %d", pcb_esi.socket);
+		//planificar();
+		sleep(5);
 		resultado_esi resultado = recibir_int(pcb_esi.socket, logger);
-		switch (resultado){
-			case (EXITO):
-				registrar_exito_en_pcb(pcb_esi.id);
-			break;
-			default:
-				abortar(pcb_esi);
-			break;
+		log_info(logger, "El ESI me envio el resultado_esi %d\n", resultado);
+		if (resultado){
+			switch (resultado){
+				case (EXITO):
+					//registrar_exito_en_pcb(pcb_esi.id);
+				break;
+				default:
+					//abortar(pcb_esi);
+				break;
+			}
 		}
 	}
 }
@@ -158,12 +165,14 @@ void planificar(){
 
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 61);
-	enviar(esi_a_ejecutar->socket, buffer, sizeof(int), 0, logger);
-
+	enviar(esi_a_ejecutar.socket, buffer, sizeof(int), logger);
 }
 
 void registrar_exito_en_pcb(int id_esi){
 
+	void* pcbb;
+	//pcbb = list_find(pcbs, );
+	pcb esi_a_ejecutar = *((pcb*) pcbb);
 }
 
 
@@ -175,15 +184,14 @@ void ordenar_pcbs(){
 	planificacionSJF_CD();
 	break;
 
-
 	case SJF_SD:
 	planificacionSJF_SD();
 	break;
 
-
 	case HRRRN:
 	planificacionHRRN();
 	break;
+
 	}
 }
 
