@@ -17,11 +17,9 @@ int main(int argc, char* argv[]){
 
 	int socket_Coordinador = conectarse_al_Coordinador(datos_configuracion, logger_esi);
 	handshake(socket_Coordinador, idEsi, logger_esi);
-	log_info(logger_esi, "ESI %d conectado a Coordinador", idEsi);
 
 	int socket_Planificador = conectarse_al_Planificador(datos_configuracion, logger_esi);
 	handshake(socket_Planificador, idEsi, logger_esi);
-	log_info(logger_esi, "ESI %d conectado a Planificador", idEsi);
 
 	int codigo_plani;
 	int abortoESI = 0;

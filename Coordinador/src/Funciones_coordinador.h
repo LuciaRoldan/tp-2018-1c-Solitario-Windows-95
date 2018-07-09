@@ -7,6 +7,8 @@
 t_log * logger;
 t_conexion conexionInstancia;
 int socket_planificador;
+int socket_escucha;
+t_dictionary diccionario_instancias;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -21,12 +23,17 @@ typedef struct{
 	int retardo;
 }info_archivo_config;
 
+typedef struct{
+	int socket;
+	int id;
+}hilo_proceso;
+
 ///////////////////////// FUNCIONES /////////////////////////
 
 //INICIALIZACION
 void leer_archivo_configuracion(info_archivo_config* configuracion);
-int inicializar_coordinador(info_archivo_config configuracion);
-void conectar_planificador(int socket_escucha);
+void inicializar_coordinador(info_archivo_config configuracion);
+void conectar_planificador();
 
 //COMUNICACION
 int enviar_configuracion_instancia(int socket, info_archivo_config configuracion);
@@ -42,10 +49,13 @@ t_esi_operacion recibir_instruccion(int socket);
 //FUNCIONAMIENTO INTERNO
 int handshake(int socket);
 int procesar_mensaje(int id, int socket);
-void conectar_esi(int socket, int id_recibido);
-void conectar_instancia(int socket, int id_recibido);
+void procesar_conexion();
+void atender_planificador();
+void atender_esi(void* datos_esi);
+void atender_instancia(void* datos_instancia);
 void desconectar_instancia();
 int* buscar_instancia(char* clave);
 int procesar_instruccion(t_esi_operacion instruccion, int socket);
+void agregar_nuevo_esi(int socket_esi, int id_esi);
 
 #endif /* FUNCIONES_COORDINADOR_H_ */

@@ -14,23 +14,29 @@ int main(){
 	leer_archivo_configuracion(&configuracion);
 
 	log_info(logger,"Se paso a archivo");
-	int socket_escucha = inicializar_coordinador(configuracion);
-	conectar_planificador(socket_escucha);
+	inicializar_coordinador(configuracion);
+	conectar_planificador();
 
 	pthread_t hilo_escucha;
 	pthread_t hilo_planificador;
 
-	//pthread_create(&hilo_escucha, 0, procesar_conexion, (int*)&socket_escucha, (t_log*) logger);
-	//pthread_create(&hilo_planificador, 0, atender_planificador, (&socket_planificador, logger));
+	pthread_create(&hilo_escucha, 0, procesar_conexion, NULL);
+	pthread_create(&hilo_planificador, 0, atender_planificador, NULL);
 
-	int protocolo_prueba;
+	/*int protocolo_prueba;
 	int socket_esi = aceptar_conexion(socket_escucha);
 	recibir(socket_esi, &protocolo_prueba, sizeof(int), logger);
 	handshake(socket_esi);
 	int socket_instancia = aceptar_conexion(socket_escucha);
 	recibir(socket_instancia, &protocolo_prueba, sizeof(int), logger);
-	handshake(socket_instancia);
+	handshake(socket_instancia);*/
 
+
+
+	log_info(logger, "Hilos ya creados");
+
+	pthread_join(hilo_escucha, NULL);
+	pthread_join(hilo_planificador, NULL);
 	close(socket_escucha);
 
 	return 0;

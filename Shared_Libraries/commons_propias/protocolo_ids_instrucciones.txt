@@ -28,7 +28,6 @@ El mensaje consiste del tipo de dato que van a enviar.
 24 t_esi_operacion
 
 
-
 ///////////////// PLANIFICADOR /////////////////
 DE ESI A PLANIFICADOR
 41 resultado_ejecucion_esi
@@ -45,3 +44,4 @@ DE PLANIFICADOR A ESI
 
 ///////////////// TODOS /////////////////
 80 t_handshake
+81 el esi termino

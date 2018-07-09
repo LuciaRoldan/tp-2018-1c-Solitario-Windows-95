@@ -7,11 +7,6 @@ void leer_archivo_configuracion(info_archivo_config* configuracion){
 	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
 	FILE* archivo = fopen("Configuracion_coordinador.txt", "r");
 
-	if (archivo < 1) {
-		log_info(logger, "No se puede abrir el archivo Configuracion_coordinador.txt");
-		exit(1);
-	}
-
 	fscanf(archivo, "%s %d %d %d %d %d",
 			configuracion->ip,
 			&(configuracion->puerto_escucha),
@@ -22,12 +17,11 @@ void leer_archivo_configuracion(info_archivo_config* configuracion){
 	fclose(archivo);
 }
 
-int inicializar_coordinador(info_archivo_config configuracion){
-	int socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
-	return socket_escucha;
+void inicializar_coordinador(info_archivo_config configuracion){
+	socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
 }
 
-void conectar_planificador(int socket_escucha){
+void conectar_planificador(){
 	int socket_cliente = aceptar_conexion(socket_escucha);
 	int protocolo;
 
@@ -114,7 +108,7 @@ int handshake(int socket_cliente){
 	int conexion_hecha = 0;
 
 	t_handshake proceso_recibido;
-	t_handshake yo = {0, 1};
+	t_handshake yo = {0, COORDINADOR};
 	void* buffer_recepcion = malloc(sizeof(int)*2);
 	void* buffer_envio = malloc(sizeof(int)*3);
 
@@ -132,7 +126,6 @@ int handshake(int socket_cliente){
 	free(buffer_envio);
 
 	switch(proceso_recibido.proceso){
-
 	case PLANIFICADOR:
 		if(!conexion_hecha){
 			conexion_hecha = 1;
@@ -143,14 +136,15 @@ int handshake(int socket_cliente){
 		break;
 
 	case INSTANCIA:
+		log_info(logger, "Se establecio la conexion con una Instancia ");
+		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
 		//conectar_instancia(socket_cliente, proceso_recibido.id);
-		log_info(logger, "Me conecte a la instancia");
 		return 1;
 		break;
 
 	case ESI:
-		//conectar_esi(socket_cliente, proceso_recibido.id);
-		log_info(logger, "Me conecte al ESI");
+		log_info(logger, "Se establecio la conexion con un ESI ");
+		agregar_nuevo_esi(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
@@ -160,39 +154,62 @@ int handshake(int socket_cliente){
 	}
 }
 
-void procesar_conexion(int socket_escucha){
+void procesar_conexion(){
+	int id_mensaje;
 	while(1){
+		log_info(logger, "Entre en el while de procesar conexion");
+		printf("socket escucha %d \n", socket_escucha);
 		int socket_cliente = aceptar_conexion(socket_escucha);
-		handshake(socket_cliente);
+		printf("socket cliente %d \n", socket_cliente);
+		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
+		printf("protocolo recibido %d \n", id_mensaje);
+		if(id_mensaje == 80){
+			handshake(socket_cliente);
+		}
 	}
 }
 
-void atender_planificador(int socket_planificador){
+void atender_planificador(){
 	int id_mensaje;
 	while(1){
+		log_info(logger, "Entre en el while de atender planificador");
 		recibir(socket_planificador, &id_mensaje, sizeof(int), logger);
 		procesar_mensaje(id_mensaje, socket_planificador);
 	}
 }
 
-void conectar_esi(int socket, int id_recibido){
-	int id_proceso = id_recibido;
+void atender_esi(void* datos_esi){
+	log_info(logger, "Estoy en el hilo del esi!");
+	hilo_proceso mis_datos = *((hilo_proceso*)datos_esi);
 	int id_mensaje;
 	while(1){
-		recibir(socket, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje, socket);
+		recibir(mis_datos.socket, &id_mensaje, sizeof(int), logger);
+		procesar_mensaje(id_mensaje, mis_datos.socket);
 	}
 }
 
-void conectar_instancia(int socket, int id_recibido){
-
-	log_info(logger, "Conectado a la INSTANCIA");
-	int id_proceso = id_recibido;
+void atender_instancia(void* datos_instancia){
+	log_info(logger, "Estoy en el hilo de la instancia!");
+	hilo_proceso mis_datos = *((hilo_proceso*)datos_instancia);
 	int id_mensaje;
 	while(1){
-		recibir(socket, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje, socket);
+		recibir(mis_datos.socket, &id_mensaje, sizeof(int), logger);
+		procesar_mensaje(id_mensaje, mis_datos.socket);
 	}
+}
+
+void agregar_nuevo_esi(int socket_esi, int id_esi){
+	hilo_proceso datos_esi = {socket_esi, id_esi};
+	void* datazos = &datos_esi;
+	pthread_t hilo_esi;
+	pthread_create(&hilo_esi, 0, atender_esi, datazos);
+}
+
+void agregar_nueva_instancia(int socket_instancia, int id_instancia){
+	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
+	void* datazos = &datos_instancia;
+	pthread_t hilo_instanica;
+	pthread_create(&hilo_instanica, 0, atender_instancia, datazos);
 }
 
 int procesar_mensaje(int id, int socket){
@@ -209,7 +226,7 @@ int procesar_mensaje(int id, int socket){
 			break;
 		case 21:
 			clave = recibir_pedido_clave(socket);
-			socket_instancia = buscar_instancia(clave); //falta
+			//socket_instancia = buscar_instancia(clave); //falta
 			resultado = enviar_pedido_valor(socket_instancia, clave);
 			return resultado;
 			break;
