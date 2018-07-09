@@ -35,6 +35,7 @@ int main() {
 	memoria = malloc(espacio_para_memoria);
 
 	free(espacio_para_memoria);
+	sleep(5);
 	return 0;
 }
 

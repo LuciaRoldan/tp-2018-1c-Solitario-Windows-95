@@ -5,6 +5,10 @@
 #include "Funciones_coordinador.h"
 
 
+
+
+
+
 int main(){
 
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
@@ -34,7 +38,8 @@ int main(){
 
 
 	log_info(logger, "Hilos ya creados");
-
+	sleep(60);
+	log_info(logger, "Me desperte");
 	pthread_join(hilo_escucha, NULL);
 	pthread_join(hilo_planificador, NULL);
 	close(socket_escucha);

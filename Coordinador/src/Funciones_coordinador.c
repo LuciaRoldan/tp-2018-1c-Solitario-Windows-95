@@ -19,6 +19,7 @@ void leer_archivo_configuracion(info_archivo_config* configuracion){
 
 void inicializar_coordinador(info_archivo_config configuracion){
 	socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
+	lista_esis = list_create();
 }
 
 void conectar_planificador(){
@@ -115,8 +116,8 @@ int handshake(int socket_cliente){
 	recibir(socket_cliente, buffer_recepcion, sizeof(int)*2, logger);
 	proceso_recibido = deserializar_handshake(buffer_recepcion);
 
-	printf("proceso recibido %d \n", proceso_recibido.proceso);
-	printf("id proceso recibido %d \n", proceso_recibido.id);
+	log_info(logger, "proceso recibido %d", proceso_recibido.proceso);
+	log_info(logger, "id proceso recibido %d", proceso_recibido.id);
 
 	free(buffer_recepcion);
 
@@ -138,7 +139,6 @@ int handshake(int socket_cliente){
 	case INSTANCIA:
 		log_info(logger, "Se establecio la conexion con una Instancia ");
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
-		//conectar_instancia(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
@@ -158,11 +158,8 @@ void procesar_conexion(){
 	int id_mensaje;
 	while(1){
 		log_info(logger, "Entre en el while de procesar conexion");
-		printf("socket escucha %d \n", socket_escucha);
 		int socket_cliente = aceptar_conexion(socket_escucha);
-		printf("socket cliente %d \n", socket_cliente);
 		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
-		printf("protocolo recibido %d \n", id_mensaje);
 		if(id_mensaje == 80){
 			handshake(socket_cliente);
 		}
@@ -172,7 +169,7 @@ void procesar_conexion(){
 void atender_planificador(){
 	int id_mensaje;
 	while(1){
-		log_info(logger, "Entre en el while de atender planificador");
+		//log_info(logger, "Entre en el while de atender planificador");
 		recibir(socket_planificador, &id_mensaje, sizeof(int), logger);
 		procesar_mensaje(id_mensaje, socket_planificador);
 	}
@@ -180,11 +177,14 @@ void atender_planificador(){
 
 void atender_esi(void* datos_esi){
 	log_info(logger, "Estoy en el hilo del esi!");
-	hilo_proceso mis_datos = *((hilo_proceso*)datos_esi);
+	//hilo_proceso mis_datos = *((hilo_proceso*)datos_esi);
+	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_esi);
 	int id_mensaje;
 	while(1){
-		recibir(mis_datos.socket, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje, mis_datos.socket);
+		int resultado = recibir(mis_datos.socket, &id_mensaje, sizeof(int), logger);
+		if(resultado > 0){
+			procesar_mensaje(id_mensaje, mis_datos.socket);
+		}
 	}
 }
 
@@ -200,9 +200,12 @@ void atender_instancia(void* datos_instancia){
 
 void agregar_nuevo_esi(int socket_esi, int id_esi){
 	hilo_proceso datos_esi = {socket_esi, id_esi};
-	void* datazos = &datos_esi;
+	void* buffer = malloc(sizeof(int)*2);
+	serializar_hilo_proceso(buffer, datos_esi);
 	pthread_t hilo_esi;
-	pthread_create(&hilo_esi, 0, atender_esi, datazos);
+	pthread_create(&hilo_esi, 0, atender_esi, buffer); //(void*) &
+	nodo_esi nodo = {socket_esi, id_esi, hilo_esi};
+	list_add(lista_esis, &nodo);
 }
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
@@ -244,6 +247,13 @@ int procesar_mensaje(int id, int socket){
 			resultado = procesar_instruccion(instruccion, socket); // falta
 			return resultado;
 			break;
+		case 81:
+			socket_esi_buscado = socket;
+			nodo_esi* el_nodo = list_find(lista_esis, condicion_join_esi);
+			resultado = pthread_join(el_nodo->hilo, NULL);
+			log_info(logger, "ya tire el join: %d", resultado);
+			return resultado;
+			break;
 		default:
 			return -1;
 			break;
@@ -263,4 +273,25 @@ int* buscar_instancia(char* clave){
 
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	return 1;
+}
+
+bool condicion_join_esi(void* datos){
+	nodo_esi un_nodo = *((nodo_esi*) datos);
+	return un_nodo.socket == socket_esi_buscado;
+}
+
+/////////////////////////////// FUNCIONES PARA HILOS ///////////////////////////////
+
+void serializar_hilo_proceso(void* buffer, hilo_proceso hilo){
+	hilo_proceso* info_hilo_proceso = malloc(sizeof(hilo_proceso));
+	*info_hilo_proceso = hilo;
+	memcpy(buffer, info_hilo_proceso, sizeof(hilo_proceso));
+	free(info_hilo_proceso);
+}
+
+hilo_proceso deserializar_hilo_proceso(void *buffer_recepcion){
+	hilo_proceso hilo_proceso_recibido;
+	memcpy(&hilo_proceso_recibido.socket, buffer_recepcion, sizeof(int));
+	memcpy(&hilo_proceso_recibido.id, buffer_recepcion + sizeof(int), sizeof(int));
+	return hilo_proceso_recibido;
 }

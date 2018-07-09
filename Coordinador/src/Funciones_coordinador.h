@@ -8,7 +8,8 @@ t_log * logger;
 t_conexion conexionInstancia;
 int socket_planificador;
 int socket_escucha;
-t_dictionary diccionario_instancias;
+t_list* lista_esis;
+int socket_esi_buscado;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -27,6 +28,12 @@ typedef struct{
 	int socket;
 	int id;
 }hilo_proceso;
+
+typedef struct{
+	int socket;
+	int id;
+	pthread_t hilo;
+}nodo_esi;
 
 ///////////////////////// FUNCIONES /////////////////////////
 
@@ -57,5 +64,11 @@ void desconectar_instancia();
 int* buscar_instancia(char* clave);
 int procesar_instruccion(t_esi_operacion instruccion, int socket);
 void agregar_nuevo_esi(int socket_esi, int id_esi);
+void agregar_nueva_instancia(int socket_instancia, int id_instancia);
+bool condicion_join_esi(void* datos);
+
+//DE HILOS
+void serializar_hilo_proceso(void* buffer, hilo_proceso hilo);
+hilo_proceso deserializar_hilo_proceso(void *buffer_recepcion);
 
 #endif /* FUNCIONES_COORDINADOR_H_ */
