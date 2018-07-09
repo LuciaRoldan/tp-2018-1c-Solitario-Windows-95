@@ -3,6 +3,9 @@
 
 #include "commons_propias/commons_propias.h"
 
+///////////////////////// VARIABLES GLOBALES /////////////////////////
+datos_configuracion configuracion;
+
 typedef enum {
 	LRU, CIRC, BSU
 } tipo_algoritmo_reemplazo;
@@ -17,11 +20,11 @@ typedef struct{
 }configuracion_propia;
 
 ///////////////////////// FUNCIONES /////////////////////////
-datos_configuracion recibir_configuracion(int* socket_coordinador,t_log* logger);
+void recibir_configuracion(int socket_coordinador,datos_configuracion configuracion, t_log* logger);
 void inicializar_instancia();
 void leer_configuracion_propia(configuracion_propia* configuracion,t_log* logger);
-t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger);
-void procesar_instruccion(int* socket_coordinador, t_esi_operacion instruccion);
+void recibir_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger);
+void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion);
 void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger);
 void guardar_archivo(char* clave, char* value);
 int handshake(int* socket_coordinador, t_log* logger, int id_proceso);

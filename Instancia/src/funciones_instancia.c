@@ -3,12 +3,10 @@
 
 /////////////////////// INICIALIZACION ///////////////////////
 
-	datos_configuracion recibir_configuracion(int* socket_coordinador,t_log* logger) {
-		datos_configuracion configuracion;
-		recibir(socket_coordinador, &configuracion, sizeof(datos_configuracion), logger);
-		return configuracion;
-		//deserializar?
-	}
+
+void recibir_configuracion(int socket_coordinador,datos_configuracion configuracion, t_log* logger) {
+			recibir(socket_coordinador,(void*)&configuracion, sizeof(datos_configuracion), logger);
+		}
 
 void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logger) {
 
@@ -30,54 +28,79 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 }
 
 
-//	t_esi_operacion recibir_instruccion(int* socket_coordinador, t_log* logger) {
-//		t_esi_operacion instruccion;
-//		recibir(socket_coordinador, &instruccion, sizeof(t_esi_operacion), logger);
-//		return instruccion;
-//		//deserializar?
-//	}
-//
-//	void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger) {
-//		enviar(socket_coordinador, clave, sizeof(clave), 03, logger);
-//		//serializar?
-//	}
+	void procesarID(int socket_coordinador, t_log* logger){
+		int id = recibir_int(socket_coordinador,logger);
+		t_handshake handshake_coordi;
+		t_esi_operacion instruccion;
 
-	/*void guardar_archivo(char* clave, char* valor) {
-
-		int* direccion = obtener_direccion(clave);
-		memcopy(direccion, valor, sizeof(valor));
-	}*/
-
-/*	void procesar_instruccion(int* socket_coordinador, t_esi_operacion instruccion) {
-
-		switch (instruccion.keyword) {
-		case (GET):
-//fijarme si existe en memoria, en caso de que no exista tengo que guardar una de las entradas
+		switch(id){
+			case(00):
+					recibir_configuracion(socket_coordinador, configuracion, logger);
 			break;
-//		case (SET):
-//			char* clave = malloc(40);
-//			char* valor = malloc(char);
-//			*strcpy(clave, instruccion.argumentos.SET.clave);
-//			*strcpy(valor, instruccion.argumentos.SET.valor);
-// 			guardar_archivo(clave,valor);
-//			break;
-//		case (STORE):
-			char* clave = malloc(40);
-			*strcpy(clave, instruccion.argumentos.STORE.clave);
-			int direccion = &clave;
-			char informacion[];
-
-			memcpy(informacion, *direccion, sizeof(informacion));
-
-			//archivo = fopen("informacion.txt", "w");
-			fwrite(&informacion, sizeof(informacion), 1, archivo);
-			fclose (archivo);
-
-			void enviar_a_desbloquear_clave(socket_coordinador, clave);
+			case(01):
+	//				me pueden pedir clave sin una instruccion??
+			break;
+			case(02):
+					recibir_instruccion(socket_coordinador, instruccion, logger);
+					procesar_instruccion(socket_coordinador,instruccion);
+			break;
+			case(80):
+					recibir(socket_coordinador,(void*)&handshake_coordi,sizeof(t_handshake),logger);
+					deserializar_handshake((void*)&handshake_coordi);
 			break;
 		}
 	}
-*/
+
+	void deserializar_configuracion(void* buffer){
+			memcpy(&(configuracion.cantidad_entradas),buffer,sizeof(int));
+			memcpy(&(configuracion.tamano_entrada), (buffer + (sizeof(int))),sizeof(int));
+		}
+
+		void recibir_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
+			recibir(socket_coordinador, (void*)&instruccion, sizeof(t_esi_operacion), logger);
+		}
+	//
+	//	void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger) {
+	//		enviar(socket_coordinador, clave, sizeof(clave), 03, logger);
+	//		//serializar?
+	//	}
+
+		/*void guardar_archivo(char* clave, char* valor) {
+
+			int* direccion = obtener_direccion(clave);
+			memcopy(direccion, valor, sizeof(valor));
+		}*/
+
+
+			void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion) { //REVISAR
+
+//				switch (instruccion.keyword) {
+//				case (GET):
+//		//fijarme si existe en memoria, en caso de que no exista tengo que guardar una de las entradas
+//					break;
+//				case (SET):
+//					char* clave = malloc(40);
+//					char* valor = malloc(char);
+//					*strcpy(clave, instruccion.argumentos.SET.clave);
+//					*strcpy(valor, instruccion.argumentos.SET.valor);
+//		 			guardar_archivo(clave,valor);
+//					break;
+//				case (STORE):
+//					char* clave = malloc(40);
+//					*strcpy(clave, instruccion.argumentos.STORE.clave);
+//					int direccion = &clave;
+//					char informacion[];
+//
+//					memcpy(informacion, *direccion, sizeof(informacion));
+//
+//					//archivo = fopen("informacion.txt", "w");
+//					fwrite(&informacion, sizeof(informacion), 1, archivo);
+//					fclose (archivo);
+//
+//					void enviar_a_desbloquear_clave(socket_coordinador, clave);
+//					break;
+//				}
+			}
 
 	int handshake(int* socket_coordinador, t_log* logger, int id) {
 		int conexion_hecha = 0;
@@ -113,6 +136,8 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 	 /*algoritmo_distribucion(){
 
 	}*/
+
+
 
 }
 
