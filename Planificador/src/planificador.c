@@ -16,19 +16,21 @@ int main() {
 	//int socket_un_esi = aceptar_conexion(&sockets_planificador.socket_esis);
 	//handshake_esi(socket_un_esi);
 
+	//int socket_esi_nuevo = aceptar_conexion(sockets_planificador.socket_esis);
+	//int id_esi_nuevo = handshake_esi(socket_esi_nuevo);
 
 	pthread_t hilo_escucha_esis;
 	//pthread_t hilo_coordinador;
 	//pthread_t hilo_consola;
 
-	int* se = malloc(sizeof(int));
-	//memcpy(se, &sockets_planificador.socket_esis, sizeof(int));
+	void* puntero_socket_esis = &sockets_planificador.socket_esis;
 
-	pthread_create(&hilo_escucha_esis, 0, recibir_esis, (void*) &sockets_planificador.socket_esis);
+	log_info(logger, "Por entrar al hilo del Esi y el socket_esis es %d\n", sockets_planificador.socket_esis);
+	pthread_create(&hilo_escucha_esis, 0, recibir_esis, puntero_socket_esis);
 	//pthread_create(&hilo_coordinador, 0, manejar_coordinador, (void*) &socket_coordinador);
 	//pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
 
-
+	pthread_join(hilo_escucha_esis, NULL);
 	return 0;
 }
 

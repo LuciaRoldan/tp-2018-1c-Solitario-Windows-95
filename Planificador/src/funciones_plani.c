@@ -103,22 +103,26 @@ pcb crear_pcb_esi(int socket_esi_nuevo, int id_esi){
 
 
 //manejar esis
-void recibir_esis(int socket_esis){
-	log_info(logger, "Entre al hilo recibir_esis");
+void recibir_esis(void* socket_esis){
+	int int_socket_esis = *((int*) socket_esis);
+	log_info(logger, "Entre al hilo recibir_esis y el socket es %d\n", int_socket_esis);
 	t_list* pcbs = list_create();
 	t_list* esis_ready = list_create();
-	while(1);
 	int socket_esi_nuevo;
-	socket_esi_nuevo = aceptar_conexion(&socket_esis); //es como una funcion con un accept basicamente
-	if(socket_esi_nuevo > 1){						//que devuelve lo que me devuelve el accept. Now
-		int id_esi_nuevo;								//en las commons!
-		id_esi_nuevo = handshake_esi(socket_esi_nuevo);
-		if (id_esi_nuevo){
-			pcb pcb_esi_nuevo;
-			pcb_esi_nuevo = crear_pcb_esi(socket_esi_nuevo, id_esi_nuevo);
-			list_add(pcbs, &pcb_esi_nuevo); //agrego PCB ESI a mi lista de ESIs
-			list_add(esis_ready, &pcb_esi_nuevo); //agrego PCB ESI a cola ready
-}}}/*
+	while(socket_esi_nuevo = aceptar_conexion(int_socket_esis) > 0){
+		//sleep(1);
+		log_info(logger, "Esperando un ESI");
+		//socket_esi_nuevo = aceptar_conexion(int_socket_esis);
+		//while(socket_esi_nuevo = aceptar_conexion(int_socket_esis) > 0){
+		if(socket_esi_nuevo > 0){
+			int id_esi_nuevo;
+			id_esi_nuevo = handshake_esi(socket_esi_nuevo);
+			if (id_esi_nuevo){
+				pcb pcb_esi_nuevo;
+				pcb_esi_nuevo = crear_pcb_esi(socket_esi_nuevo, id_esi_nuevo);
+				list_add(pcbs, &pcb_esi_nuevo); //agrego PCB ESI a mi lista de ESIs
+				list_add(esis_ready, &pcb_esi_nuevo); //agrego PCB ESI a cola ready
+}}}}/*
 
 
 

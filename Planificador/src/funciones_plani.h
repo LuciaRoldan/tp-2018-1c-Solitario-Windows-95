@@ -88,7 +88,7 @@ void kill_esis(ColaDeEsi esis);
 
 */
 //manejar esis
-void recibir_esis(int socket_esis);
+void recibir_esis(void* socket_esis);
 /*
 void manejar_esi(pcb pcb_esi);
 
