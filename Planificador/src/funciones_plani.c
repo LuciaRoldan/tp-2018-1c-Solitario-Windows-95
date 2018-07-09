@@ -71,8 +71,8 @@ int handshake_esi(int socket_esi){
 
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_handshake(buffer, yo);
-	log_info(logger, "Serialice el handshake de un Esi!");
 
+	log_info(logger, "Por enviar en Handshake al ESI");
 	int protocolo;
 	recibir(socket_esi, &protocolo, sizeof(int), logger);
 
@@ -106,15 +106,14 @@ pcb crear_pcb_esi(int socket_esi_nuevo, int id_esi){
 void recibir_esis(void* socket_esis){
 	int int_socket_esis = *((int*) socket_esis);
 	log_info(logger, "Entre al hilo recibir_esis y el socket es %d\n", int_socket_esis);
-	t_list* pcbs = list_create();
-	t_list* esis_ready = list_create();
+	pcbs = list_create();
+	esis_ready = list_create();
 	int socket_esi_nuevo;
-	while(socket_esi_nuevo = aceptar_conexion(int_socket_esis) > 0){
-		//sleep(1);
+	while(1){
 		log_info(logger, "Esperando un ESI");
-		//socket_esi_nuevo = aceptar_conexion(int_socket_esis);
-		//while(socket_esi_nuevo = aceptar_conexion(int_socket_esis) > 0){
-		if(socket_esi_nuevo > 0){
+		sleep(1);
+		socket_esi_nuevo = aceptar_conexion(int_socket_esis);
+		if (socket_esi_nuevo > 0){
 			int id_esi_nuevo;
 			id_esi_nuevo = handshake_esi(socket_esi_nuevo);
 			if (id_esi_nuevo){

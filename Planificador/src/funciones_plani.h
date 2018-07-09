@@ -46,17 +46,14 @@ t_conexion conexion_coordinador;
 t_log * logger;
 algoritmo_planificacion algoritmoPlanificacion; //FALTA LEER DE ARCHIVO
 int estimacionInicial; //FALTA LEER DE ARCHIVO
+t_list* pcbs;
+t_list* esis_ready;
+t_list* esis_bloqueados;
+t_list* esis_finalizados;
 
-//char* clavesInicialmenteBloqueadas; //es una lista
+t_list* claves_bloqueadas;
 
-/*
-struct ColaDeEsi *colaDeReadyEsis;
-struct ColaDeEsi *colaDeBloqueadoEsis;
-struct ColaDeEsi *colaDeFinalizadoEsis;
-
-struct ClavesBloqueadas *clavesBloqueadas;
-*/
-
+//char* claves_inicialmente_bloqueadas; //es una lista
 
 
 //FUNCIONES
