@@ -5,6 +5,7 @@
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
 datos_configuracion configuracion;
+t_dictionary* diccionario_memoria;
 
 typedef enum {
 	LRU, CIRC, BSU
@@ -20,13 +21,17 @@ typedef struct{
 }configuracion_propia;
 
 ///////////////////////// FUNCIONES /////////////////////////
-void recibir_configuracion(int socket_coordinador,datos_configuracion configuracion, t_log* logger);
+int handshake(int* socket_coordinador, t_log* logger, int id_proceso);
+void recibir_configuracion(int socket_coordinador, t_log* logger);
+void deserializar_configuracion(void* buffer);
 void inicializar_instancia();
 void leer_configuracion_propia(configuracion_propia* configuracion,t_log* logger);
-void recibir_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger);
-void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion);
-void enviar_a_desbloquear_clave(int* socket_coordinador, int clave, t_log* logger);
-void guardar_archivo(char* clave, char* value);
-int handshake(int* socket_coordinador, t_log* logger, int id_proceso);
+t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger);
+t_esi_operacion deserializar_instruccion(void* buffer);
+void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger);
+void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,t_log* logger);
+void serializar_pedido_desbloqueo(void* buffer, char* clave);
+void guardar_archivo(char* clave, t_log* logger);
+
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

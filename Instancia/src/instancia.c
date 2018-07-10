@@ -15,7 +15,7 @@ t_log * logger;
 
 int socket_coordinador;
 
-t_dictionary* diccionario_memoria;
+
 
 int main() {
 

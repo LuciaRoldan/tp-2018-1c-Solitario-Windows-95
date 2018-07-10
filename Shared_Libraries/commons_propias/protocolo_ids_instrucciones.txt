@@ -18,6 +18,8 @@ El mensaje consiste del tipo de dato que van a enviar.
 01 char* (clave)
 02 t_esi_operacion
 03 desbloquear_clave
+04 existe_clave
+05 se_creo_la_clave
 
 
 ///////////////// COORDINADOR /////////////////
