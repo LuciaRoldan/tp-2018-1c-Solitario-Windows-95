@@ -6,29 +6,28 @@
 
 //STRUCTS
 
-/*typedef struct{
-	int IDEsi;
-	struct Esi* sgte;
-} ColaDeEsi; //esto es una cola o un esi ???
-
+typedef struct{
+	int id_esi;
+	int* sgte;
+} cola_de_esis; //esto es una cola o un esi ???
 
 typedef struct{ //estructura que va a contener todas las claves y el estado de cada una
-//	Clave clave;
-	int esiQueLaUsa; //ESI que la esta usando ahora. O sea que hizo un GET.
-	ColaDeEsi esisEnEspera; //ESIS bloqueados esperando a que se desbloquee la clave.
-} ClaveBloqueada;
+	char* clave;
+	int esi_que_la_usa; //ESI que la esta usando ahora. O sea que hizo un GET.
+	cola_de_esis esis_en_espera; //ESIS bloqueados esperando a que se desbloquee la clave.
+} clave_bloqueada;
 
-typedef struct{
-	ClaveBloqueada clave;
-	ClaveBloqueada* sgte;
-} ClavesBloqueadas;
+//typedef struct{
+//	clave_bloqueada clave;
+//	claves_bloqueadas* sgte;
+//} claves_bloqueadas;
 
-*/
-typedef enum{
-	SJF_CD,
-	SJF_SD,
-	HRRRN
-} algoritmo_planificacion;
+
+//typedef enum{
+//	SJF_CD,
+//	SJF_SD,
+//	HRRRN
+//} algoritmo_planificacion;
 
 
 typedef struct{
@@ -44,15 +43,20 @@ sockets sockets_planificador;
 t_conexion conexion_planificador;
 t_conexion conexion_coordinador;
 t_log * logger;
-algoritmo_planificacion algoritmoPlanificacion; //FALTA LEER DE ARCHIVO
-int estimacionInicial; //FALTA LEER DE ARCHIVO
+char* algoritmo;
+int estimacion_inicial; //FALTA LEER DE ARCHIVO
+//char* claves_inicialmente_bloqueadas; //es una lista
 
 t_list* pcbs;
 t_list* esis_ready;
 t_list* esis_bloqueados;
 t_list* esis_finalizados;
 t_list* claves_bloqueadas;
-//char* claves_inicialmente_bloqueadas; //es una lista
+
+
+
+///---Variables Globales Auxiliares---///
+int id_buscado;
 
 
 //FUNCIONES
@@ -85,7 +89,6 @@ void kill_esis(ColaDeEsi esis);
 */
 //manejar esis
 void recibir_esis(void* socket_esis);
-
 void manejar_esi(void* pcb_esi);
 
 //Planificar
@@ -97,6 +100,13 @@ void planificacionHRRN();
 
 bool algoritmo_SJF(void* pcb1, void* pcb2);
 bool algoritmo_HRRN(void* pcb1, void* pcb2);
+
+
+//Operaciones sobre PCBs
+void registrar_exito_en_pcb(int id_esi);
+
+//funciones auxiliares
+bool claves_iguales(void* pcb);
 
 /*
 

@@ -1,10 +1,13 @@
 #include "funciones_plani.h"
 
+//////////----------COSAS POR HACER ANTES DE SEGUIR----------//////////
+//1. TERMINAR DE LEER EL ARCHIVO DE CONFIGURACION Y VER QUE LEA BIEN = LISTA DE CLAVES INICIALMENTE BLOQUEADAS
+//2. VERIFICAR QUE registrar_exito_en_pcb ANDE
 
 //inicializando
 
 sockets inicializar_planificador(){
-	sockets sockets_planificador;//doble declaracion
+	sockets sockets_planificador;
 	leer_archivo_configuracion();
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
@@ -18,10 +21,10 @@ void leer_archivo_configuracion(){
 		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
 		conexion_coordinador.ip = strdup(config_get_string_value(configuracion,"IP_COORDINADOR"));
 		conexion_coordinador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
+		algoritmo = strdup(config_get_string_value(configuracion, "ALGORITMO_PLANIFICACION")); //anda
+		estimacion_inicial = atoi(strdup(config_get_string_value(configuracion, "ESTIMACION_INICIAL"))); //anda
+		//falta leer las claves inicialmente bloqueadas
 	log_info(logger, "Se leyo el archivo de configuracion correctamente");
-
-	//ver como levantar el resto, puerto escucha, algoritmo, etc
-
 }
 
 void conectarse_al_coordinador(int socket_coordinador){
@@ -142,19 +145,22 @@ void manejar_esi(void* la_pcb){
 	while(1){
 		log_info(logger, "Entre a manjear ESI");
 		pcb pcb_esi = *((pcb*) la_pcb);
-		log_info(logger, "id dentro de manejar esi es %d", pcb_esi.id);
-		log_info(logger, "socket dentro de manejar esi es %d", pcb_esi.socket);
-		//planificar();
+		log_info(logger, "ID dentro de manejar esi es %d\n", pcb_esi.id);
+		log_info(logger, "Socket dentro de manejar esi es %d\n", pcb_esi.socket);
+		planificar();
 		sleep(5);
 		resultado_esi resultado = recibir_int(pcb_esi.socket, logger);
 		log_info(logger, "El ESI me envio el resultado_esi %d\n", resultado);
-		if (resultado){
+		if (resultado >= 0){
 			switch (resultado){
 				case (EXITO):
-					//registrar_exito_en_pcb(pcb_esi.id);
+						registrar_exito_en_pcb(pcb_esi.id);
+				break;
+				case (FALLO):
+					//mover_esi_a_bloqueados(pcb_esi.id);
 				break;
 				default:
-					//abortar(pcb_esi);
+					//abortar_esi(pcb_esi.id);
 				break;
 			}
 		}
@@ -172,37 +178,40 @@ void planificar(){
 	enviar(esi_a_ejecutar.socket, buffer, sizeof(int), logger);
 }
 
+//--Registrar exito--// //VER QUE ESTO ANDE ANTES DE SEGUIR!!!!!
 void registrar_exito_en_pcb(int id_esi){
-
 	void* pcbb;
-	//pcbb = list_find(pcbs, );
-	//pcb esi_a_ejecutar = *((pcb*) pcbb);
+	id_buscado = id_esi;
+	pcbb = list_find(pcbs, claves_iguales);
+	pcb* esi_que_ejecuto = pcbb;
+	esi_que_ejecuto->ultimaRafaga++;
+	log_info(logger, "La ultima rafaga del ESI que acaba de ejecutar es: %d\n", esi_que_ejecuto->ultimaRafaga);
 }
 
+bool claves_iguales(void* pcbb){
+	pcb* pcb_esi = pcbb;
+	return pcb_esi->id == id_buscado;
+}
 
+//--Ordenar PCBs--//
 void ordenar_pcbs(){
-
-	switch(algoritmoPlanificacion) {
-
-	case SJF_CD:
+	if(strcmp(algoritmo, "SJF_CD")){
 	planificacionSJF_CD();
-	break;
-
-	case SJF_SD:
+	}
+	else if(strcmp(algoritmo, "SJF_SD")){
 	planificacionSJF_SD();
-	break;
-
-	case HRRRN:
+	}
+	else if(strcmp(algoritmo, "HRRN")){
 	planificacionHRRN();
-	break;
-
+	}
+	else{
+		log_info(logger, "Algoritmo invalido en ordenar_pcbs");
 	}
 }
 
 void planificacionSJF_CD(){
 	list_sort(esis_ready, algoritmo_SJF);
 }
-
 
 void planificacionSJF_SD(){
 	list_sort(esis_ready, algoritmo_SJF);
@@ -248,7 +257,6 @@ bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 	if(tiempo_de_respuesta1 >= tiempo_de_respuesta2){
 		return 1;
 	}
-
 	return 0;
 }
 

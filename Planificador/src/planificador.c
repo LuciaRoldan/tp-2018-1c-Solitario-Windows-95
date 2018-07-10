@@ -13,12 +13,6 @@ int main() {
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
 
-	//int socket_un_esi = aceptar_conexion(&sockets_planificador.socket_esis);
-	//handshake_esi(socket_un_esi);
-
-	//int socket_esi_nuevo = aceptar_conexion(sockets_planificador.socket_esis);
-	//int id_esi_nuevo = handshake_esi(socket_esi_nuevo);
-
 	pthread_t hilo_escucha_esis;
 	//pthread_t hilo_coordinador;
 	//pthread_t hilo_consola;
