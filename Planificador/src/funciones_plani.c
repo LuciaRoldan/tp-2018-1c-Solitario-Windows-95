@@ -38,9 +38,7 @@ void handshake_coordinador(int socket_coordinador){
 	log_info(logger, "Serialice el Handshake del Coordinador");
 
 	enviar(socket_coordinador, buffer, sizeof(int)*3, logger);
-
 	log_info(logger, "Envie Handshake al Coordinador");
-
 	free(buffer);
 
 	int id_protocolo;
@@ -50,6 +48,7 @@ void handshake_coordinador(int socket_coordinador){
 		void* buffer = malloc(sizeof(int)*2);
 		recibir(socket_coordinador, buffer, sizeof(int)*2, logger);
 		proceso_recibido = deserializar_handshake(buffer);
+		free(buffer);
 
 		printf("proceso recibido %d \n", proceso_recibido.proceso);
 		printf("id proceso recibido %d \n", proceso_recibido.id);
@@ -70,27 +69,32 @@ int handshake_esi(int socket_esi){
 	t_handshake proceso_recibido;
 	t_handshake yo = {0, 0};
 
-	void* buffer = malloc(sizeof(int)*3);
-	serializar_handshake(buffer, yo);
+	void* buffer1 = malloc(sizeof(int)*3);
+	serializar_handshake(buffer1, yo);
 
 	log_info(logger, "Por enviar en Handshake al ESI");
 	int protocolo;
 	recibir(socket_esi, &protocolo, sizeof(int), logger);
 
 	if(protocolo == 80){
-	void* buffer = malloc(sizeof(int)*2);
-		recibir(socket_esi, buffer, sizeof(int), logger);
-		proceso_recibido = deserializar_handshake(buffer);
+	void* buffer2 = malloc(sizeof(int)*2);
+		recibir(socket_esi, buffer2, sizeof(int), logger);
+		proceso_recibido = deserializar_handshake(buffer2);
 		if (proceso_recibido.proceso !=  0){ //validar que no tenía ya al ESI en otra PCB
-			enviar(socket_esi, buffer, sizeof(int)*3, logger);
+			enviar(socket_esi, buffer1, sizeof(int)*3, logger);
 			log_info(logger, "Se establecio la conexion con el Esi de id %d\n", proceso_recibido.id);
+			free(buffer1);
+			free(buffer2);
 			return proceso_recibido.id;
 		} else {
 			log_info(logger, "Se recibio el Handshake el Esi de id %d\n pero fallo", proceso_recibido.id);
+			free(buffer1);
+			free(buffer2);
 			return -1;
 		}
 	} else {
 		log_info(logger, "Error en el protocolo del Handshake del Esi");
+		free(buffer1);
 		return -1;
 	}
 }
@@ -172,7 +176,7 @@ void registrar_exito_en_pcb(int id_esi){
 
 	void* pcbb;
 	//pcbb = list_find(pcbs, );
-	pcb esi_a_ejecutar = *((pcb*) pcbb);
+	//pcb esi_a_ejecutar = *((pcb*) pcbb);
 }
 
 
