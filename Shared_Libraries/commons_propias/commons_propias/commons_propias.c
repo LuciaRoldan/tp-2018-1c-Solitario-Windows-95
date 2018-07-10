@@ -128,6 +128,127 @@ t_handshake deserializar_handshake(void *buffer_recepcion){
 	return handshake_recibido;
 }
 
+int serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
+	int tamanio_clave, tamanio_valor, tam_buffer_aux;
+	int tamanio_int = sizeof(int);
+	int* id_protocolo = malloc(sizeof(int));
+	*id_protocolo = 82;
+	t_esi_operacion *ptr_instruccion = malloc(sizeof(t_esi_operacion));
+	*ptr_instruccion = la_instruccion;
+	memcpy(buffer, id_protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &tamanio_int, sizeof(int)); // Ver si conviene...
+	memcpy(buffer + (sizeof(int)*2), &(la_instruccion.valido), sizeof(bool));
+	memcpy(buffer + (sizeof(int)*3), &tamanio_int, sizeof(int));
+	memcpy(buffer + (sizeof(int)*4), &(la_instruccion.keyword), sizeof(int));
+	switch(ptr_instruccion->keyword){
+	case GET:
+		tamanio_clave = sizeof(ptr_instruccion->argumentos.GET.clave);
+		void* buffer_aux_get = malloc(tamanio_clave + sizeof(int));
+		memcpy(buffer_aux_get, &tamanio_clave, tamanio_clave);
+		memcpy(buffer_aux_get + (sizeof(int)), ptr_instruccion->argumentos.GET.clave, tamanio_clave);
+		tam_buffer_aux = sizeof(buffer_aux_get);
+		memcpy(buffer + (sizeof(int)*5), buffer_aux_get, tam_buffer_aux);
+		free(buffer_aux_get);
+		break;
+	case SET:
+		tamanio_clave = sizeof(ptr_instruccion->argumentos.SET.clave);
+		tamanio_valor = sizeof(ptr_instruccion->argumentos.SET.valor);
+		void* buffer_aux_set = malloc(tamanio_clave + tamanio_valor + (sizeof(int)*2));
+		memcpy(buffer_aux_set, &tamanio_clave, tamanio_clave);
+		memcpy(buffer_aux_set + (sizeof(int)), ptr_instruccion->argumentos.SET.clave, tamanio_clave);
+		memcpy(buffer_aux_set + sizeof(int) + tamanio_clave, &tamanio_valor, tamanio_valor);
+		memcpy((buffer_aux_set + (sizeof(int)*2) + tamanio_clave), (ptr_instruccion->argumentos.SET.valor), tamanio_valor);
+		tam_buffer_aux = sizeof(buffer_aux_get);
+		memcpy(buffer + (sizeof(int)*5), buffer_aux_set, tam_buffer_aux);
+		free(buffer_aux_set);
+		break;
+	case STORE:
+		tamanio_clave = sizeof(ptr_instruccion->argumentos.STORE.clave);
+		void* buffer_aux_store = malloc(tamanio_clave + sizeof(int));
+		memcpy(buffer_aux_store, &tamanio_clave, tamanio_clave);
+		memcpy(buffer_aux_store + (sizeof(int)), ptr_instruccion->argumentos.STORE.clave, tamanio_clave);
+		tam_buffer_aux = sizeof(buffer_aux_get);
+		memcpy(buffer + (sizeof(int)*5), buffer_aux_store, tam_buffer_aux);
+		free(buffer_aux_store);
+	}
+	int tam_raw = sizeof(ptr_instruccion->_raw);
+	memcpy(buffer + (sizeof(int)*5) + tam_buffer_aux, ptr_instruccion->_raw, tam_raw);
+	int tamanio_buffer = sizeof(buffer);
+
+	free(id_protocolo);
+	free(ptr_instruccion);
+
+	return tamanio_buffer ;
+
+}
+
+t_esi_operacion deserializar_instruccion(void* buffer) {
+	t_esi_operacion instruccion;
+	int tamanio_clave, tamanio_valor;
+	memcpy(&(instruccion.valido), (buffer + sizeof(int)), sizeof(int));
+	memcpy(&(instruccion.keyword), (buffer + sizeof(int)*2), sizeof(int));
+	memcpy(&tamanio_clave, (buffer + sizeof(int) * 3), sizeof(int));
+	switch (instruccion.keyword) {
+	case (GET):
+		memcpy(&(instruccion.argumentos.GET.clave), (buffer + sizeof(int) * 4),sizeof(tamanio_clave));
+		break;
+	case (SET):
+		memcpy(&(instruccion.argumentos.SET.clave), (buffer + sizeof(int) * 4),sizeof(tamanio_clave));
+		memcpy(&tamanio_valor, (buffer + sizeof(int)*4 + tamanio_clave), sizeof(int));
+		memcpy(&(instruccion.argumentos.SET.valor), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_valor);
+		break;
+	case (STORE):
+		memcpy(&(instruccion.argumentos.STORE.clave),(buffer + sizeof(int) * 4), tamanio_clave);
+		break;
+		//return instruccion;
+	}
+	return instruccion;
+}
+
+int tamanio_instruccion(t_esi_operacion instruccion){
+	char* clave, valor;
+	int tamanio_base = sizeof(instruccion.valido) + sizeof(instruccion.keyword) +sizeof(instruccion._raw);
+	switch(instruccion.keyword){
+		case GET:
+			clave = instruccion.argumentos.GET.clave;
+			return tamanio_base + strlen(clave);
+			break;
+		case SET:
+			clave = instruccion.argumentos.SET.clave;
+			valor = instruccion.argumentos.SET.valor;
+			return tamanio_base + strlen(clave) + strlen(valor);
+			break;
+		case STORE:
+			clave = instruccion.argumentos.STORE.clave;
+			return tamanio_base + strlen(clave);
+			break;
+		default:
+			return -1;
+			break;
+	}
+}
+/*	typedef struct {
+		bool valido;
+		enum {
+			GET,
+			SET,
+			STORE
+		} keyword;
+		union {
+			struct {
+				char* clave;
+			} GET;
+			struct {
+				char* clave;
+				char* valor;
+			} SET;
+			struct {
+				char* clave;
+			} STORE;
+		} argumentos;
+		char** _raw; //Para uso de la liberación
+	} t_esi_operacion;*/
+
 
 //////////PARA PLANIFICADOR//////////
 

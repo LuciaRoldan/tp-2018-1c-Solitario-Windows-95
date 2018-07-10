@@ -144,5 +144,8 @@ void serializar_handshake(void* buffer, t_handshake handshake);
 int deserializar_id(void* buffer_mensaje);
 t_handshake deserializar_handshake(void *buffer_recepcion);
 void deserializar_pedido_coordinador(void* buffer, pedido_esi* pedido);
+t_esi_operacion deserializar_instruccion(void* buffer);
+int serializar_instruccion(void* buffer, t_esi_operacion la_instruccion);
+int tamanio_instruccion(t_esi_operacion instruccion);
 
 #endif /* COMMONS_PROPIAS_H_ */

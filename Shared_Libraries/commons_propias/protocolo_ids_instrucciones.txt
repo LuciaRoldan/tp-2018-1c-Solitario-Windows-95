@@ -27,7 +27,6 @@ El mensaje consiste del tipo de dato que van a enviar.
 21 char* (clave)
 22 char* (valor clave)
 23 desconexion instancia
-24 t_esi_operacion
 
 
 ///////////////// PLANIFICADOR /////////////////
@@ -47,3 +46,4 @@ DE PLANIFICADOR A ESI
 ///////////////// TODOS /////////////////
 80 t_handshake
 81 el esi termino
+82 t_esi_operacion
