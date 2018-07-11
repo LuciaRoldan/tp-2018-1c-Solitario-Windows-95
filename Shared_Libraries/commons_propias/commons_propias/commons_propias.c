@@ -104,6 +104,12 @@ void serializar_id(void* envio, int id){
 
 }
 
+void serializar_int(void* envio, int id, int protocolo){
+	memcpy(envio, &protocolo, sizeof(int));
+	memcpy(envio + sizeof(int), &id, sizeof(int));
+
+}
+
 int deserializar_id(void* buffer_mensaje){
 	int id;
 	memcpy(&id, buffer_mensaje, sizeof(int));

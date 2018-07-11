@@ -137,6 +137,7 @@ int recibir_int(int socket, t_log* logger);
 
 //serializar
 void serializar_id(void* envio, int id);
+void serializar_int(void* envio, int id, int protocolo);
 void serializar_handshake(void* buffer, t_handshake handshake);
 void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion);
 void serializar_configuracion_inicial_instancia(void* buffer, datos_configuracion configuracion);
