@@ -9,4 +9,4 @@ make all
 
 cd ../../
 
-./ESI/Debug/ESI "ESI/Prubeas-ESI/ESI_1.txt" 1
+./ESI/Debug/ESI "ESI/Pruebas-ESI/ESI_1" 1
