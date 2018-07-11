@@ -5,6 +5,7 @@
 #include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <parsi/parser.h>
 
 int main(int argc, char* argv[]){
 
@@ -12,9 +13,47 @@ int main(int argc, char* argv[]){
 	/*char** el_raw = "raw?";
 	t_esi_operacion instruccion1 = {1, SET, "hola", "chau", el_raw};*/
 	FILE* archivo = fopen(argv[1], "r");
-	char* line;
-	fgets(line, 0, archivo);
-	t_esi_operacion instruccion = parse(line); //Parsea y devuelve instrucción de ESI
+	char* line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	printf("El argv[0] es: %s \n El argv[1] es: %s \n El argv[2] es: %s \n", argv[0], argv[1], argv[2]);
+	if (archivo == NULL){
+		perror("Error al abrir el archivo: ");
+		exit(EXIT_FAILURE);
+	}
+
+	while ((read = getline(&line, &len, archivo)) != -1) {
+		printf("La linea leida es: %s \n", line);
+		t_esi_operacion parsed = parse(line);
+
+		if(parsed.valido){
+			switch(parsed.keyword){
+				case GET:
+					printf("GET\tclave: <%s>\n", parsed.argumentos.GET.clave);
+					break;
+				case SET:
+					printf("SET\tclave: <%s>\tvalor: <%s>\n", parsed.argumentos.SET.clave, parsed.argumentos.SET.valor);
+					break;
+				case STORE:
+					printf("STORE\tclave: <%s>\n", parsed.argumentos.STORE.clave);
+					break;
+				default:
+					fprintf(stderr, "No pude interpretar <%s>\n", line);
+					exit(EXIT_FAILURE);
+			}
+
+			destruir_operacion(parsed);
+		} else {
+			fprintf(stderr, "La linea <%s> no es valida\n", line);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	fclose(archivo);
+	if (line)
+		free(line);
+
+	/*t_esi_operacion instruccion = parse(line); //Parsea y devuelve instrucción de ESI
 	free(line);
 	int tamanio_instruc = tamanio_instruccion2(instruccion);
 	int tamanio_buffer = tamanio_instruc + sizeof(int);
