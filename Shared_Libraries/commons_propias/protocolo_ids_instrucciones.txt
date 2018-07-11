@@ -26,7 +26,7 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 ///////////////// COORDINADOR /////////////////
 20 int (exito o fallo)
 21 char* (clave)
-22 char* (valor clave)
+22 status_clave
 23 NULL desconexion instancia
 
 

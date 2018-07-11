@@ -21,6 +21,7 @@ void inicializar_coordinador(info_archivo_config configuracion){
 	socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
 	lista_esis = list_create();
 	lista_instancias = list_create();
+	diccionario_claves = dictionary_create();
 }
 
 void conectar_planificador(){
@@ -244,10 +245,11 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 int procesar_mensaje(int id, int socket){
 	int resultado;
 	char* clave;
-	int socket_instancia;
-	int id2 = 1;
+	nodo nodo_instancia;
+	int protocolo_extra = 1; //Sacar inicializacion
 	//t_esi_operacion instruccion;
 	status_clave status;
+	void* buffer_int = malloc(sizeof(int));
 
 	switch(id){
 		case 20:
@@ -256,13 +258,14 @@ int procesar_mensaje(int id, int socket){
 			break;
 		case 21:
 			clave = recibir_pedido_clave(socket);
-			//socket_instancia = buscar_instancia(clave); //falta
-			resultado = enviar_pedido_valor(socket_instancia, clave, id2);
+			nodo_instancia = buscar_instancia(clave);
+			protocolo_extra = 1;
+			resultado = enviar_pedido_valor(nodo_instancia.socket, clave, protocolo_extra);
 			return resultado;
 			break;
 		case 22:
 			status = recibir_status(socket);
-			resultado = enviar_status_clave(socket, status);
+			resultado = enviar_status_clave(socket_planificador, status);
 			return resultado;
 			break;
 		case 23:
@@ -290,10 +293,10 @@ int desconectar_instancia(int socket){
 	return resultado;
 }
 
-int* buscar_instancia(char* clave){
-	int y = 1;
-	int* x = &y;
-	return x;
+nodo buscar_instancia(char* clave){
+	nodo nodo_instancia;
+	dictionary_get(diccionario_claves, clave);
+	return nodo_instancia;
 }
 
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
@@ -316,7 +319,7 @@ int verificar_existencia_instancia(nodo nodo){
 
 void reemplazar_instancia(nodo un_nodo){
 	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
-	list_add(lista_instancias, un_nodo);
+	list_add(lista_instancias, &un_nodo);
 }
 
 /////////////////////////////// FUNCIONES PARA HILOS ///////////////////////////////

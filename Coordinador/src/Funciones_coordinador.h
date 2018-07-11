@@ -12,6 +12,7 @@ t_list* lista_esis;
 t_list* lista_instancias;
 int socket_esi_buscado;
 int socket_instancia_buscado;
+t_dictionary* diccionario_claves;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -36,6 +37,7 @@ typedef struct{
 	int id;
 	pthread_t hilo;
 }nodo;
+
 
 ///////////////////////// FUNCIONES /////////////////////////
 
@@ -63,7 +65,7 @@ void atender_planificador();
 void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
 int desconectar_instancia(int socket);
-int* buscar_instancia(char* clave);
+nodo buscar_instancia(char* clave);
 int procesar_instruccion(t_esi_operacion instruccion, int socket);
 void agregar_nuevo_esi(int socket_esi, int id_esi);
 void agregar_nueva_instancia(int socket_instancia, int id_instancia);
