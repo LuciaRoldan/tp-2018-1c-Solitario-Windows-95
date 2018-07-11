@@ -9,7 +9,9 @@ t_conexion conexionInstancia;
 int socket_planificador;
 int socket_escucha;
 t_list* lista_esis;
+t_list* lista_instancias;
 int socket_esi_buscado;
+int socket_instancia_buscado;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -33,7 +35,7 @@ typedef struct{
 	int socket;
 	int id;
 	pthread_t hilo;
-}nodo_esi;
+}nodo;
 
 ///////////////////////// FUNCIONES /////////////////////////
 
@@ -60,12 +62,15 @@ void procesar_conexion();
 void atender_planificador();
 void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
-void desconectar_instancia();
+int desconectar_instancia(int socket);
 int* buscar_instancia(char* clave);
 int procesar_instruccion(t_esi_operacion instruccion, int socket);
 void agregar_nuevo_esi(int socket_esi, int id_esi);
 void agregar_nueva_instancia(int socket_instancia, int id_instancia);
-bool condicion_join_esi(void* datos);
+bool condicion_socket_esi(void* datos);
+bool condicion_socket_instancia(void* datos);
+int verificar_existencia_instancia(nodo nodo);
+void reemplazar_instancia(nodo nodo);
 
 //DE HILOS
 void serializar_hilo_proceso(void* buffer, hilo_proceso hilo);

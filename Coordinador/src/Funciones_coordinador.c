@@ -20,6 +20,7 @@ void leer_archivo_configuracion(info_archivo_config* configuracion){
 void inicializar_coordinador(info_archivo_config configuracion){
 	socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
 	lista_esis = list_create();
+	lista_instancias = list_create();
 }
 
 void conectar_planificador(){
@@ -75,8 +76,9 @@ int enviar_pedido_valor(int socket, char* clave, int id){
 }
 
 int enviar_confirmacion(int socket, int confirmacion, int id){
-	//serializa
-	int bytes_enviados = enviar(socket, confirmacion, sizeof(int), logger);
+	void* buffer = malloc(sizeof(int)*2);
+	serializar_int(buffer, confirmacion, id);
+	int bytes_enviados = enviar(socket, buffer, sizeof(int)*2, logger);
 	return bytes_enviados;
 }
 
@@ -220,7 +222,7 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 	serializar_hilo_proceso(buffer, datos_esi);
 	pthread_t hilo_esi;
 	pthread_create(&hilo_esi, 0, atender_esi, buffer); //(void*) &
-	nodo_esi nodo = {socket_esi, id_esi, hilo_esi};
+	nodo nodo = {socket_esi, id_esi, hilo_esi};
 	list_add(lista_esis, &nodo);
 }
 
@@ -229,6 +231,14 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	void* datazos = &datos_instancia;
 	pthread_t hilo_instanica;
 	pthread_create(&hilo_instanica, 0, atender_instancia, datazos);
+	nodo nodo = {socket_instancia, id_instancia, hilo_instanica};
+	socket_instancia_buscado = nodo.socket;
+	int precencia_instancia = verificar_existencia_instancia(nodo);
+	if(!precencia_instancia){
+		list_add(lista_instancias, &nodo);
+	}else{
+		reemplazar_instancia(nodo);
+	}
 }
 
 int procesar_mensaje(int id, int socket){
@@ -236,7 +246,7 @@ int procesar_mensaje(int id, int socket){
 	char* clave;
 	int socket_instancia;
 	int id2 = 1;
-	t_esi_operacion instruccion;
+	//t_esi_operacion instruccion;
 	status_clave status;
 
 	switch(id){
@@ -256,17 +266,12 @@ int procesar_mensaje(int id, int socket){
 			return resultado;
 			break;
 		case 23:
-			desconectar_instancia(); //falta
+			resultado = desconectar_instancia(socket);
 			return 1;
-			break;
-		case 24:
-			instruccion = recibir_instruccion(socket);
-			resultado = procesar_instruccion(instruccion, socket); // falta
-			return resultado;
 			break;
 		case 81:
 			socket_esi_buscado = socket;
-			nodo_esi* el_nodo = list_find(lista_esis, condicion_join_esi);
+			nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
 			resultado = pthread_join(el_nodo->hilo, NULL);
 			log_info(logger, "ya tire el join: %d", resultado);
 			return resultado;
@@ -277,9 +282,12 @@ int procesar_mensaje(int id, int socket){
 	}
 }
 
-void desconectar_instancia(){
-	//modificar tabla
-	//terminar el hilo
+int desconectar_instancia(int socket){
+	socket_instancia_buscado = socket;
+	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
+	int resultado = pthread_join(el_nodo->hilo, NULL);
+	log_info(logger, "ya tire el join: %d", resultado);
+	return resultado;
 }
 
 int* buscar_instancia(char* clave){
@@ -292,9 +300,23 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	return 1;
 }
 
-bool condicion_join_esi(void* datos){
-	nodo_esi un_nodo = *((nodo_esi*) datos);
+bool condicion_socket_esi(void* datos){
+	nodo un_nodo = *((nodo*) datos);
 	return un_nodo.socket == socket_esi_buscado;
+}
+
+bool condicion_socket_instancia(void* datos){
+	nodo un_nodo = *((nodo*) datos);
+	return un_nodo.socket == socket_instancia_buscado;
+}
+
+int verificar_existencia_instancia(nodo nodo){
+	return list_count_satisfying(lista_instancias, condicion_socket_instancia);
+}
+
+void reemplazar_instancia(nodo un_nodo){
+	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
+	list_add(lista_instancias, un_nodo);
 }
 
 /////////////////////////////// FUNCIONES PARA HILOS ///////////////////////////////
