@@ -39,7 +39,11 @@ void informar_fin_de_programa(sockets_conexiones conexiones);
 // Serializacion-Deserializacion
 void serializar_confirmacion(void* buffer, resultado_esi *msj_confirmacion);
 void deserializar_confirmacion(resultado_esi *la_confirmacion, void* buffer);
-int serializar_instruccion(void* buffer, t_esi_operacion instruccion);
+//int serializar_instruccion1(void* buffer, t_esi_operacion instruccion);
+// ----------- nuevas funciones ---------------- //
+t_esi_operacion deserializar_instruccion2(void* buffer);
+int tamanio_instruccion2(t_esi_operacion instruccion);
+void serializar_instruccion2(void* buffer, t_esi_operacion instruccion);
 
 
 #endif /* FUNCIONES_ESI_H_ */

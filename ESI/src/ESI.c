@@ -6,8 +6,35 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-int main(int argc, char* argv[2]){
-	idEsi = atoi(argv[2]);
+int main(int argc, char* argv[]){
+
+// PRUEBA DE SERIALIZACION
+	/*char** el_raw = "raw?";
+	t_esi_operacion instruccion1 = {1, SET, "hola", "chau", el_raw};*/
+	FILE* archivo = fopen(argv[1], "r");
+	char* line;
+	fgets(line, 0, archivo);
+	t_esi_operacion instruccion = parse(line); //Parsea y devuelve instrucción de ESI
+	free(line);
+	int tamanio_instruc = tamanio_instruccion2(instruccion);
+	int tamanio_buffer = tamanio_instruc + sizeof(int);
+	void* buffer = malloc(tamanio_buffer);
+	serializar_instruccion2(buffer, instruccion);
+	int protocolo;
+	memcpy(&protocolo, buffer, sizeof(int));
+	printf("protocolo: %d \n", protocolo);
+	memcpy(&tamanio_buffer, buffer+ sizeof(int), sizeof(int));
+	printf("tamanio_buffer: %d \n", tamanio_buffer);
+	void* buffer_recibido = malloc(tamanio_buffer);
+	memcpy(buffer_recibido, buffer+ sizeof(int)*2, tamanio_buffer);
+	t_esi_operacion recibido = deserializar_instruccion2(buffer_recibido);
+	printf("Recibido: %s, %s, %d \n", recibido.argumentos.SET.clave, recibido.argumentos.SET.valor, recibido.keyword);
+
+
+
+// CODIGO ESI
+
+	/*idEsi = atoi(argv[2]);
 	sockets_conexiones conexiones;
 
 	logger_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
@@ -62,6 +89,6 @@ int main(int argc, char* argv[2]){
 	free(mensaje_coordi);
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
-	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
+	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);*/
 	exit(1);
 }
