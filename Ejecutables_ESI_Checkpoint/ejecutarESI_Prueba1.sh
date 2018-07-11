@@ -2,7 +2,7 @@
 
 export LD_LIBRARY_PATH=$PWD/Shared_Libraries/commons_propias/Debug
 
-cd ESI/Debug/
+cd ../ESI/Debug/
 
 make clean
 make all
