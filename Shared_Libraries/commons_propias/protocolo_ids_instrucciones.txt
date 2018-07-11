@@ -12,6 +12,7 @@ Entonces cada uno va agregando los mensajes que RECIBE en su propio proceso.
 Y los mensajes que ENVIAN (que van a ser recibidos por otro poceso), en el otro porceso.
 
 El mensaje consiste del tipo de dato que van a enviar.
+Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 
 ///////////////// INSTANCIA /////////////////
 00 datos_configuracion
@@ -26,7 +27,7 @@ El mensaje consiste del tipo de dato que van a enviar.
 20 int (exito o fallo)
 21 char* (clave)
 22 char* (valor clave)
-23 desconexion instancia
+23 NULL desconexion instancia
 
 
 ///////////////// PLANIFICADOR /////////////////
@@ -45,5 +46,5 @@ DE PLANIFICADOR A ESI
 
 ///////////////// TODOS /////////////////
 80 t_handshake
-81 el esi termino
+81 NULL el esi termino
 82 t_esi_operacion

@@ -130,7 +130,7 @@ t_handshake deserializar_handshake(void *buffer_recepcion){
 
 void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 	int tamanio_clave, tamanio_valor, tam_buffer_aux;
-	int tamanio_mensaje = tamanio_instruccion(la_instruccion) - 2*sizeof(int);
+	int tamanio_mensaje = tamanio_buffer_instruccion(la_instruccion) - 2*sizeof(int);
 	int* id_protocolo = malloc(sizeof(int));
 	*id_protocolo = 82;
 
@@ -219,21 +219,16 @@ t_esi_operacion deserializar_instruccion(void* buffer) {
 	return instruccion;
 }
 
-int tamanio_instruccion(t_esi_operacion instruccion){
-	char* clave, valor;
+int tamanio_buffer_instruccion(t_esi_operacion instruccion){
 	int tamanio_base = sizeof(instruccion.valido) + sizeof(instruccion.keyword) +strlen(*instruccion._raw) + 4*sizeof(int);
 	switch(instruccion.keyword){
 		case GET:
-			clave = instruccion.argumentos.GET.clave;
 			return tamanio_base + strlen(instruccion.argumentos.GET.clave);
 			break;
 		case SET:
-			clave = instruccion.argumentos.SET.clave;
-			valor = instruccion.argumentos.SET.valor;
 			return tamanio_base + strlen(instruccion.argumentos.SET.clave) + strlen(instruccion.argumentos.SET.valor) + sizeof(int);
 			break;
 		case STORE:
-			clave = instruccion.argumentos.STORE.clave;
 			return tamanio_base + strlen(instruccion.argumentos.STORE.clave);
 			break;
 		default:
@@ -242,6 +237,166 @@ int tamanio_instruccion(t_esi_operacion instruccion){
 	}
 }
 
+void serializar_configuracion_inicial_instancia(void* buffer, datos_configuracion configuracion){
+	int* id_protocolo = malloc(sizeof(int));
+	*id_protocolo = 0;
+	memcpy(buffer, id_protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &(configuracion.cantidad_entradas), sizeof(int));
+	memcpy(buffer + sizeof(int)*2, &(configuracion.tamano_entrada), sizeof(int));
+	free(id_protocolo);
+}
+
+datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer) {
+	datos_configuracion configuracion;
+	memcpy(&(configuracion.cantidad_entradas), buffer, sizeof(int));
+	memcpy(&(configuracion.tamano_entrada), (buffer + (sizeof(int))), sizeof(int));
+	return configuracion;
+}
+
+void serializar_pedido_esi(void* buffer, pedido_esi pedido){ //Hay que declarar un buffer con tam_buffer_instruccion() y sumarle el tamaño de un int
+	int tamanio_clave, tamanio_valor, tam_buffer_aux;
+	t_esi_operacion la_instruccion = pedido.instruccion;
+	int tamanio_mensaje = tamanio_buffer_instruccion(la_instruccion) - sizeof(int);
+	int* id_protocolo = malloc(sizeof(int));
+	*id_protocolo = 43;
+
+	memcpy(buffer, id_protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &tamanio_mensaje, sizeof(int)); // Ver si conviene... Cambie tamaño int por tamanio mensaje
+	memcpy(buffer + (sizeof(int)*2), &(la_instruccion.valido), sizeof(bool));
+	memcpy(buffer + (sizeof(int)*2 + sizeof(bool)), &(la_instruccion.keyword), sizeof(int));
+	//Hasta aca guardamos el protocolo, el tamaño para buffer, el bool y la keyword
+
+
+	switch(la_instruccion.keyword){
+	case GET:
+		tamanio_clave = strlen(la_instruccion.argumentos.GET.clave);
+		tam_buffer_aux = tamanio_clave + sizeof(int);
+		void* buffer_aux_get = malloc(tam_buffer_aux);
+		memcpy(buffer_aux_get, &tamanio_clave, sizeof(int));
+		memcpy(buffer_aux_get + (sizeof(int)), &la_instruccion.argumentos.GET.clave, tamanio_clave);
+		//Hasta aca tenemos en un buffer nuevo con el tamaño de la clave y la clave
+
+		memcpy(buffer + sizeof(int)*3 + sizeof(bool), buffer_aux_get, tam_buffer_aux);
+		free(buffer_aux_get);
+		break;
+
+	case SET:
+		tamanio_clave = strlen(la_instruccion.argumentos.SET.clave);
+		tamanio_valor = strlen(la_instruccion.argumentos.SET.valor);
+		tam_buffer_aux = tamanio_clave + tamanio_valor + (sizeof(int)*2);
+		void* buffer_aux_set = malloc(tam_buffer_aux);
+		memcpy(buffer_aux_set, &tamanio_clave, sizeof(int));
+		memcpy(buffer_aux_set + (sizeof(int)), &la_instruccion.argumentos.SET.clave, tamanio_clave);
+		memcpy(buffer_aux_set + sizeof(int) + tamanio_clave, &tamanio_valor, sizeof(int));
+		memcpy((buffer_aux_set + (sizeof(int)*2) + tamanio_clave), &la_instruccion.argumentos.SET.valor, tamanio_valor);
+		//Hasta aca tenemos en un buffer nuevo con el tamaño de la clave, la clave, el tamaño del valor y el valor
+
+		memcpy(buffer + sizeof(int)*3 + sizeof(bool), buffer_aux_set, tam_buffer_aux);
+		free(buffer_aux_set);
+		break;
+
+		case STORE:
+		tamanio_clave = strlen(la_instruccion.argumentos.STORE.clave);
+		tam_buffer_aux = tamanio_clave + sizeof(int);
+		void* buffer_aux_store = malloc(tam_buffer_aux);
+		memcpy(buffer_aux_store, &tamanio_clave, sizeof(int));
+		memcpy(buffer_aux_store + (sizeof(int)), &la_instruccion.argumentos.STORE.clave, tamanio_clave);
+		//Hasta aca tenemos en un buffer nuevo con el tamaño de la clave y la clave
+
+		memcpy(buffer + sizeof(int)*3 + sizeof(bool), buffer_aux_store, tam_buffer_aux);
+		free(buffer_aux_store);
+	}
+
+	int tam_raw = sizeof(la_instruccion._raw);
+	memcpy(buffer + sizeof(int)*3 + sizeof(bool) + tam_buffer_aux, &tam_raw, sizeof(int));
+	memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tam_buffer_aux, la_instruccion._raw, tam_raw);
+	memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tam_buffer_aux + tam_raw, &pedido.esi_id, sizeof(int));
+
+	free(id_protocolo);
+}
+
+pedido_esi deserializar_pedido_esi(void* buffer) {
+	pedido_esi pedido;
+	t_esi_operacion instruccion;
+	int tamanio_clave, tamanio_valor, tamanio_raw;
+	memcpy(&(instruccion.valido), buffer, sizeof(bool));
+	memcpy(&(instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
+	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
+
+	switch (instruccion.keyword) {
+	case (GET):
+		memcpy(&(instruccion.argumentos.GET.clave), (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
+		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
+		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_raw);
+		break;
+	case (SET):
+		memcpy(&(instruccion.argumentos.SET.clave), (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
+		memcpy(&tamanio_valor, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
+		memcpy(&(instruccion.argumentos.SET.valor), (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_valor);
+		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave + tamanio_valor), sizeof(int));
+		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*4 + tamanio_clave + tamanio_valor), tamanio_raw);
+		break;
+	case (STORE):
+		memcpy(&(instruccion.argumentos.STORE.clave),(buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
+		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
+		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_raw);
+		break;
+	}
+	memcpy(&pedido.esi_id, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave +tamanio_raw), sizeof(int));
+	pedido.instruccion = instruccion;
+	return pedido;
+}
+
+void serializar_status_clave(void* buffer, status_clave status){
+	int* id_protocolo = malloc(sizeof(int));
+	*id_protocolo = 0;
+	int tamanio_clave = strlen(status.clave)*sizeof(char);
+	int tamanio_contenido = strlen(status.contenido)*sizeof(char);
+	int tamanio_total = tamanio_buffer_status(status)- sizeof(int)*2;
+	memcpy(buffer, id_protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &tamanio_total, sizeof(int));
+	memcpy(buffer + sizeof(int)*2, &tamanio_clave, sizeof(int));
+	memcpy(buffer + sizeof(int)*3, &status.clave, tamanio_clave);
+	memcpy(buffer + sizeof(int)*3 + tamanio_clave, &status.id_instancia, sizeof(int));
+	memcpy(buffer + sizeof(int)*4 + tamanio_clave, &tamanio_contenido, sizeof(int));
+	memcpy(buffer + sizeof(int)*5 + tamanio_clave, &status.contenido, tamanio_contenido);
+	free(id_protocolo);
+}
+
+status_clave deserializar_status_clave(void* buffer) {//Se hicieron dos recibir antes, uno para el protocolo y otro para el tamaño del buffer
+	status_clave status;
+	int tamanio_clave, tamanio_contenido;
+	memcpy(&tamanio_clave, buffer, sizeof(int));
+	memcpy(&status.clave, buffer + sizeof(int), tamanio_clave);
+	memcpy(&status.id_instancia, buffer + sizeof(int) + tamanio_clave, sizeof(int));
+	memcpy(&tamanio_contenido, buffer + sizeof(int)*2 + tamanio_clave, sizeof(int));
+	memcpy(&status.contenido, buffer + sizeof(int)*3 + tamanio_clave, tamanio_contenido);
+	return status;
+}
+
+int tamanio_buffer_status(status_clave status){
+	return sizeof(int)*4 + (strlen(status.clave) + strlen(status.contenido)) * sizeof(char);
+}
+
+void serializar_string(void* buffer, char* cadena, int protocolo){//Se guarda dos veces el tamaño para recibirlo afuera de deserializar y poder declarar el buffer y para poder recibirlo dentro de deserializacion y saber de que tamaño hacer el memcpy
+	int tamanio = strlen(cadena) * sizeof(char); 				// recibe el protocolo porque la mismma funcion se puede usar muchas veces
+	memcpy(buffer, &protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &tamanio, sizeof(int));
+	memcpy(buffer + sizeof(int)*2, &tamanio, sizeof(int));
+	memcpy(buffer + sizeof(int)*3, cadena, tamanio);
+}
+
+char* deserializar_string(void* buffer){
+	int tamanio;
+	char* mensaje;
+	memcpy(&tamanio, buffer, sizeof(int));
+	memcpy(mensaje, buffer, tamanio);
+	return mensaje;
+}
+
+int tamanio_buffer_string(char* cadena){
+	return strlen(cadena) * sizeof(char) + sizeof(int)*3;
+}
 
 
 //////////PARA PLANIFICADOR//////////

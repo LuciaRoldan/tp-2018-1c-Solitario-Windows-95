@@ -138,14 +138,25 @@ int recibir_int(int socket, t_log* logger);
 //serializar
 void serializar_id(void* envio, int id);
 void serializar_handshake(void* buffer, t_handshake handshake);
-
+void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion);
+void serializar_configuracion_inicial_instancia(void* buffer, datos_configuracion configuracion);
+void serializar_pedido_esi(void* buffer, pedido_esi pedido);
+void serializar_status_clave(void* buffer, status_clave status);
+void serializar_string(void* buffer, char* cadena, int protocolo);
 
 //deserealizar
 int deserializar_id(void* buffer_mensaje);
 t_handshake deserializar_handshake(void *buffer_recepcion);
 void deserializar_pedido_coordinador(void* buffer, pedido_esi* pedido);
 t_esi_operacion deserializar_instruccion(void* buffer);
-void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion);
-int tamanio_instruccion(t_esi_operacion instruccion);
+datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer);
+status_clave deserializar_status_clave(void* buffer);
+pedido_esi deserializar_pedido_esi(void* buffer);
+char* deserializar_string(void* buffer);
+
+//tamaños de buffers
+int tamanio_buffer_instruccion(t_esi_operacion instruccion);
+int tamanio_buffer_status(status_clave status);
+int tamanio_buffer_string(char* cadena);
 
 #endif /* COMMONS_PROPIAS_H_ */
