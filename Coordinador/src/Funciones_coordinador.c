@@ -44,61 +44,77 @@ void conectar_planificador(){
 
 int enviar_configuracion_instancia(int socket, info_archivo_config configuracion){
 	datos_configuracion mensaje = {configuracion.tamano_entrada, configuracion.cantidad_entradas};
-	//serializar
-	int bytes_enviados = enviar(socket, &mensaje, sizeof(datos_configuracion), 00, logger);
+	void* buffer = malloc(sizeof(int)*3);
+	serializar_configuracion_inicial_instancia(buffer, mensaje);
+	int bytes_enviados = enviar(socket, buffer, sizeof(int)*3, logger);
 	return bytes_enviados;
 }
 
 int enviar_pedido_esi(int esi_id, int socket, t_esi_operacion instruccion){
 	pedido_esi pedido = {esi_id, instruccion};
-	//serializar
-	int bytes_enviados = enviar(socket, &pedido, sizeof(pedido), 43, logger);
+	void* buffer = malloc(tamanio_buffer_instruccion(instruccion) + sizeof(int));
+	serializar_pedido_esi(buffer, pedido);
+	int bytes_enviados = enviar(socket, &pedido, sizeof(pedido), logger);
 	return bytes_enviados;
 }
 
-int enviar_status_clave(int socket, status_clave* status){
-	//serializar
-	int bytes_enviados = enviar(socket, status, sizeof(status_clave), 44, logger);
+int enviar_status_clave(int socket, status_clave status){
+	int tamanio = tamanio_buffer_status(status);
+	void* buffer = malloc(tamanio);
+	serializar_status_clave(buffer, status);
+	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
 	return bytes_enviados;
 }
 
-int enviar_pedido_valor(int socket, char* clave){
-	//serializar
-	int bytes_enviados = enviar(socket, clave, sizeof(clave), 01, logger);
+int enviar_pedido_valor(int socket, char* clave, int id){
+	int tamanio = tamanio_buffer_string(clave);
+	void* buffer = malloc(tamanio);
+	serializar_string(buffer, clave, id);
+	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
 	return bytes_enviados;
 }
 
-int enviar_confirmacion(int socket, int* confirmacion, int id){
+int enviar_confirmacion(int socket, int confirmacion, int id){
 	//serializa
-	int bytes_enviados = enviar(socket, confirmacion, sizeof(int), id, logger);
+	int bytes_enviados = enviar(socket, confirmacion, sizeof(int), logger);
 	return bytes_enviados;
 }
 
 int recibir_confirmacion(int socket){
 	int confirmacion;
-	recibir(socket, &confirmacion, sizeof(int), logger);
-	//deserializar
+	void* buffer = malloc(sizeof(int));
+	recibir(socket, buffer, sizeof(int), logger);
+	confirmacion = deserializar_id(buffer);
 	return confirmacion;
 }
 
 char* recibir_pedido_clave(int socket){
 	char* clave;
-	recibir(socket, clave, sizeof(clave), logger);
-	//deserializar?
+	int tamanio;
+	recibir(socket, &tamanio, sizeof(int), logger);
+	void* buffer = malloc(tamanio);
+	recibir(socket, buffer, tamanio, logger);
+	clave = deserializar_string(buffer);
 	return clave;
 }
 
 status_clave recibir_status(int socket){
 	status_clave status;
-	recibir(socket, &status, sizeof(status_clave), logger);
-	//deserializar?
+	int tamanio;
+	recibir(socket, &tamanio, sizeof(int), logger);
+	void* buffer = malloc(tamanio);
+	recibir(socket, buffer, tamanio, logger);
+	status = deserializar_status_clave(buffer);
 	return status;
 }
 
 t_esi_operacion recibir_instruccion(int socket){
 	t_esi_operacion instruccion;
-	recibir(socket, &instruccion, sizeof(t_esi_operacion), logger);
-	//deserializar
+	int tamanio;
+	recibir(socket, &tamanio, sizeof(int), logger);
+	void* buffer = malloc(tamanio);
+	recibir(socket, buffer, tamanio, logger);
+	instruccion = deserializar_instruccion(buffer);
 	return instruccion;
 }
 
@@ -122,7 +138,7 @@ int handshake(int socket_cliente){
 	free(buffer_recepcion);
 
 	serializar_handshake(buffer_envio, yo);
-	enviar(socket_cliente, buffer_envio, sizeof(int)*3, 80, logger);
+	enviar(socket_cliente, buffer_envio, sizeof(int)*3, logger);
 
 	free(buffer_envio);
 
@@ -219,6 +235,7 @@ int procesar_mensaje(int id, int socket){
 	int resultado;
 	char* clave;
 	int socket_instancia;
+	int id2 = 1;
 	t_esi_operacion instruccion;
 	status_clave status;
 
@@ -230,12 +247,12 @@ int procesar_mensaje(int id, int socket){
 		case 21:
 			clave = recibir_pedido_clave(socket);
 			//socket_instancia = buscar_instancia(clave); //falta
-			resultado = enviar_pedido_valor(socket_instancia, clave);
+			resultado = enviar_pedido_valor(socket_instancia, clave, id2);
 			return resultado;
 			break;
 		case 22:
 			status = recibir_status(socket);
-			resultado = enviar_status_clave(socket, &status);
+			resultado = enviar_status_clave(socket, status);
 			return resultado;
 			break;
 		case 23:
@@ -295,3 +312,7 @@ hilo_proceso deserializar_hilo_proceso(void *buffer_recepcion){
 	memcpy(&hilo_proceso_recibido.id, buffer_recepcion + sizeof(int), sizeof(int));
 	return hilo_proceso_recibido;
 }
+
+
+
+

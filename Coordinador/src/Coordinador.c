@@ -5,10 +5,6 @@
 #include "Funciones_coordinador.h"
 
 
-
-
-
-
 int main(){
 
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);

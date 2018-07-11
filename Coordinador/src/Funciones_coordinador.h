@@ -45,9 +45,9 @@ void conectar_planificador();
 //COMUNICACION
 int enviar_configuracion_instancia(int socket, info_archivo_config configuracion);
 int enviar_pedido_esi(int esi_id, int socket, t_esi_operacion instruccion);
-int enviar_status_clave(int socket, status_clave* status);
-int enviar_pedido_valor(int socket, char* clave);
-int enviar_confirmacion(int socket, int* confirmacion, int id);
+int enviar_status_clave(int socket, status_clave status);
+int enviar_pedido_valor(int socket, char* clave, int id);
+int enviar_confirmacion(int socket, int confirmacion, int id);
 int recibir_confirmacion(int socket);
 char* recibir_pedido_clave(int socket);
 status_clave recibir_status(int socket);
