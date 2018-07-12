@@ -10,7 +10,7 @@ sockets_conexiones leer_arch_configuracion(){
 	sockets_conexiones conexion;
 	configuracion_esi = config_create("ESI/Configuracion_ESI.cfg");
 	conexion.socket_coordi = conectarse_al_Coordinador();
-	conexion.socket_plani = conectarse_al_Planificador();
+	//conexion.socket_plani = conectarse_al_Planificador();
 	return conexion;
 }
 
@@ -89,16 +89,21 @@ t_esi_operacion parsear_linea(FILE* archivo){
 }
 
 int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
+	puts("--> Entré a enviar");
 	int tamanio_buffer = tamanio_buffer_instruccion(instruccion);
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
+	puts("--> Fin de serializacion de instruccion");
 	int exito = enviar(socket_Coordinador, buffer_instruccion, tamanio_buffer, logger_esi);
+	puts("--> Instruccion enviada");
 	free(buffer_instruccion);
 	return exito;
 }
 
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
+	puts("--> Estoy por parsear");
 	t_esi_operacion operacion = parsear_linea(archivo);
+	puts("--> Parseado completo");
 	ultima_instruccion = operacion;
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
 		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Planificador \n ");

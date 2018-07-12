@@ -50,6 +50,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	free(line);
+	fseek(script_prueba, 0, SEEK_SET);
 
 	conexiones = leer_arch_configuracion();
 	log_info(logger_esi, "Archivo de configuracion leido para ESI %d.", idEsi);
@@ -57,7 +58,8 @@ int main(int argc, char* argv[]){
 	handshake(conexiones.socket_coordi);
 	handshake(conexiones.socket_plani);
 
-	int codigo_plani, codigo_coordi;
+	int codigo_plani = 61;
+	int codigo_coordi;
 	int abortoESI = 0;
 	void* mensaje_coordi = malloc(sizeof(resultado_esi));
 
