@@ -73,38 +73,23 @@ int cumple_protocolo(int mensaje, int nro){
 }
 
 // Acciones
-nodo* parsear(FILE* archivo){
-	nodo* raiz = malloc(sizeof(nodo));
-	nodo* ptr_aux = raiz;
-	nodo* ptr_ant = NULL;
+t_esi_operacion parsear_linea(FILE* archivo){
 	char* line = NULL;
 	size_t len = 0;
 	ssize_t read;
-
-	while ((read = getline(&line, &len, archivo)) != -1) {
-		t_esi_operacion parsed = parse(line);
-		if(parsed.valido){
-			ptr_aux->instruccion = parsed;
-			ptr_aux->anterior = ptr_ant;
-			ptr_ant = ptr_aux;
-			ptr_aux->sgte  = malloc(sizeof(nodo));
-			ptr_aux = ptr_aux->sgte;
-			destruir_operacion(parsed);
-		} else {
-			fprintf(stderr, "La linea <%s> no es valida\n", line);
-			exit(EXIT_FAILURE);
-		}
+	read = getline(&line, &len, archivo);
+	t_esi_operacion parsed = parse(line);
+	if(parsed.valido){
+		destruir_operacion(parsed);
+	} else {
+		fprintf(stderr, "La linea <%s> no es valida\n", line);
+		exit(EXIT_FAILURE);
 	}
-	free(ptr_aux);
-	ptr_ant->sgte = NULL;
-	free(ptr_ant);
-	free(line);
-	return raiz;
+	return parsed;
 }
 
-int enviar_instruccion(nodo* ptr_sentencia, int socket_Coordinador){
-	t_esi_operacion instruccion = ptr_sentencia->instruccion;
-	int tamanio_buffer = tamanio_instruccion(instruccion);
+int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
+	int tamanio_buffer = tamanio_buffer_instruccion(instruccion);
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
 	int exito = enviar(socket_Coordinador, buffer_instruccion, tamanio_buffer, logger_esi);
@@ -112,10 +97,11 @@ int enviar_instruccion(nodo* ptr_sentencia, int socket_Coordinador){
 	return exito;
 }
 
-int ejecutar_instruccion_sgte(int socket_Coordinador){
-	if(enviar_instruccion(sentencia_actual->sgte, socket_Coordinador) > 0){
+int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
+	t_esi_operacion operacion = parsear_linea(archivo);
+	ultima_instruccion = operacion;
+	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
 		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Planificador \n ");
-		sentencia_actual = sentencia_actual->sgte;
 		return 1;
 		} else {
 			log_info(logger_esi, "No se pudo enviar la instruccion al Planificador \n");
@@ -124,7 +110,7 @@ int ejecutar_instruccion_sgte(int socket_Coordinador){
 }
 
 void ejecutar_ultima_instruccion(int socket_destino){
-	enviar_instruccion(sentencia_actual->anterior, socket_destino);
+	enviar_instruccion(ultima_instruccion, socket_destino);
 }
 
 void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger_esi){
@@ -159,20 +145,6 @@ void informar_fin_de_programa(sockets_conexiones conexiones){
 	enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
 }
 
-void liberar_lista(nodo* raiz){
-	nodo *aux1 = raiz;
-	nodo *aux2 = raiz->sgte;
-	while (aux1->sgte != NULL){
-		free(aux1->anterior);
-		free(aux1->sgte);
-		aux1 = aux2;
-		aux2 = aux2->sgte;
-	}
-	free(aux1);
-	free(aux2);
-	free(raiz);
-}
-
 // Serializacion/Deserializacion
 void serializar_confirmacion(void* buffer, resultado_esi *msj_confirmacion){
 	int id_protocolo = 41;
@@ -184,55 +156,5 @@ resultado_esi deserializar_confirmacion(void* buffer_receptor){
 	memcpy(&confirmacion, buffer_receptor + sizeof(int), sizeof(resultado_esi));
 	return confirmacion;
 }
-
-/*/ ETÁ EN LAS COMMONS
-int tamanio_instruccion2(t_esi_operacion instruccion){
-	//char* clave, valor;
-	int tamanio, tam_clave, tam_valor;
-	int tamanio_base = sizeof(instruccion.valido) + sizeof(instruccion.keyword) + sizeof(instruccion._raw) + 2;
-	switch(instruccion.keyword){
-	case GET:
-		tam_clave = strlen(instruccion.argumentos.GET.clave);
-		//clave = instruccion.argumentos.GET.clave;
-		return tamanio_base + tam_clave;
-		break;
-	case SET:
-		tam_clave = strlen(instruccion.argumentos.SET.clave);
-		tam_valor = strlen(instruccion.argumentos.SET.valor);
-		//strcpy(&valor, instruccion.argumentos.SET.valor);
-		tamanio = tamanio_base + tam_clave + tam_valor;
-		return tamanio;
-		break;
-	case STORE:
-		tam_clave = strlen(instruccion.argumentos.STORE.clave);
-		//clave = instruccion.argumentos.STORE.clave;
-		return tamanio_base + tam_clave;
-		break;
-	default:
-		return -1;
-		break;
-	}
-}
-
-void serializar_instruccion2(void* buffer, t_esi_operacion la_instruccion){
-	int tam_instruc = tamanio_instruccion2(la_instruccion);
-	int id_protocolo = 24;
-	t_esi_operacion *ptr_instruccion = malloc(sizeof(t_esi_operacion));
-	*ptr_instruccion = la_instruccion;
-	memcpy(buffer, &id_protocolo, sizeof(int));
-	memcpy(buffer + (sizeof(int)), &tam_instruc, sizeof(int));
-	memcpy(buffer + (sizeof(int)*2), ptr_instruccion, sizeof(tam_instruc));
-
-	free(ptr_instruccion);
-}
-
-
-t_esi_operacion deserializar_instruccion2(void* buffer) {
-	t_esi_operacion instruccion;
-	int tamanio_recibido;
-	memcpy(&tamanio_recibido, (buffer + sizeof(int)), sizeof(int));
-	memcpy(&instruccion, (buffer + sizeof(int)*2), tamanio_recibido);
-	return instruccion;
-}*/
 
 #endif /* ESI_FUNCIONES_H_ */
