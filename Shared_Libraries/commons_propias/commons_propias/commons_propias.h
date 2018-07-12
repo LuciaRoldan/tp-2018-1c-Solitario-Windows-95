@@ -149,7 +149,7 @@ void serializar_string(void* buffer, char* cadena, int protocolo);
 int deserializar_id(void* buffer_mensaje);
 t_handshake deserializar_handshake(void *buffer_recepcion);
 void deserializar_pedido_coordinador(void* buffer, pedido_esi* pedido);
-t_esi_operacion deserializar_instruccion(void* buffer);
+t_esi_operacion deserializar_instruccion(void* buffer, t_log* logger);
 datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer);
 status_clave deserializar_status_clave(void* buffer);
 pedido_esi deserializar_pedido_esi(void* buffer);

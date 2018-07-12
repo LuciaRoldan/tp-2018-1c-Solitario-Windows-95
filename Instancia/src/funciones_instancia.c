@@ -70,7 +70,7 @@ t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 }
 
 
-t_esi_operacion deserializar_instruccion(void* buffer) {
+/*t_esi_operacion deserializar_instruccion(void* buffer) {
 	t_esi_operacion instruccion;
 	int tamanio_clave, tamanio_valor;
 	memcpy(&(instruccion.valido), (buffer + sizeof(int)), sizeof(int));
@@ -90,7 +90,7 @@ t_esi_operacion deserializar_instruccion(void* buffer) {
 		break;
 		return instruccion;
 	}
-}
+}*/
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) { //REVISAR
 

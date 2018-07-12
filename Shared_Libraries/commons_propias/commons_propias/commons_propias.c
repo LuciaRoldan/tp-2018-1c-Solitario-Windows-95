@@ -196,16 +196,19 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 
 }
 
-t_esi_operacion deserializar_instruccion(void* buffer) {
+t_esi_operacion deserializar_instruccion(void* buffer, t_log* logger) {
 	t_esi_operacion instruccion;
 	int tamanio_clave, tamanio_valor, tamanio_raw;
+	log_info(logger, "//////////////////////////////////////////////////////////////");
 	memcpy(&(instruccion.valido), buffer, sizeof(bool));
 	memcpy(&(instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
 	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
+	log_info(logger, "//////////// %d /////////// %d ////////////////", instruccion.keyword, tamanio_clave);
 
 	switch (instruccion.keyword) {
 	case (GET):
-		memcpy(&(instruccion.argumentos.GET.clave), (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
+		memcpy(&instruccion.argumentos.GET.clave, (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
+		log_info(logger, instruccion.argumentos.GET.clave);
 		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
 		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_raw);
 		break;

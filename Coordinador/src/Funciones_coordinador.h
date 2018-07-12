@@ -59,7 +59,7 @@ t_esi_operacion recibir_instruccion(int socket);
 
 //FUNCIONAMIENTO INTERNO
 int handshake(int socket);
-int procesar_mensaje(int id, int socket);
+int procesar_mensaje(int socket);
 void procesar_conexion();
 void atender_planificador();
 void atender_esi(void* datos_esi);

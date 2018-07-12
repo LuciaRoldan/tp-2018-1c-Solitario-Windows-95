@@ -21,9 +21,9 @@ int main(int argc, char* argv[]){
 	} else
 		log_info(logger_esi, "Script abierto para ESI %d \n", idEsi);
 
+	fseek(script_prueba, 0, SEEK_SET);
 
-
-	char* line = NULL;
+	/*char* line = NULL;
 	size_t len = 0;
 	ssize_t read;
 
@@ -50,13 +50,13 @@ int main(int argc, char* argv[]){
 		}
 	}
 	free(line);
-	fseek(script_prueba, 0, SEEK_SET);
+	fseek(script_prueba, 0, SEEK_SET);*/
 
 	conexiones = leer_arch_configuracion();
 	log_info(logger_esi, "Archivo de configuracion leido para ESI %d.", idEsi);
 
 	handshake(conexiones.socket_coordi);
-	handshake(conexiones.socket_plani);
+	//handshake(conexiones.socket_plani);
 
 	int codigo_plani = 61;
 	int codigo_coordi;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
 	void* mensaje_coordi = malloc(sizeof(resultado_esi));
 
 	while((!feof(script_prueba)) || abortoESI == 0) {
-		codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
+		//codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 		switch(codigo_plani){
 			case 45: //desbloqueo ESI
 				ejecutar_ultima_instruccion(conexiones.socket_coordi);

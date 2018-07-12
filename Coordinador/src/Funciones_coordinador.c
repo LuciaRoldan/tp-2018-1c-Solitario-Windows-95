@@ -114,10 +114,15 @@ status_clave recibir_status(int socket){
 t_esi_operacion recibir_instruccion(int socket){
 	t_esi_operacion instruccion;
 	int tamanio;
-	recibir(socket, &tamanio, sizeof(int), logger);
+	void* buffercito = malloc(sizeof(int));
+	recibir(socket, buffercito, sizeof(int), logger);
+	tamanio = deserializar_id(buffercito);
+	log_info(logger, "Tamaño: %d", tamanio);
 	void* buffer = malloc(tamanio);
-	recibir(socket, buffer, tamanio, logger);
-	instruccion = deserializar_instruccion(buffer);
+	int resultado = recibir(socket, buffer, tamanio, logger);
+	log_info(logger, "Resultado: %d", resultado);
+	instruccion = deserializar_instruccion(buffer, logger);
+	printf("//////////////////////////////////////////////////////////////");
 	return instruccion;
 }
 
@@ -176,7 +181,6 @@ int handshake(int socket_cliente){
 void procesar_conexion(){
 	int id_mensaje;
 	while(1){
-		log_info(logger, "Entre en el while de procesar conexion");
 		int socket_cliente = aceptar_conexion(socket_escucha);
 		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
 		if(id_mensaje == 80){
@@ -186,34 +190,26 @@ void procesar_conexion(){
 }
 
 void atender_planificador(){
-	int id_mensaje;
+	log_info(logger, "Entre en el hilo del planificador");
 	while(1){
-		//log_info(logger, "Entre en el while de atender planificador");
-		recibir(socket_planificador, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje, socket_planificador);
+		procesar_mensaje(socket_planificador);
 	}
 }
 
 void atender_esi(void* datos_esi){
+	int resultado = 1;
 	log_info(logger, "Estoy en el hilo del esi!");
-	//hilo_proceso mis_datos = *((hilo_proceso*)datos_esi);
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_esi);
-	int id_mensaje;
-	while(1){
-		int resultado = recibir(mis_datos.socket, &id_mensaje, sizeof(int), logger);
-		if(resultado > 0){
-			procesar_mensaje(id_mensaje, mis_datos.socket);
-		}
+	while(resultado > 0){
+		resultado = procesar_mensaje(mis_datos.socket);
 	}
 }
 
 void atender_instancia(void* datos_instancia){
 	log_info(logger, "Estoy en el hilo de la instancia!");
 	hilo_proceso mis_datos = *((hilo_proceso*)datos_instancia);
-	int id_mensaje;
 	while(1){
-		recibir(mis_datos.socket, &id_mensaje, sizeof(int), logger);
-		procesar_mensaje(id_mensaje, mis_datos.socket);
+		procesar_mensaje(mis_datos.socket);
 	}
 }
 
@@ -242,14 +238,17 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	}
 }
 
-int procesar_mensaje(int id, int socket){
-	int resultado;
+int procesar_mensaje(int socket){
+	int resultado, id;
 	char* clave;
 	nodo nodo_instancia;
 	int protocolo_extra = 1; //Sacar inicializacion
-	//t_esi_operacion instruccion;
+	t_esi_operacion instruccion;
 	status_clave status;
 	void* buffer_int = malloc(sizeof(int));
+	recibir(socket, buffer_int, sizeof(int), logger);
+	id = deserializar_id(buffer_int);
+	log_info(logger, "Protocolo recibido: %d", id);
 
 	switch(id){
 		case 20:
@@ -278,6 +277,11 @@ int procesar_mensaje(int id, int socket){
 			resultado = pthread_join(el_nodo->hilo, NULL);
 			log_info(logger, "ya tire el join: %d", resultado);
 			return resultado;
+			break;
+		case 82:
+			instruccion = recibir_instruccion(socket);
+			log_info(logger, "Id: %d, Clave: %s", instruccion.keyword, instruccion.argumentos.GET.clave);
+			return 1;
 			break;
 		default:
 			return -1;
