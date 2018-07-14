@@ -20,7 +20,7 @@ t_esi_operacion ultima_instruccion;
 sockets_conexiones leer_arch_configuracion();
 
 // Handshake
-int handshake(int socket_servidor);
+int handshake_del_esi(int socket_servidor);
 
 // Verificaciones
 int cumple_protocolo(int mensaje, int nro);

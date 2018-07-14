@@ -10,7 +10,7 @@ sockets_conexiones leer_arch_configuracion(){
 	sockets_conexiones conexion;
 	configuracion_esi = config_create("ESI/Configuracion_ESI.cfg");
 	conexion.socket_coordi = conectarse_al_Coordinador();
-	//conexion.socket_plani = conectarse_al_Planificador();
+	conexion.socket_plani = conectarse_al_Planificador();
 	return conexion;
 }
 
@@ -26,7 +26,7 @@ int conectarse_al_Planificador(){
 }
 
 // Handshake
-int handshake(int socket_servidor) {
+int handshake_del_esi(int socket_servidor) {
 
 	t_handshake yo = { idEsi, ESI };
 	t_handshake proceso_recibido;
@@ -40,6 +40,7 @@ int handshake(int socket_servidor) {
 	free(buffer);
 
 	protocolo = recibir_int(socket_servidor, logger_esi);
+	log_info(logger_esi, "Id de protocolo recibido: %d \n", protocolo);
 	if (cumple_protocolo(protocolo, 80) == 0) {
 		log_info(logger_esi, "Conexion invalida: error en protocolo.");
 		return -1;
@@ -117,10 +118,10 @@ int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
 	puts("--> Parseado completo");
 	//ultima_instruccion = operacion;
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
-		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Planificador \n "); //Lu, no seria al coordinador?
+		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
 		return 1;
 		} else {
-			log_info(logger_esi, "No se pudo enviar la instruccion al Planificador \n");
+			log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
 			return 0;
 		}
 }
