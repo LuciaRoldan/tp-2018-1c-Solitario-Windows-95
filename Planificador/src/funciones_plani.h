@@ -9,12 +9,13 @@
 typedef struct{
 	int id_esi;
 	int* sgte;
-} cola_de_esis; //esto es una cola o un esi ???
+} cola_de_esis; //esto es una cola o un esi ??? */
+
 
 typedef struct{ //estructura que va a contener todas las claves y el estado de cada una
 	char* clave;
 	int esi_que_la_usa; //ESI que la esta usando ahora. O sea que hizo un GET.
-	cola_de_esis esis_en_espera; //ESIS bloqueados esperando a que se desbloquee la clave.
+	t_list* esis_en_espera; //ESIS bloqueados esperando a que se desbloquee la clave.
 } clave_bloqueada;
 
 //typedef struct{
@@ -57,7 +58,8 @@ t_list* claves_bloqueadas;
 
 ///---Variables Globales Auxiliares---///
 int id_buscado;
-
+char* clave_buscada;
+pcb* esi_abortado;
 
 //FUNCIONES
 
@@ -104,9 +106,14 @@ bool algoritmo_HRRN(void* pcb1, void* pcb2);
 
 //Operaciones sobre PCBs
 void registrar_exito_en_pcb(int id_esi);
+void mover_esi_a_bloqueados(char* clave);
+void abortar_esi(int id_esi);
 
 //funciones auxiliares
+bool ids_iguales(void* pcbb);
 bool claves_iguales(void* pcb);
+void* quitar_esi_de_cola_bloqueados(void* clave_bloq);
+bool ids_iguales_cola_de_esis(void* id);
 
 /*
 
