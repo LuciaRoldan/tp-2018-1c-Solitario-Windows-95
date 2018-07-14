@@ -393,9 +393,10 @@ void serializar_string(void* buffer, char* cadena, int protocolo){//Se guarda do
 
 char* deserializar_string(void* buffer){
 	int tamanio;
-	char* mensaje;
 	memcpy(&tamanio, buffer, sizeof(int));
+	char* mensaje = malloc(tamanio);
 	memcpy(mensaje, buffer, tamanio);
+	free(tamanio);
 	return mensaje;
 }
 
