@@ -2,7 +2,8 @@
 
 //////////----------COSAS POR HACER ANTES DE SEGUIR----------//////////
 //1. TERMINAR DE LEER EL ARCHIVO DE CONFIGURACION Y VER QUE LEA BIEN = LISTA DE CLAVES INICIALMENTE BLOQUEADAS
-//2. VERIFICAR QUE registrar_exito_en_pcb ANDE
+//2. VERIFICAR QUE abortar_esi ANDE
+//3. HABLAR CON EL COORDINADOR PARA QUE ME PIDA UNA INSTRUCCION Y YO ME CREE UNA CLAVE CON SUS COSAS
 
 //inicializando
 
@@ -80,8 +81,8 @@ int handshake_esi(int socket_esi){
 	recibir(socket_esi, &protocolo, sizeof(int), logger);
 
 	if(protocolo == 80){
-	void* buffer2 = malloc(sizeof(int)*2);
-		recibir(socket_esi, buffer2, sizeof(int), logger);
+		void* buffer2 = malloc(sizeof(int)*2);
+		recibir(socket_esi, buffer2, sizeof(int)*2, logger);
 		proceso_recibido = deserializar_handshake(buffer2);
 		if (proceso_recibido.proceso !=  0){ //validar que no tenía ya al ESI en otra PCB
 			enviar(socket_esi, buffer1, sizeof(int)*3, logger);
@@ -106,6 +107,8 @@ pcb crear_pcb_esi(int socket_esi_nuevo, int id_esi){
 	pcb pcb_esi;
 	pcb_esi.id = id_esi;
 	pcb_esi.socket = socket_esi_nuevo;
+	pcb_esi.ultimaEstimacion = estimacion_inicial;
+	pcb_esi.ultimaRafaga = 0;
 	return pcb_esi;
 }
 
@@ -116,6 +119,8 @@ void recibir_esis(void* socket_esis){
 	log_info(logger, "Entre al hilo recibir_esis y el socket es %d\n", int_socket_esis);
 	pcbs = list_create();
 	esis_ready = list_create();
+	esis_finalizados = list_create();
+	claves_bloqueadas = list_create();
 	int socket_esi_nuevo;
 	while(1){
 		log_info(logger, "Esperando un ESI");
@@ -147,20 +152,43 @@ void manejar_esi(void* la_pcb){
 		pcb pcb_esi = *((pcb*) la_pcb);
 		log_info(logger, "ID dentro de manejar esi es %d\n", pcb_esi.id);
 		log_info(logger, "Socket dentro de manejar esi es %d\n", pcb_esi.socket);
-		planificar();
+		//planificar();
 		sleep(5);
+
+		/*
+		//probando recibir una instruccion
+		void* bufferEjec = malloc(sizeof(int));
+		serializar_id(bufferEjec, 61);
+		enviar(pcb_esi.socket, bufferEjec, sizeof(int), logger);
+
+		sleep(5);
+
+		int protocolo = recibir_int(pcb_esi.socket, logger);
+		log_info(logger, "Protocolo recibido deberia ser 82: %d \n", protocolo);
+		int tamanio = recibir_int(pcb_esi.socket, logger);
+		log_info(logger, "Tamanio recibido deberia ser 54: %d \n", tamanio);
+		void* buffer = malloc(tamanio);
+		recibir(pcb_esi.socket, buffer, tamanio, logger);
+		t_esi_operacion recibido = deserializar_instruccion(buffer+ sizeof(int)*2);
+		printf("Recibido: %s, %d \n", recibido.argumentos.GET.clave, recibido.keyword);
+
+		sleep(100);
+		//probando finished
+		*/
+
+
 		resultado_esi resultado = recibir_int(pcb_esi.socket, logger);
 		log_info(logger, "El ESI me envio el resultado_esi %d\n", resultado);
 		if (resultado >= 0){
 			switch (resultado){
 				case (EXITO):
-						registrar_exito_en_pcb(pcb_esi.id);
+					registrar_exito_en_pcb(pcb_esi.id);//anda
 				break;
 				case (FALLO):
-					//mover_esi_a_bloqueados(pcb_esi.id);
+					//mover_esi_a_bloqueados(pcb_esi.id); //hacer falta que tenga una cola de bloqueados?
 				break;
 				default:
-					//abortar_esi(pcb_esi.id);
+					abortar_esi(pcb_esi.id);
 				break;
 			}
 		}
@@ -178,20 +206,51 @@ void planificar(){
 	enviar(esi_a_ejecutar.socket, buffer, sizeof(int), logger);
 }
 
-//--Registrar exito--// //VER QUE ESTO ANDE ANTES DE SEGUIR!!!!!
+//--Registrar exito--// ANDA!
 void registrar_exito_en_pcb(int id_esi){
 	void* pcbb;
 	id_buscado = id_esi;
-	pcbb = list_find(pcbs, claves_iguales);
+	pcbb = list_find(pcbs, ids_iguales);
 	pcb* esi_que_ejecuto = pcbb;
 	esi_que_ejecuto->ultimaRafaga++;
 	log_info(logger, "La ultima rafaga del ESI que acaba de ejecutar es: %d\n", esi_que_ejecuto->ultimaRafaga);
 }
-
-bool claves_iguales(void* pcbb){
+bool ids_iguales(void* pcbb){
 	pcb* pcb_esi = pcbb;
 	return pcb_esi->id == id_buscado;
 }
+
+//--Mover ESI a cola de bloqueados de una clave--// //TERMINAR
+/*void mover_esi_a_bloqueados(char* clave){
+	void* nodo_clave;
+	clave_buscada = clave;
+	nodo_clave = list_find(claves_bloqueadas, claves_iguales);
+	clave_bloqueada* nodo_clave_a_bloquear = nodo_clave;
+	nodo_clave_a_bloquear->esis_en_espera
+}
+*/
+
+//--Abortar ESIS--//    //VER QUE ANDE
+void abortar_esi(int id_esi){
+	void* pcbb;
+	id_buscado = id_esi;
+	pcbb = list_remove_by_condition(pcbs, ids_iguales);
+	pcb* esi_abortado = pcbb;
+	list_add(esis_finalizados, esi_abortado);
+	list_map(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
+}
+
+void* quitar_esi_de_cola_bloqueados(void* clave_bloq){
+	clave_bloqueada* clave = clave_bloq;
+	list_remove_by_condition(clave->esis_en_espera, ids_iguales_cola_de_esis); //tiene que ser t_list pero todavia no tengo claves
+	return clave;
+}
+
+bool ids_iguales_cola_de_esis(void* id){ //cuando creo una clave, la creo con una list de ids bloqueados esperando.
+	int* id_esi = id;
+	return *id_esi == id_buscado;
+}
+
 
 //--Ordenar PCBs--//
 void ordenar_pcbs(){
@@ -495,3 +554,4 @@ void enviar_resultado_esi(int socket_planificador, resultado_esi resultado, t_lo
 //	memcpy(buffer + offset, resultado, sizeof(int));
 }
 */
+
