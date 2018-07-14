@@ -1,10 +1,11 @@
 
 #include "funciones_instancia.h"
 
+configuracion_propia mi_configuracion;
 char* ipCoordinador;
 int puertoCoordinador;
 tipo_algoritmo_reemplazo algoritmo_reemplazo;
-char* nombreInstancia;
+int idInstancia;
 int intervaloDump;
 int cantidad_entradas;
 int tamano_entrada;
@@ -21,14 +22,14 @@ int main() {
 
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 
-	configuracion_propia mi_configuracion;
+
 	leer_configuracion_propia(&mi_configuracion,logger);
 
 	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
 
 	handshake(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
 
-//	recibe_pedido_valor(socket_coordinador,logger); //para probar
+//	recibe_pedido_status(socket_coordinador,logger); para probar
 
 	int espacio_para_memoria = cantidad_entradas * tamano_entrada;
 

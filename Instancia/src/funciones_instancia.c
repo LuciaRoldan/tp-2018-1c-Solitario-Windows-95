@@ -6,7 +6,7 @@
 
 void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logger) {
 
-	FILE* archivo = fopen("Configuracion_instancia.txt", "r");
+	FILE* archivo = fopen("../Configuracion_instancia.txt", "r");
 
 	if (archivo < 1) {
 		log_info(logger,"No se puede abrir el archivo Configuracion_instancia.txt");
@@ -39,14 +39,15 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	int id = recibir_int(socket_coordinador, logger);
 	t_handshake handshake_coordi;
 	t_esi_operacion instruccion;
+	char* clave;
 
 	switch (id) {
 	case (00):
 		recibir_configuracion(socket_coordinador, logger);
 		break;
 	case (01):
-		recibe_pedido_valor();
-//		enviar_valor(); //declarar
+		clave =	recibe_pedido_status(socket_coordinador, logger);
+//		enviar_status_clave(); //declarar
 		break;
 	case (02):
 		instruccion = recibir_instruccion(socket_coordinador, logger);
@@ -59,15 +60,32 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	}
 }
 
-void recibe_pedido_valor(int socket_coordinador, t_log* logger){
+char* recibe_pedido_status(int socket_coordinador, t_log* logger){
+	int tamanio;
 	char* clave;
-	int tamanio_buffer = tamanio_buffer_string(clave);
-	void* buffer = malloc(tamanio_buffer);
-	recibir(socket_coordinador,buffer,tamanio_buffer,logger);
-	deserializar_string(buffer);
+	void* buffer_tamanio = malloc(sizeof(int));
+	recibir(socket_coordinador,buffer_tamanio,sizeof(int),logger);
+	tamanio = deserializar_id(buffer_tamanio);
+	void* buffer = malloc(tamanio);
+	recibir(socket_coordinador,buffer,tamanio,logger);
+	clave = deserializar_string(buffer);
+	free(buffer_tamanio);
+	free(tamanio);
+	return clave;
 }
 
-//void enviar_valor(int socket_coordinadir, char*clave)
+int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
+	char* valor;
+	valor = dictionary_get(diccionario_memoria,clave);
+//	int idInstancia = mi_configuracion.nombreInstancia;
+	status_clave status = {clave,0,valor};
+	int tamanio_buffer = tamanio_buffer_status(status);
+	void* buffer = malloc(tamanio_buffer);
+	serializar_status_clave(buffer,status);
+	int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
+	return bytes_enviados;
+
+}
 
 
 
@@ -78,35 +96,6 @@ t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	free(buffer);
 	return instruccion;
 }
-
-
-/*t_esi_operacion deserializar_instruccion(void* buffer) {
-	t_esi_operacion instruccion;
-	int tamanio_clave, tamanio_valor, tamanio_raw;
-	memcpy(&(instruccion.valido), (buffer + sizeof(int)), sizeof(int));
-	memcpy(&(instruccion.keyword), (buffer + sizeof(int)*2), sizeof(int));
-	memcpy(&tamanio_clave, (buffer + sizeof(int) * 3), sizeof(int));
-	switch (instruccion.keyword) {
-	case (GET):
-		memcpy(&(instruccion.argumentos.GET.clave), (buffer + sizeof(int) * 4),tamanio_clave);
-		memcpy(&tamanio_raw, (buffer + sizeof(int) * 4 + tamanio_clave), sizeof(int));
-		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_raw);
-		break;
-	case (SET):
-		memcpy(&(instruccion.argumentos.SET.clave), (buffer + sizeof(int) * 4),tamanio_clave);
-		memcpy(&tamanio_valor, (buffer + sizeof(int)*4 + tamanio_clave), sizeof(int));
-		memcpy(&(instruccion.argumentos.SET.valor), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_valor);
-		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 5) + tamanio_clave + tamanio_valor), sizeof(int));
-		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 6) + tamanio_clave + tamanio_valor), tamanio_raw);
-		break;
-	case (STORE):
-		memcpy(&(instruccion.argumentos.STORE.clave),(buffer + sizeof(int) * 4), tamanio_clave);
-		memcpy(&tamanio_raw, (buffer + sizeof(int) * 4 + tamanio_clave), sizeof(int));
-		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_raw);
-		break;
-		return instruccion;
-	}
-}*/
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) { //REVISAR
 
