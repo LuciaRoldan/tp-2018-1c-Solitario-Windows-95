@@ -195,6 +195,64 @@ void manejar_esi(void* la_pcb){
 	}
 }
 
+void manejar_coordinador(void* socket){
+	int socket_coordinador = *((int*) socket);
+	log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
+	claves_bloqueadas = list_create();
+
+	while(1){
+		int id = recibir_int(sockets_planificador.socket_coordinador, logger);
+		int tamanio;
+		pedido_esi pedido;
+		switch(id){
+		case (10): //nuevo pedido
+				tamanio = recibir_int(socket_coordinador, logger);
+				log_info(logger, "Tamanio recibido del coordinador: %d \n", tamanio);
+				void* buffer = malloc(tamanio);
+				recibir(socket_coordinador, buffer, tamanio, logger);
+				//pedido = deserializar_pedido_esi(buffer+ sizeof(int)*2, logger);
+				printf("Recibido: %s, %d \n", pedido.instruccion.argumentos.GET.clave, pedido.instruccion.keyword);
+				procesar_pedido(pedido);
+		break;
+		case (11): //respuesta de un estado que pedi
+				//int tamano_status_clave = malloc(sizeof(struct status_clave));
+				//struct status_clave status = recibir_status_clave(socket_coordinador);
+				//mostrar_status_clave(status);
+		break;
+		default:
+		log_info(logger, "Pedido invalido del Coordinador");
+	}
+
+	//comportamiento posterior
+	}
+}
+
+void procesar_pedido(pedido_esi pedido){
+	switch(pedido.instruccion.keyword){
+	case(GET):
+			clave_buscada = pedido.instruccion.argumentos.GET.clave;
+			clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales);
+			if(nodo_clave_buscada == NULL){
+				 clave_bloqueada clave_nueva;
+				 clave_nueva.clave = clave_buscada;
+				 clave_nueva.esi_que_la_usa = pedido.esi_id;
+				 clave_nueva.esis_en_espera = list_create();
+				 list_add(claves_bloqueadas, &clave_nueva);
+			} else {
+				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
+					nodo_clave_buscada->esi_que_la_usa = pedido.esi_id;
+				} else {
+					list_add(nodo_clave_buscada->esis_en_espera, &pedido.esi_id);
+				}
+			}
+			break;
+	case(SET):
+	break;
+	case(STORE):
+	break;
+	}
+}
+
 void planificar(){
 	ordenar_pcbs();
 	void* pcbb;
@@ -230,6 +288,11 @@ bool ids_iguales(void* pcbb){
 }
 */
 
+bool claves_iguales(void* nodo_clave){
+	clave_bloqueada* clave = nodo_clave;
+	return clave->clave == clave_buscada;
+}
+
 //--Abortar ESIS--//    //VER QUE ANDE
 void abortar_esi(int id_esi){
 	void* pcbb;
@@ -250,6 +313,8 @@ bool ids_iguales_cola_de_esis(void* id){ //cuando creo una clave, la creo con un
 	int* id_esi = id;
 	return *id_esi == id_buscado;
 }
+
+
 
 
 //--Ordenar PCBs--//
@@ -321,32 +386,7 @@ bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 
 
 /*
-void manejar_coordinador(void* socket_coordinador){
 
-	int id = recibir_int(sockets_planificador.socket_coordinador, logger);
-	pedido_esi pedido;
-
-	switch(id){
-		case (10): //nuevo pedido
-				pedido = recibir_pedido_coordinador(sockets_planificador.socket_coordinador);
-
-
-				//responder_a_pedido_coordinador(socket_coordinador, pedido);
-		break;
-		case (11): //respuesta de un estado que pedi
-				//int tamano_status_clave = malloc(sizeof(struct status_clave));
-				//struct status_clave status = recibir_status_clave(socket_coordinador);
-				//mostrar_status_clave(status);
-		break;
-		log_info(logger, "Pedido invalido del Coordinador");
-}
-
-
-
-	//comportamiento posterior
-
-
-}
 
 
 */

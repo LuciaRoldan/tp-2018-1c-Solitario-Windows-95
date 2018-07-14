@@ -14,14 +14,15 @@ int main() {
 	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
 
 	pthread_t hilo_escucha_esis;
-	//pthread_t hilo_coordinador;
+	pthread_t hilo_coordinador;
 	//pthread_t hilo_consola;
 
 	void* puntero_socket_esis = &sockets_planificador.socket_esis;
+	void* puntero_socket_coordinador = &sockets_planificador.socket_coordinador;
 
 	log_info(logger, "Por entrar al hilo del Esi y el socket_esis es %d\n", sockets_planificador.socket_esis);
 	pthread_create(&hilo_escucha_esis, 0, recibir_esis, puntero_socket_esis);
-	//pthread_create(&hilo_coordinador, 0, manejar_coordinador, (void*) &socket_coordinador);
+	pthread_create(&hilo_coordinador, 0, manejar_coordinador, puntero_socket_coordinador);
 	//pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
 
 	pthread_join(hilo_escucha_esis, NULL);

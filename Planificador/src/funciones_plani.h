@@ -132,6 +132,8 @@ void actualizar_pcb_esi_asignado(int id_esi); //atomico. siempre de a uno
 //////////-----HABLAR CON COORDINADOR-----//////////
 */
 void manejar_coordinador();
+
+void procesar_pedido(pedido_esi pedido);
 /*
 void responder_a_pedido_coordinador(int socket_coodinador, pedido_esi pedido);
 void mostrar_status_clave(status_clave status);
