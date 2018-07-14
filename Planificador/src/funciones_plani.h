@@ -106,14 +106,22 @@ bool algoritmo_HRRN(void* pcb1, void* pcb2);
 
 //Operaciones sobre PCBs
 void registrar_exito_en_pcb(int id_esi);
-void mover_esi_a_bloqueados(char* clave);
+void mover_esi_a_bloqueados(char* clave, clave_bloqueada* nodo_clave_buscada, int esi_id);
 void abortar_esi(int id_esi);
 
-//funciones auxiliares
-bool ids_iguales(void* pcbb);
-bool claves_iguales_nodo_clave(void* nodo_clave);
-void* quitar_esi_de_cola_bloqueados(void* clave_bloq);
+//Operaciones sobre claves_bloqueadas
+void liberar_clave(char* clave);
+
+///---FUNCIONES AUXILIARES---///
+//ids_iguales
+bool ids_iguales_pcb(void* pcbb);
 bool ids_iguales_cola_de_esis(void* id);
+
+//claves_iguales
+bool claves_iguales_nodo_clave(void* nodo_clave);
+
+void* quitar_esi_de_cola_bloqueados(void* clave_bloq);
+
 
 /*
 
