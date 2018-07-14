@@ -97,7 +97,7 @@ char* recibir_pedido_clave(int socket){
 	recibir(socket, &tamanio, sizeof(int), logger);
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
-	clave = deserializar_string(buffer);
+	deserializar_string(buffer,clave);
 	return clave;
 }
 

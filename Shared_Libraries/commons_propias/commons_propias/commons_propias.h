@@ -153,7 +153,7 @@ t_esi_operacion deserializar_instruccion(void* buffer, t_log* logger);
 datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer);
 status_clave deserializar_status_clave(void* buffer);
 pedido_esi deserializar_pedido_esi(void* buffer);
-char* deserializar_string(void* buffer);
+void deserializar_string(void* buffer, char* mensaje);
 
 //tamaños de buffers
 int tamanio_buffer_instruccion(t_esi_operacion instruccion);
