@@ -23,9 +23,11 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 
 
 ///////////////// COORDINADOR /////////////////
-20 int (exito o fallo)
+20 NULL exito
 21 char* (clave)
+22 NULL esi abortado
 23 NULL desconexion instancia
+24 NULL fallo
 
 
 
@@ -41,6 +43,10 @@ DE COORDINADOR A PLANIFICADOR
 DE PLANIFICADOR A ESI
 61 solicitud_ejecutar_instruccion
 62 aborto
+
+DE COORDINADOR A ESI
+63 NULL exito
+64 NULL fallo
 
 ///////////////// TODOS /////////////////
 80 t_handshake
