@@ -4,6 +4,10 @@
 #include <commons_propias/commons_propias.h>
 #include <commons/bitarray.h>
 
+#define ABORTO_ESI -99
+#define EXITO_ESI 63
+#define FALLO_ESI 64
+
 t_log * logger;
 t_conexion conexionInstancia;
 int socket_planificador;
@@ -51,7 +55,7 @@ void conectar_planificador();
 
 //COMUNICACION
 int enviar_configuracion_instancia(int socket, info_archivo_config configuracion);
-int enviar_pedido_esi(int esi_id, int socket, t_esi_operacion instruccion);
+int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion);
 int enviar_status_clave(int socket, status_clave status);
 int enviar_pedido_valor(int socket, char* clave, int id);
 int enviar_confirmacion(int socket, int confirmacion, int id);
@@ -77,6 +81,8 @@ bool condicion_socket_instancia(void* datos);
 int verificar_existencia_instancia(nodo nodo);
 void reemplazar_instancia(nodo nodo);
 nodo* seleccionar_instancia(char* clave);
+nodo* encontrar_esi(int socket);
+
 
 //DE HILOS
 void serializar_hilo_proceso(void* buffer, hilo_proceso hilo);
