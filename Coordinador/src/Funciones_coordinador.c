@@ -119,7 +119,7 @@ t_esi_operacion recibir_instruccion(int socket){
 	tamanio = deserializar_id(buffercito);
 	void* buffer = malloc(tamanio);
 	int resultado = recibir(socket, buffer, tamanio, logger);
-	instruccion = deserializar_instruccion(buffer, logger);
+	instruccion = deserializar_instruccion(buffer);
 	return instruccion;
 }
 
@@ -261,11 +261,6 @@ int procesar_mensaje(int socket){
 			resultado = enviar_pedido_valor(nodo_instancia.socket, clave, protocolo_extra);
 			return resultado;
 			break;
-		case 22:
-			status = recibir_status(socket);
-			resultado = enviar_status_clave(socket_planificador, status);
-			return resultado;
-			break;
 		case 23:
 			resultado = desconectar_instancia(socket);
 			return 1;
@@ -280,6 +275,11 @@ int procesar_mensaje(int socket){
 		case 82:
 			instruccion = recibir_instruccion(socket);
 			return 1;
+			break;
+		case 83:
+			status = recibir_status(socket);
+			resultado = enviar_status_clave(socket_planificador, status);
+			return resultado;
 			break;
 		default:
 			return -1;
