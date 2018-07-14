@@ -22,6 +22,8 @@ void inicializar_coordinador(info_archivo_config configuracion){
 	lista_esis = list_create();
 	lista_instancias = list_create();
 	diccionario_claves = dictionary_create();
+	mi_algoritmo = configuracion.algoritmo_distribucion;
+	ultima_instancia_EL = 0;
 }
 
 void conectar_planificador(){
@@ -238,7 +240,7 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 int procesar_mensaje(int socket){
 	int resultado, id;
 	char* clave;
-	nodo nodo_instancia;
+	nodo* nodo_instancia;
 	int protocolo_extra = 1; //Sacar inicializacion
 	t_esi_operacion instruccion;
 	status_clave status;
@@ -258,7 +260,7 @@ int procesar_mensaje(int socket){
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
 			protocolo_extra = 1;
-			resultado = enviar_pedido_valor(nodo_instancia.socket, clave, protocolo_extra);
+			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
 			return resultado;
 			break;
 		case 23:
@@ -274,6 +276,7 @@ int procesar_mensaje(int socket){
 			break;
 		case 82:
 			instruccion = recibir_instruccion(socket);
+			procesar_instruccion(instruccion, socket);
 			return 1;
 			break;
 		case 83:
@@ -295,13 +298,50 @@ int desconectar_instancia(int socket){
 	return resultado;
 }
 
-nodo buscar_instancia(char* clave){
-	nodo nodo_instancia;
-	dictionary_get(diccionario_claves, clave);
+nodo* buscar_instancia(char* clave){
+	nodo* nodo_instancia;
+	if(dictionary_has_key(diccionario_claves, clave)){
+		nodo_instancia = dictionary_get(diccionario_claves, clave);
+	} else {
+		nodo_instancia = seleccionar_instancia(clave);
+	}
+
 	return nodo_instancia;
 }
 
+nodo* seleccionar_instancia(char* clave){
+	nodo* instancia_seleccionada;
+	switch(mi_algoritmo){
+	case EL:
+		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
+		ultima_instancia_EL++;
+		break;
+	case LSU:
+		break;
+	case KE:
+		break;
+	}
+	return instancia_seleccionada;
+}
+
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
+	char* clave;
+	switch(instruccion.keyword){
+	case GET:
+		clave = malloc(sizeof(instruccion.argumentos.GET.clave));
+		memcpy(clave, instruccion.argumentos.GET.clave, sizeof(instruccion.argumentos.GET.clave));
+		break;
+	case SET:
+		clave = malloc(sizeof(instruccion.argumentos.SET.clave));
+		memcpy(clave, instruccion.argumentos.SET.clave, sizeof(instruccion.argumentos.SET.clave));
+		break;
+	case STORE:
+		clave = malloc(sizeof(instruccion.argumentos.STORE.clave));
+		memcpy(clave, instruccion.argumentos.STORE.clave, sizeof(instruccion.argumentos.STORE.clave));
+		break;
+	}
+	nodo* instancia = buscar_instancia(clave);
+	//continuara
 	return 1;
 }
 
