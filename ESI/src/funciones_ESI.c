@@ -80,12 +80,6 @@ t_esi_operacion parsear_linea(FILE* archivo){
 	ssize_t read;
 	read = getline(&line, &len, archivo);
 	t_esi_operacion parsed = parse(line);
-	/*if(parsed.valido){
-		destruir_operacion(parsed);
-	} else {
-		fprintf(stderr, "La linea <%s> no es valida\n", line);
-		exit(EXIT_FAILURE);
-	}*/
 	log_info(logger_esi, "Id: %d, Clave: %s", parsed.keyword, parsed.argumentos.GET.clave);
 	return parsed;
 }
@@ -97,13 +91,6 @@ int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
 	log_info(logger_esi, "Tamaño clave: %d", strlen(instruccion.argumentos.GET.clave));
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
-
-	t_esi_operacion op;
-	void* buf = malloc(tamanio_buffer - sizeof(int)*2);
-	memcpy(buf, buffer_instruccion + sizeof(int)*2, tamanio_buffer - sizeof(int)*2);
-	op = deserializar_instruccion(buf, logger_esi);
-	log_info(logger_esi, "Deserializacion: %s", op.argumentos.GET.clave);
-
 	puts("--> Fin de serializacion de instruccion");
 	int exito = enviar(socket_Coordinador, buffer_instruccion, tamanio_buffer, logger_esi);
 	puts("--> Instruccion enviada");
@@ -116,7 +103,7 @@ int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
 	t_esi_operacion operacion = parsear_linea(archivo);
 	log_info(logger_esi, "Id: %d, Clave: %s", operacion.keyword, operacion.argumentos.GET.clave);
 	puts("--> Parseado completo");
-	//ultima_instruccion = operacion;
+	ultima_instruccion = operacion;
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
 		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
 		return 1;

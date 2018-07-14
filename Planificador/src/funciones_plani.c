@@ -24,6 +24,7 @@ void leer_archivo_configuracion(){
 		conexion_coordinador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
 		algoritmo = strdup(config_get_string_value(configuracion, "ALGORITMO_PLANIFICACION")); //anda
 		estimacion_inicial = atoi(strdup(config_get_string_value(configuracion, "ESTIMACION_INICIAL"))); //anda
+		alpha = atof(strdup(config_get_string_value(configuracion, "ALPHA")));
 		//falta leer las claves inicialmente bloqueadas
 	log_info(logger, "Se leyo el archivo de configuracion correctamente");
 }
@@ -150,10 +151,14 @@ void manejar_esi(void* la_pcb){
 	while(1){
 		log_info(logger, "Entre a manjear ESI");
 		pcb pcb_esi = *((pcb*) la_pcb);
-		log_info(logger, "ID dentro de manejar esi es %d\n", pcb_esi.id);
-		log_info(logger, "Socket dentro de manejar esi es %d\n", pcb_esi.socket);
+		log_info(logger, "ID dentro de manejar esi es %d", pcb_esi.id);
+		log_info(logger, "Socket dentro de manejar esi es %d", pcb_esi.socket);
 		//planificar();
 		sleep(5);
+		void* buffer = malloc(sizeof(int));
+			serializar_id(buffer, 61);
+			enviar(pcb_esi.socket, buffer, sizeof(int), logger);
+		log_info(logger, "envie al esi que ejecute");
 
 		/*
 		//probando recibir una instruccion
@@ -178,14 +183,16 @@ void manejar_esi(void* la_pcb){
 
 
 		resultado_esi resultado = recibir_int(pcb_esi.socket, logger);
-		log_info(logger, "El ESI me envio el resultado_esi %d\n", resultado);
+		log_info(logger, "El ESI me envio el resultado_esi %d", resultado);
 		if (resultado >= 0){
 			switch (resultado){
 				case (EXITO):
 					registrar_exito_en_pcb(pcb_esi.id);//anda
 				break;
 				case (FALLO):
-					//mover_esi_a_bloqueados(pcb_esi.id); //hacer falta que tenga una cola de bloqueados?
+					//id_buscado = pcb_esi.id;
+					//list_remove_by_condition(esis_ready, id_buscado);
+					//ya lo encole en la cola de esis_bloqueados que corresponde en el Coordi
 				break;
 				default:
 					abortar_esi(pcb_esi.id);
@@ -228,27 +235,78 @@ void manejar_coordinador(void* socket){
 }
 
 void procesar_pedido(pedido_esi pedido){
+	clave_bloqueada* nodo_clave_buscada;
 	switch(pedido.instruccion.keyword){
 	case(GET):
-			clave_buscada = pedido.instruccion.argumentos.GET.clave;
-			clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+		clave_buscada = pedido.instruccion.argumentos.GET.clave;
+		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 			if(nodo_clave_buscada == NULL){
+				//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas
 				 clave_bloqueada clave_nueva;
 				 clave_nueva.clave = clave_buscada;
 				 clave_nueva.esi_que_la_usa = pedido.esi_id;
 				 clave_nueva.esis_en_espera = list_create();
 				 list_add(claves_bloqueadas, &clave_nueva);
+				 log_info(logger, "Nueva clave_bloqueada creada: %s", clave_buscada);
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
+					//Existe esa clave_bloqueada en mi lista de claves pero no esta asignada a ningun ESI
 					nodo_clave_buscada->esi_que_la_usa = pedido.esi_id;
+					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, pedido.esi_id);
 				} else {
-					list_add(nodo_clave_buscada->esis_en_espera, &pedido.esi_id);
+					if(nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
+					//Me hacen un GET sobre una clave que ya tenia asignado ese ESI entonces no hago nada.
+					log_info(logger, "El ESI %d hizo un GET sobre la clave %s que la le pertenecia", pedido.esi_id, clave_buscada);
+					} else {
+						//Me hacen un GET sobre una clave que estaba asignada a otro ESI entonces lo pongo en
+						//la lista de espera de esa clave y lo saco de ready
+						mover_esi_a_bloqueados(clave_buscada, nodo_clave_buscada, pedido.esi_id);
+					}
 				}
 			}
 			break;
+
 	case(SET):
-	break;
+		clave_buscada = pedido.instruccion.argumentos.SET.clave;
+		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+			if(nodo_clave_buscada == NULL){
+				log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, pedido.esi_id);
+				abortar_esi(pedido.esi_id);
+			} else {
+				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
+					log_info(logger, "SET realizado por el ESI %d sobre una clave %s sin ESIS asignados", pedido.esi_id, clave_buscada);
+					abortar_esi(pedido.esi_id);
+				} else {
+					if (nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
+						log_info(logger, "SET realizado por el ESI %d sobre la clave que le pertenecia %s", pedido.esi_id, clave_buscada);
+					} else {
+						log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
+						abortar_esi(pedido.esi_id);
+					}
+				}
+			}
+			break;
+
 	case(STORE):
+		clave_buscada = pedido.instruccion.argumentos.STORE.clave;
+		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+			if(nodo_clave_buscada == NULL){
+				log_info(logger, "STORE realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, pedido.esi_id);
+				abortar_esi(pedido.esi_id);
+			} else {
+				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
+					log_info(logger, "STORE realizado por el ESI %d sobre una clave %s sin ESIS asignados", pedido.esi_id, clave_buscada);
+					abortar_esi(pedido.esi_id);
+				} else {
+					if (nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
+						log_info(logger, "STORE realizado por el ESI %d sobre la clave que le pertenecia %s", pedido.esi_id, clave_buscada);
+						liberar_clave(clave_buscada);
+					} else {
+						log_info(logger, "STORE realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
+						abortar_esi(pedido.esi_id);
+					}
+				}
+			}
 	break;
 	}
 }
@@ -264,49 +322,67 @@ void planificar(){
 	enviar(esi_a_ejecutar.socket, buffer, sizeof(int), logger);
 }
 
-//--Registrar exito--// ANDA!
+/////-----OPERACIONES SOBRE PCBS-----/////
+//--Registrar exito ESIS--// ANDA!
 void registrar_exito_en_pcb(int id_esi){
 	void* pcbb;
 	id_buscado = id_esi;
-	pcbb = list_find(pcbs, ids_iguales);
+	pcbb = list_find(pcbs, ids_iguales_pcb);
 	pcb* esi_que_ejecuto = pcbb;
 	esi_que_ejecuto->ultimaRafaga++;
 	log_info(logger, "La ultima rafaga del ESI que acaba de ejecutar es: %d\n", esi_que_ejecuto->ultimaRafaga);
 }
-bool ids_iguales(void* pcbb){
-	pcb* pcb_esi = pcbb;
-	return pcb_esi->id == id_buscado;
-}
 
 //--Mover ESI a cola de bloqueados de una clave--// //TERMINAR
-/*void mover_esi_a_bloqueados(char* clave){
-	void* nodo_clave;
-	clave_buscada = clave;
-	nodo_clave = list_find(claves_bloqueadas, claves_iguales);
-	clave_bloqueada* nodo_clave_a_bloquear = nodo_clave;
-	nodo_clave_a_bloquear->esis_en_espera
+void mover_esi_a_bloqueados(char* clave, clave_bloqueada* nodo_clave_buscada, int esi_id){
+	list_add(nodo_clave_buscada->esis_en_espera, &esi_id);
+	id_buscado = esi_id;
+	list_remove_by_condition(esis_ready, ids_iguales_cola_de_esis);
+	log_info(logger, "Esi %d colocado en cola de espera de la clave %s", esi_id, clave_buscada);
 }
-*/
 
-bool claves_iguales_nodo_clave(void* nodo_clave){
-	clave_bloqueada* clave = nodo_clave;
-	return clave->clave == clave_buscada;
-}
 
 //--Abortar ESIS--//    //VER QUE ANDE
 void abortar_esi(int id_esi){
 	void* pcbb;
 	id_buscado = id_esi;
-	pcbb = list_remove_by_condition(pcbs, ids_iguales);
+	pcbb = list_remove_by_condition(pcbs, ids_iguales_pcb);
 	pcb* esi_abortado = pcbb;
 	list_add(esis_finalizados, esi_abortado);
 	list_map(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
+	log_info(logger, "ESI abortado: %d", id_esi);
 }
 
 void* quitar_esi_de_cola_bloqueados(void* clave_bloq){
 	clave_bloqueada* clave = clave_bloq;
 	list_remove_by_condition(clave->esis_en_espera, ids_iguales_cola_de_esis); //tiene que ser t_list pero todavia no tengo claves
 	return clave;
+}
+
+//FUNCIONES AUXILIARES PCB//
+bool ids_iguales_pcb(void* pcbb){
+	pcb* pcb_esi = pcbb;
+	return pcb_esi->id == id_buscado;
+}
+
+
+/////-----OPERACIONES SOBRE CLAVE_BLOQUEADA-----/////
+void liberar_clave(char* clave){
+	clave_buscada = clave;
+	clave_bloqueada* nodo_clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+	nodo_clave->esi_que_la_usa = NULL;
+	log_info(logger, "La clave %s se libero", clave);
+	if(!list_is_empty(nodo_clave->esis_en_espera)){
+		int* esi_que_ahora_va_a_tener_la_clave = list_remove(nodo_clave->esis_en_espera, 1);
+		nodo_clave->esi_que_la_usa = *esi_que_ahora_va_a_tener_la_clave;
+		log_info(logger, "y es ahora ocupada por el ESI %d", esi_que_ahora_va_a_tener_la_clave);
+	}
+}
+
+//FUNCIONES AUXILIARES CLAVE_BLOQUEADA//
+bool claves_iguales_nodo_clave(void* nodo_clave){
+	clave_bloqueada* clave = nodo_clave;
+	return clave->clave == clave_buscada;
 }
 
 bool ids_iguales_cola_de_esis(void* id){ //cuando creo una clave, la creo con una list de ids bloqueados esperando.
@@ -317,8 +393,11 @@ bool ids_iguales_cola_de_esis(void* id){ //cuando creo una clave, la creo con un
 
 
 
+
+
 //--Ordenar PCBs--//
 void ordenar_pcbs(){
+	log_info(logger, "El algoritmo es: %s", algoritmo);
 	if(strcmp(algoritmo, "SJF_CD")){
 	planificacionSJF_CD();
 	}
@@ -334,15 +413,21 @@ void ordenar_pcbs(){
 }
 
 void planificacionSJF_CD(){
-	list_sort(esis_ready, algoritmo_SJF);
+	if(list_size(esis_ready) > 1){
+		list_sort(esis_ready, algoritmo_SJF);
+	}
 }
 
 void planificacionSJF_SD(){
-	list_sort(esis_ready, algoritmo_SJF);
+	if(list_size(esis_ready) > 1){
+		list_sort(esis_ready, algoritmo_SJF);
+	}
 }
 
 void planificacionHRRN(){
-	list_sort(esis_ready, algoritmo_HRRN);
+	if(list_size(esis_ready) > 1){
+		list_sort(esis_ready, algoritmo_HRRN);
+	}
 }
 
 bool algoritmo_SJF(void* pcb_1, void* pcb_2){
@@ -353,15 +438,13 @@ bool algoritmo_SJF(void* pcb_1, void* pcb_2){
 	float proxima_rafaga1;
 	float proxima_rafaga2;
 
-	int alfaSJF = 2;
-
-	proxima_rafaga1 =  (alfaSJF/100) * (pcb1.ultimaRafaga) + (1 - alfaSJF/100)* (pcb1.ultimaEstimacion);
-	proxima_rafaga2 =  (alfaSJF/100) * (pcb2.ultimaRafaga) + (1 - alfaSJF/100)* (pcb2.ultimaEstimacion);
+	proxima_rafaga1 =  (alpha/100) * (pcb1.ultimaRafaga) + (1 - alpha/100)* (pcb1.ultimaEstimacion);
+	proxima_rafaga2 =  (alpha/100) * (pcb2.ultimaRafaga) + (1 - alpha/100)* (pcb2.ultimaEstimacion);
 
 	if ( proxima_rafaga1 <= proxima_rafaga2){
-		return 1;
+		return true;
 	} else {
-		return 0;
+		return false;
 	}
 }
 

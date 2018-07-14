@@ -23,48 +23,19 @@ int main(int argc, char* argv[]){
 
 	fseek(script_prueba, 0, SEEK_SET);
 
-	/*char* line = NULL;
-	size_t len = 0;
-	ssize_t read;
-
-	while ((read = getline(&line, &len, script_prueba)) != -1){
-		t_esi_operacion parsed = parse(line);
-		if(parsed.valido){
-		switch(parsed.keyword){
-			case GET:
-				printf("GET\tclave: <%s>\n", parsed.argumentos.GET.clave);
-				break;
-			case SET:
-				printf("SET\tclave: <%s>\tvalor: <%s>\n", parsed.argumentos.SET.clave, parsed.argumentos.SET.valor);
-				break;
-			case STORE:
-				printf("STORE\tclave: <%s>\n", parsed.argumentos.STORE.clave);
-				break;
-			default:
-				fprintf(stderr, "No pude interpretar la linea <%s>", line);
-				exit(EXIT_FAILURE);
-			}
-		} else {
-			fprintf(stderr, "La linea <%s> no es valida\n", line);
-			exit(EXIT_FAILURE);
-		}
-	}
-	free(line);
-	fseek(script_prueba, 0, SEEK_SET);*/
-
 	conexiones = leer_arch_configuracion();
 	log_info(logger_esi, "Archivo de configuracion leido para ESI %d.", idEsi);
 
 	handshake_del_esi(conexiones.socket_coordi);
 	handshake_del_esi(conexiones.socket_plani);
 
-	int codigo_plani;
+	int codigo_plani = 61;
 	int codigo_coordi;
 	int abortoESI = 0;
 	void* mensaje_coordi = malloc(sizeof(resultado_esi));
 
-	while((!feof(script_prueba)) || abortoESI == 0) {
-		codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
+	while((!feof(script_prueba)) && abortoESI == 0) {
+		//codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 		switch(codigo_plani){
 			case 45: //desbloqueo ESI
 				ejecutar_ultima_instruccion(conexiones.socket_coordi);
@@ -78,7 +49,9 @@ int main(int argc, char* argv[]){
 				break;
 			case 61: //solicitud de ejecucion
 				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
-				//log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
+				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
+				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
+				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
 				codigo_coordi = recibir_int(conexiones.socket_coordi, logger_esi);
 				if(cumple_protocolo(codigo_coordi, 20)){
 					recibir(conexiones.socket_coordi, mensaje_coordi, sizeof(resultado_esi), logger_esi);

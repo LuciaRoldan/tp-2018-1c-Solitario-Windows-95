@@ -22,6 +22,8 @@ void inicializar_coordinador(info_archivo_config configuracion){
 	lista_esis = list_create();
 	lista_instancias = list_create();
 	diccionario_claves = dictionary_create();
+	mi_algoritmo = configuracion.algoritmo_distribucion;
+	ultima_instancia_EL = 0;
 }
 
 void conectar_planificador(){
@@ -52,11 +54,11 @@ int enviar_configuracion_instancia(int socket, info_archivo_config configuracion
 	return bytes_enviados;
 }
 
-int enviar_pedido_esi(int esi_id, int socket, t_esi_operacion instruccion){
+int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion){
 	pedido_esi pedido = {esi_id, instruccion};
 	void* buffer = malloc(tamanio_buffer_instruccion(instruccion) + sizeof(int));
 	serializar_pedido_esi(buffer, pedido);
-	int bytes_enviados = enviar(socket, &pedido, sizeof(pedido), logger);
+	int bytes_enviados = enviar(socket_planificador, &pedido, sizeof(pedido), logger);
 	return bytes_enviados;
 }
 
@@ -119,10 +121,16 @@ t_esi_operacion recibir_instruccion(int socket){
 	tamanio = deserializar_id(buffercito);
 	void* buffer = malloc(tamanio);
 	int resultado = recibir(socket, buffer, tamanio, logger);
-	instruccion = deserializar_instruccion(buffer, logger);
+	instruccion = deserializar_instruccion(buffer);
 	return instruccion;
 }
 
+void enviar_operacion(int socket, t_esi_operacion instruccion){
+	int tamanio = tamanio_buffer_instruccion(instruccion);
+	void* buffer = malloc(tamanio);
+	serializar_instruccion(buffer, instruccion);
+	enviar(socket, buffer, tamanio, logger);
+}
 
 /////////////////////// FUNCIONAMIENTO INTERNO ///////////////////////
 
@@ -238,7 +246,8 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 int procesar_mensaje(int socket){
 	int resultado, id;
 	char* clave;
-	nodo nodo_instancia;
+	nodo* nodo_instancia;
+	nodo* el_nodo;
 	int protocolo_extra = 1; //Sacar inicializacion
 	t_esi_operacion instruccion;
 	status_clave status;
@@ -247,23 +256,12 @@ int procesar_mensaje(int socket){
 	id = deserializar_id(buffer_int);
 	log_info(logger, "Protocolo recibido: %d", id);
 
-	void* buf;
-
 	switch(id){
-		case 20:
-			resultado = recibir_confirmacion(socket);
-			return resultado;
-			break;
 		case 21:
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
 			protocolo_extra = 1;
-			resultado = enviar_pedido_valor(nodo_instancia.socket, clave, protocolo_extra);
-			return resultado;
-			break;
-		case 22:
-			status = recibir_status(socket);
-			resultado = enviar_status_clave(socket_planificador, status);
+			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
 			return resultado;
 			break;
 		case 23:
@@ -271,20 +269,31 @@ int procesar_mensaje(int socket){
 			return 1;
 			break;
 		case 81:
-			socket_esi_buscado = socket;
-			nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
+			el_nodo = encontrar_esi(socket);
 			resultado = pthread_join(el_nodo->hilo, NULL);
 			log_info(logger, "ya tire el join: %d", resultado);
 			return resultado;
 			break;
 		case 82:
 			instruccion = recibir_instruccion(socket);
+			procesar_instruccion(instruccion, socket);
 			return 1;
+			break;
+		case 83:
+			status = recibir_status(socket);
+			resultado = enviar_status_clave(socket_planificador, status);
+			return resultado;
 			break;
 		default:
 			return -1;
 			break;
 	}
+}
+
+nodo* encontrar_esi(int socket){
+	socket_esi_buscado = socket;
+	nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
+	return el_nodo;
 }
 
 int desconectar_instancia(int socket){
@@ -295,14 +304,73 @@ int desconectar_instancia(int socket){
 	return resultado;
 }
 
-nodo buscar_instancia(char* clave){
-	nodo nodo_instancia;
-	dictionary_get(diccionario_claves, clave);
+nodo* buscar_instancia(char* clave){
+	nodo* nodo_instancia;
+	if(dictionary_has_key(diccionario_claves, clave)){
+		nodo_instancia = dictionary_get(diccionario_claves, clave);
+	} else {
+		nodo_instancia = seleccionar_instancia(clave);
+	}
+
 	return nodo_instancia;
 }
 
+nodo* seleccionar_instancia(char* clave){
+	nodo* instancia_seleccionada;
+	switch(mi_algoritmo){
+	case EL:
+		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
+		ultima_instancia_EL++;
+		break;
+	case LSU:
+		break;
+	case KE:
+		break;
+	}
+	return instancia_seleccionada;
+}
+
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
-	return 1;
+	char* clave;
+	switch(instruccion.keyword){
+	case GET:
+		clave = malloc(sizeof(instruccion.argumentos.GET.clave));
+		memcpy(clave, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
+		break;
+	case SET:
+		clave = malloc(sizeof(instruccion.argumentos.SET.clave));
+		memcpy(clave, instruccion.argumentos.SET.clave, strlen(instruccion.argumentos.SET.clave)+1);
+		break;
+	case STORE:
+		clave = malloc(sizeof(instruccion.argumentos.STORE.clave));
+		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
+		break;
+	}
+	nodo* instancia = buscar_instancia(clave);
+	nodo* esi = encontrar_esi(socket);
+
+	enviar_pedido_esi(esi->id, instruccion);
+	void* buffercito = malloc(sizeof(int));
+	recibir(socket_planificador, buffercito, sizeof(int), logger);
+	int protocolo_plani = deserializar_id(buffercito);
+	int protocolo_instancia;
+
+	switch(protocolo_plani){
+	case 24:
+		return FALLO_ESI;
+		break;
+	case 20:
+		enviar_operacion(instancia->socket, instruccion);
+		recibir(instancia->socket, buffercito, sizeof(int), logger);
+		protocolo_instancia = deserializar_id(buffercito);
+		if(protocolo_instancia == 20){
+			return EXITO_ESI;
+		}
+		return FALLO_ESI;
+	default:
+		return ABORTO_ESI;
+		break;
+	}
 }
 
 bool condicion_socket_esi(void* datos){
