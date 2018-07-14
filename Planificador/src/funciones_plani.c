@@ -231,7 +231,7 @@ void procesar_pedido(pedido_esi pedido){
 	switch(pedido.instruccion.keyword){
 	case(GET):
 			clave_buscada = pedido.instruccion.argumentos.GET.clave;
-			clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales);
+			clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 			if(nodo_clave_buscada == NULL){
 				 clave_bloqueada clave_nueva;
 				 clave_nueva.clave = clave_buscada;
@@ -288,7 +288,7 @@ bool ids_iguales(void* pcbb){
 }
 */
 
-bool claves_iguales(void* nodo_clave){
+bool claves_iguales_nodo_clave(void* nodo_clave){
 	clave_bloqueada* clave = nodo_clave;
 	return clave->clave == clave_buscada;
 }

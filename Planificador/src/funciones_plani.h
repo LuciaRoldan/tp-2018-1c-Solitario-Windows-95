@@ -111,7 +111,7 @@ void abortar_esi(int id_esi);
 
 //funciones auxiliares
 bool ids_iguales(void* pcbb);
-bool claves_iguales(void* pcb);
+bool claves_iguales_nodo_clave(void* nodo_clave);
 void* quitar_esi_de_cola_bloqueados(void* clave_bloq);
 bool ids_iguales_cola_de_esis(void* id);
 
