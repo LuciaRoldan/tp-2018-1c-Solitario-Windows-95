@@ -96,6 +96,13 @@ int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
 	log_info(logger_esi, "Tamaño clave: %d", strlen(instruccion.argumentos.GET.clave));
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
+
+	t_esi_operacion op;
+	void* buf = malloc(tamanio_buffer - sizeof(int)*2);
+	memcpy(buf, buffer_instruccion + sizeof(int)*2, tamanio_buffer - sizeof(int)*2);
+	op = deserializar_instruccion(buf, logger_esi);
+	log_info(logger_esi, "Deserializacion: %s", op.argumentos.GET.clave);
+
 	puts("--> Fin de serializacion de instruccion");
 	int exito = enviar(socket_Coordinador, buffer_instruccion, tamanio_buffer, logger_esi);
 	puts("--> Instruccion enviada");

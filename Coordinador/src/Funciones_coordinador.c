@@ -117,12 +117,9 @@ t_esi_operacion recibir_instruccion(int socket){
 	void* buffercito = malloc(sizeof(int));
 	recibir(socket, buffercito, sizeof(int), logger);
 	tamanio = deserializar_id(buffercito);
-	log_info(logger, "Tamaño: %d", tamanio);
 	void* buffer = malloc(tamanio);
 	int resultado = recibir(socket, buffer, tamanio, logger);
-	log_info(logger, "Resultado: %d", resultado);
 	instruccion = deserializar_instruccion(buffer, logger);
-	printf("//////////////////////////////////////////////////////////////");
 	return instruccion;
 }
 
@@ -249,6 +246,8 @@ int procesar_mensaje(int socket){
 	recibir(socket, buffer_int, sizeof(int), logger);
 	id = deserializar_id(buffer_int);
 	log_info(logger, "Protocolo recibido: %d", id);
+
+	void* buf;
 
 	switch(id){
 		case 20:
