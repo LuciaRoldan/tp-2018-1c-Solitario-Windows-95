@@ -135,7 +135,7 @@ t_handshake deserializar_handshake(void *buffer_recepcion){
 }
 
 void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
-	int tamanio_clave, tamanio_valor, tam_buffer_aux;
+	int tamanio_clave, tamanio_valor;
 	int tamanio_mensaje = tamanio_buffer_instruccion(la_instruccion) - 2*sizeof(int);
 	int* id_protocolo = malloc(sizeof(int));
 	*id_protocolo = 82;
@@ -147,27 +147,24 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 
 	switch(la_instruccion.keyword){
 	case GET:
-		tamanio_clave = strlen(la_instruccion.argumentos.GET.clave);
-		tam_buffer_aux = tamanio_clave + sizeof(int);
+		tamanio_clave = strlen(la_instruccion.argumentos.GET.clave)+2;
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.GET.clave, tamanio_clave);
 		break;
 
 	case SET:
-		tamanio_clave = strlen(la_instruccion.argumentos.SET.clave);
-		tamanio_valor = strlen(la_instruccion.argumentos.SET.valor);
-		tam_buffer_aux = tamanio_clave + tamanio_valor + (sizeof(int)*2);
+		tamanio_clave = strlen(la_instruccion.argumentos.SET.clave)+2;
+		tamanio_valor = strlen(la_instruccion.argumentos.SET.valor)+2;
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool), &la_instruccion.argumentos.SET.clave, tamanio_clave);
+		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.SET.clave, tamanio_clave);
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tamanio_clave, &tamanio_valor, sizeof(int));
-		memcpy(buffer + sizeof(int)*5 + sizeof(bool) + tamanio_clave, &la_instruccion.argumentos.SET.valor, tamanio_valor);
+		memcpy(buffer + sizeof(int)*5 + sizeof(bool) + tamanio_clave, la_instruccion.argumentos.SET.valor, tamanio_valor);
 		break;
 
 	case STORE:
-		tamanio_clave = strlen(la_instruccion.argumentos.STORE.clave);
-		tam_buffer_aux = tamanio_clave + sizeof(int);
+		tamanio_clave = strlen(la_instruccion.argumentos.STORE.clave)+2;
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.GET.clave, tamanio_clave);
+		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.STORE.clave, tamanio_clave);
 	}
 
 	free(id_protocolo);
@@ -180,23 +177,24 @@ t_esi_operacion deserializar_instruccion(void* buffer, t_log* logger) {
 	memcpy(&(instruccion.valido), buffer, sizeof(bool));
 	memcpy(&(instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
 	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
-	log_info(logger, "//////////// %d /////////// %d ////////////////", instruccion.keyword, tamanio_clave);
 	switch (instruccion.keyword) {
 	case (GET):
-		instruccion.argumentos.GET.clave = malloc(tamanio_clave + sizeof(int)*10);
+		instruccion.argumentos.GET.clave = malloc(tamanio_clave);
 		memcpy(instruccion.argumentos.GET.clave, (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
-		printf("buferino: %s \n", instruccion.argumentos.GET.clave);
+		printf("GET: %s \n", instruccion.argumentos.GET.clave);
 		break;
 	case (SET):
-		instruccion.argumentos.SET.clave = malloc(tamanio_clave + sizeof(char));
+		instruccion.argumentos.SET.clave = malloc(tamanio_clave)-1;
 		memcpy((instruccion.argumentos.SET.clave), (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
 		memcpy(&tamanio_valor, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		instruccion.argumentos.SET.valor = malloc(tamanio_valor + sizeof(char));
+		instruccion.argumentos.SET.valor = malloc(tamanio_valor);
 		memcpy((instruccion.argumentos.SET.valor), (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_valor);
+		printf("SET: %s, %s \n", instruccion.argumentos.SET.clave, instruccion.argumentos.SET.valor);
 		break;
 	case (STORE):
-		instruccion.argumentos.STORE.clave = malloc(tamanio_clave + sizeof(char));
+		instruccion.argumentos.STORE.clave = malloc(tamanio_clave);
 		memcpy((instruccion.argumentos.STORE.clave),(buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
+		printf("STORE: %s \n", instruccion.argumentos.STORE.clave);
 		break;
 	}
 	return instruccion;

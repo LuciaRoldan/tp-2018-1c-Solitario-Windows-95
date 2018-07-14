@@ -15,13 +15,13 @@ int main(){
 
 	log_info(logger,"Se paso a archivo");
 	inicializar_coordinador(configuracion);
-	//conectar_planificador();
+	conectar_planificador();
 
 	pthread_t hilo_escucha;
 	pthread_t hilo_planificador;
 
 	pthread_create(&hilo_escucha, 0, procesar_conexion, NULL);
-	//pthread_create(&hilo_planificador, 0, atender_planificador, NULL);
+	pthread_create(&hilo_planificador, 0, atender_planificador, NULL);
 
 	log_info(logger, "Hilos ya creados");
 	sleep(60);

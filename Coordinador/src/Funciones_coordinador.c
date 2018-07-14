@@ -279,7 +279,6 @@ int procesar_mensaje(int socket){
 			break;
 		case 82:
 			instruccion = recibir_instruccion(socket);
-			log_info(logger, "Id: %d, Clave: %s", instruccion.keyword, instruccion.argumentos.GET.clave);
 			return 1;
 			break;
 		default:
