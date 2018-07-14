@@ -386,7 +386,7 @@ int tamanio_buffer_status(status_clave status){
 void serializar_string(void* buffer, char* cadena, int protocolo){//Se guarda dos veces el tamaño para recibirlo afuera de deserializar y poder declarar el buffer y para poder recibirlo dentro de deserializacion y saber de que tamaño hacer el memcpy
 	int tamanio = strlen(cadena) * sizeof(char); 				// recibe el protocolo porque la mismma funcion se puede usar muchas veces
 	memcpy(buffer, &protocolo, sizeof(int));
-	memcpy(buffer + sizeof(int), &tamanio, sizeof(int));
+	memcpy(buffer + sizeof(int), &tamanio, sizeof(int)*2);
 	memcpy(buffer + sizeof(int)*2, &tamanio, sizeof(int));
 	memcpy(buffer + sizeof(int)*3, cadena, tamanio);
 }

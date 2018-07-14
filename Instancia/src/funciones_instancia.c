@@ -4,8 +4,6 @@
 #include <sys/mman.h>
 /////////////////////// INICIALIZACION ///////////////////////
 
-
-
 void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logger) {
 
 	FILE* archivo = fopen("Configuracion_instancia.txt", "r");
@@ -47,7 +45,8 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		recibir_configuracion(socket_coordinador, logger);
 		break;
 	case (01):
-		//				me pueden pedir clave sin una instruccion??
+		recibe_pedido_valor();
+//		enviar_valor(); //declarar
 		break;
 	case (02):
 		instruccion = recibir_instruccion(socket_coordinador, logger);
@@ -59,6 +58,17 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		break;
 	}
 }
+
+void recibe_pedido_valor(int socket_coordinador, t_log* logger){
+	char* clave;
+	int tamanio_buffer = tamanio_buffer_string(clave);
+	void* buffer = malloc(tamanio_buffer);
+	recibir(socket_coordinador,buffer,tamanio_buffer,logger);
+	deserializar_string(buffer);
+}
+
+//void enviar_valor(int socket_coordinadir, char*clave)
+
 
 
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
@@ -72,21 +82,27 @@ t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 
 /*t_esi_operacion deserializar_instruccion(void* buffer) {
 	t_esi_operacion instruccion;
-	int tamanio_clave, tamanio_valor;
+	int tamanio_clave, tamanio_valor, tamanio_raw;
 	memcpy(&(instruccion.valido), (buffer + sizeof(int)), sizeof(int));
 	memcpy(&(instruccion.keyword), (buffer + sizeof(int)*2), sizeof(int));
 	memcpy(&tamanio_clave, (buffer + sizeof(int) * 3), sizeof(int));
 	switch (instruccion.keyword) {
 	case (GET):
-		memcpy(&(instruccion.argumentos.GET.clave), (buffer + sizeof(int) * 4),sizeof(tamanio_clave));
+		memcpy(&(instruccion.argumentos.GET.clave), (buffer + sizeof(int) * 4),tamanio_clave);
+		memcpy(&tamanio_raw, (buffer + sizeof(int) * 4 + tamanio_clave), sizeof(int));
+		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_raw);
 		break;
 	case (SET):
-		memcpy(&(instruccion.argumentos.SET.clave), (buffer + sizeof(int) * 4),sizeof(tamanio_clave));
+		memcpy(&(instruccion.argumentos.SET.clave), (buffer + sizeof(int) * 4),tamanio_clave);
 		memcpy(&tamanio_valor, (buffer + sizeof(int)*4 + tamanio_clave), sizeof(int));
 		memcpy(&(instruccion.argumentos.SET.valor), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_valor);
+		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 5) + tamanio_clave + tamanio_valor), sizeof(int));
+		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 6) + tamanio_clave + tamanio_valor), tamanio_raw);
 		break;
 	case (STORE):
 		memcpy(&(instruccion.argumentos.STORE.clave),(buffer + sizeof(int) * 4), tamanio_clave);
+		memcpy(&tamanio_raw, (buffer + sizeof(int) * 4 + tamanio_clave), sizeof(int));
+		memcpy(&(instruccion._raw), (buffer + (sizeof(int) * 5) + tamanio_clave), tamanio_raw);
 		break;
 		return instruccion;
 	}

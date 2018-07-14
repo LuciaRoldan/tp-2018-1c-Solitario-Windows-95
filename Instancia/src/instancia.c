@@ -28,6 +28,8 @@ int main() {
 
 	handshake(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
 
+//	recibe_pedido_valor(socket_coordinador,logger); //para probar
+
 	int espacio_para_memoria = cantidad_entradas * tamano_entrada;
 
 	diccionario_memoria = dictionary_create();
