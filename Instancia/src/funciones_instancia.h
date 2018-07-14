@@ -6,6 +6,7 @@
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
 datos_configuracion configuracion;
 t_dictionary* diccionario_memoria;
+char* claveActual;
 
 typedef enum {
 	LRU, CIRC, BSU

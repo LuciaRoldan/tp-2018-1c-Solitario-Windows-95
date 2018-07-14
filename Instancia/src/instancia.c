@@ -30,14 +30,6 @@ int main() {
 	handshake(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
 	char* clave;
 
-	int id = recibir_int(socket_coordinador, logger);
-	log_info(logger,"Recibi %d bytes", sizeof(id));
-	log_info(logger,"Recibi el id: %d", id);
-
-	clave = recibe_pedido_status(socket_coordinador,logger);
-	log_info(logger,"Recibi esta clave: %s", clave);
-
-
 
 	int espacio_para_memoria = cantidad_entradas * tamano_entrada;
 

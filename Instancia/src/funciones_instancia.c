@@ -95,7 +95,6 @@ int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
 }
 
 
-
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(t_esi_operacion));
 	recibir(socket_coordinador,buffer,sizeof(t_esi_operacion), logger);
@@ -122,12 +121,14 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 	switch (instruccion.keyword) {
 	case (GET):
-		if((dictionary_has_key(diccionario_memoria,instruccion.argumentos.GET.clave))){ //devuelve true si la tiene
+		char* clave = instruccion.argumentos.GET.clave;
+		if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
 			void* buffer = malloc(sizeof(int));
 			serializar_id(buffer,04);
 			enviar(socket_coordinador,buffer,sizeof(int),logger);
 		} else{
-			dictionary_put(diccionario_memoria,instruccion.argumentos.GET.clave,""); //esta bien hacer esto para crear una key?
+			dictionary_put(diccionario_memoria,clave,""); //esta bien hacer esto para crear una key?
+			memcpy(&claveActual,clave,sizeof(clave));
 			void* buffer = malloc(sizeof(int));
 			serializar_id(buffer,05);
 			enviar(socket_coordinador,buffer, sizeof(int),logger);
@@ -218,6 +219,11 @@ int handshake(int* socket_coordinador, t_log* logger, int id) {
 		log_info(logger, "Conectado al COORDINADOR ", proceso_recibido.id);
 
 		return 1;
+}
+
+void aplicar_algoritmo_circular(){
+
+
 }
 	 /*algoritmo_distribucion(){
 
