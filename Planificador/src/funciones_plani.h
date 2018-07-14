@@ -45,7 +45,8 @@ t_conexion conexion_planificador;
 t_conexion conexion_coordinador;
 t_log * logger;
 char* algoritmo;
-int estimacion_inicial; //FALTA LEER DE ARCHIVO
+int estimacion_inicial;
+float alpha;
 //char* claves_inicialmente_bloqueadas; //es una lista
 
 t_list* pcbs;

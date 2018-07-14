@@ -24,6 +24,7 @@ void leer_archivo_configuracion(){
 		conexion_coordinador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
 		algoritmo = strdup(config_get_string_value(configuracion, "ALGORITMO_PLANIFICACION")); //anda
 		estimacion_inicial = atoi(strdup(config_get_string_value(configuracion, "ESTIMACION_INICIAL"))); //anda
+		alpha = atof(strdup(config_get_string_value(configuracion, "ALPHA")));
 		//falta leer las claves inicialmente bloqueadas
 	log_info(logger, "Se leyo el archivo de configuracion correctamente");
 }
@@ -154,6 +155,10 @@ void manejar_esi(void* la_pcb){
 		log_info(logger, "Socket dentro de manejar esi es %d", pcb_esi.socket);
 		//planificar();
 		sleep(5);
+		void* buffer = malloc(sizeof(int));
+			serializar_id(buffer, 61);
+			enviar(pcb_esi.socket, buffer, sizeof(int), logger);
+		log_info(logger, "envie al esi que ejecute");
 
 		/*
 		//probando recibir una instruccion
@@ -392,6 +397,7 @@ bool ids_iguales_cola_de_esis(void* id){ //cuando creo una clave, la creo con un
 
 //--Ordenar PCBs--//
 void ordenar_pcbs(){
+	log_info(logger, "El algoritmo es: %s", algoritmo);
 	if(strcmp(algoritmo, "SJF_CD")){
 	planificacionSJF_CD();
 	}
@@ -407,15 +413,21 @@ void ordenar_pcbs(){
 }
 
 void planificacionSJF_CD(){
-	list_sort(esis_ready, algoritmo_SJF);
+	if(list_size(esis_ready) > 1){
+		list_sort(esis_ready, algoritmo_SJF);
+	}
 }
 
 void planificacionSJF_SD(){
-	list_sort(esis_ready, algoritmo_SJF);
+	if(list_size(esis_ready) > 1){
+		list_sort(esis_ready, algoritmo_SJF);
+	}
 }
 
 void planificacionHRRN(){
-	list_sort(esis_ready, algoritmo_HRRN);
+	if(list_size(esis_ready) > 1){
+		list_sort(esis_ready, algoritmo_HRRN);
+	}
 }
 
 bool algoritmo_SJF(void* pcb_1, void* pcb_2){
@@ -426,15 +438,13 @@ bool algoritmo_SJF(void* pcb_1, void* pcb_2){
 	float proxima_rafaga1;
 	float proxima_rafaga2;
 
-	int alfaSJF = 2;
-
-	proxima_rafaga1 =  (alfaSJF/100) * (pcb1.ultimaRafaga) + (1 - alfaSJF/100)* (pcb1.ultimaEstimacion);
-	proxima_rafaga2 =  (alfaSJF/100) * (pcb2.ultimaRafaga) + (1 - alfaSJF/100)* (pcb2.ultimaEstimacion);
+	proxima_rafaga1 =  (alpha/100) * (pcb1.ultimaRafaga) + (1 - alpha/100)* (pcb1.ultimaEstimacion);
+	proxima_rafaga2 =  (alpha/100) * (pcb2.ultimaRafaga) + (1 - alpha/100)* (pcb2.ultimaEstimacion);
 
 	if ( proxima_rafaga1 <= proxima_rafaga2){
-		return 1;
+		return true;
 	} else {
-		return 0;
+		return false;
 	}
 }
 
