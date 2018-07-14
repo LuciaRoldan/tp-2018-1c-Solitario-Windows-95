@@ -80,12 +80,6 @@ t_esi_operacion parsear_linea(FILE* archivo){
 	ssize_t read;
 	read = getline(&line, &len, archivo);
 	t_esi_operacion parsed = parse(line);
-	if(parsed.valido){
-		destruir_operacion(parsed);
-	} else {
-		fprintf(stderr, "La linea <%s> no es valida\n", line);
-		exit(EXIT_FAILURE);
-	}
 	log_info(logger_esi, "Id: %d, Clave: %s", parsed.keyword, parsed.argumentos.GET.clave);
 	return parsed;
 }
