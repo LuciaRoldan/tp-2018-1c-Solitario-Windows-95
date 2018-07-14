@@ -74,7 +74,7 @@ void recibe_pedido_valor(int socket_coordinador, t_log* logger){
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(t_esi_operacion));
 	recibir(socket_coordinador,buffer,sizeof(t_esi_operacion), logger);
-	t_esi_operacion instruccion = deserializar_instruccion(buffer);
+	t_esi_operacion instruccion = deserializar_instruccion(buffer,logger);
 	free(buffer);
 	return instruccion;
 }
