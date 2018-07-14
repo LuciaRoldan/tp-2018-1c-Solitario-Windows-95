@@ -146,10 +146,15 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 	memcpy(buffer + (sizeof(int)*2 + sizeof(bool)), &(la_instruccion.keyword), sizeof(int));
 	//Hasta aca guardamos el protocolo, el tamaño para buffer, el bool y la keyword
 
-
 	switch(la_instruccion.keyword){
 	case GET:
 		tamanio_clave = strlen(la_instruccion.argumentos.GET.clave);
+		char* cl = malloc(tamanio_clave);
+		cl = la_instruccion.argumentos.GET.clave;
+		tam_buffer_aux = tamanio_clave + sizeof(int);
+		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
+		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.GET.clave, tamanio_clave);
+		/*tamanio_clave = strlen(la_instruccion.argumentos.GET.clave);
 		tam_buffer_aux = tamanio_clave + sizeof(int);
 		void* buffer_aux_get = malloc(tam_buffer_aux);
 		memcpy(buffer_aux_get, &tamanio_clave, sizeof(int));
@@ -157,7 +162,7 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 		//Hasta aca tenemos en un buffer nuevo con el tamaño de la clave y la clave
 
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), buffer_aux_get, tam_buffer_aux);
-		free(buffer_aux_get);
+		free(buffer_aux_get);*/
 		break;
 
 	case SET:
@@ -187,49 +192,40 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 		free(buffer_aux_store);
 	}
 
-	int tam_raw = sizeof(la_instruccion._raw);
-	memcpy(buffer + sizeof(int)*3 + sizeof(bool) + tam_buffer_aux, &tam_raw, sizeof(int));
-	memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tam_buffer_aux, la_instruccion._raw, tam_raw);
-
-
 	free(id_protocolo);
 
 }
 
 t_esi_operacion deserializar_instruccion(void* buffer, t_log* logger) {
 	t_esi_operacion instruccion;
-	int tamanio_clave, tamanio_valor, tamanio_raw;
-	log_info(logger, "//////////////////////////////////////////////////////////////");
+	int tamanio_clave, tamanio_valor;
 	memcpy(&(instruccion.valido), buffer, sizeof(bool));
 	memcpy(&(instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
 	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
 	log_info(logger, "//////////// %d /////////// %d ////////////////", instruccion.keyword, tamanio_clave);
-
 	switch (instruccion.keyword) {
 	case (GET):
-		memcpy(&instruccion.argumentos.GET.clave, (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
-		log_info(logger, instruccion.argumentos.GET.clave);
-		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_raw);
+		instruccion.argumentos.GET.clave = malloc(tamanio_clave + sizeof(int)*10);
+		memcpy(instruccion.argumentos.GET.clave, (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
+		printf("buferino: %s \n", instruccion.argumentos.GET.clave);
 		break;
 	case (SET):
-		memcpy(&(instruccion.argumentos.SET.clave), (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
+		instruccion.argumentos.SET.clave = malloc(tamanio_clave + sizeof(char));
+		memcpy((instruccion.argumentos.SET.clave), (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
 		memcpy(&tamanio_valor, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		memcpy(&(instruccion.argumentos.SET.valor), (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_valor);
-		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave + tamanio_valor), sizeof(int));
-		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*4 + tamanio_clave + tamanio_valor), tamanio_raw);
+		instruccion.argumentos.SET.valor = malloc(tamanio_valor + sizeof(char));
+		memcpy((instruccion.argumentos.SET.valor), (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_valor);
 		break;
 	case (STORE):
-		memcpy(&(instruccion.argumentos.STORE.clave),(buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
-		memcpy(&tamanio_raw, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		memcpy(&instruccion._raw, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_raw);
+		instruccion.argumentos.STORE.clave = malloc(tamanio_clave + sizeof(char));
+		memcpy((instruccion.argumentos.STORE.clave),(buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
 		break;
 	}
 	return instruccion;
 }
 
 int tamanio_buffer_instruccion(t_esi_operacion instruccion){
-	int tamanio_base = sizeof(instruccion.valido) + sizeof(instruccion.keyword) +strlen(*instruccion._raw) + 4*sizeof(int);
+	int tamanio_base = sizeof(instruccion.valido) + sizeof(instruccion.keyword) + 3*sizeof(int);
 	switch(instruccion.keyword){
 		case GET:
 			return tamanio_base + strlen(instruccion.argumentos.GET.clave);
