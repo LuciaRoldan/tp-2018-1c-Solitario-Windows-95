@@ -147,14 +147,14 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 
 	switch(la_instruccion.keyword){
 	case GET:
-		tamanio_clave = strlen(la_instruccion.argumentos.GET.clave)+2;
+		tamanio_clave = strlen(la_instruccion.argumentos.GET.clave)+1;
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.GET.clave, tamanio_clave);
 		break;
 
 	case SET:
-		tamanio_clave = strlen(la_instruccion.argumentos.SET.clave)+2;
-		tamanio_valor = strlen(la_instruccion.argumentos.SET.valor)+2;
+		tamanio_clave = strlen(la_instruccion.argumentos.SET.clave)+1;
+		tamanio_valor = strlen(la_instruccion.argumentos.SET.valor)+1;
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.SET.clave, tamanio_clave);
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tamanio_clave, &tamanio_valor, sizeof(int));
@@ -162,7 +162,7 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 		break;
 
 	case STORE:
-		tamanio_clave = strlen(la_instruccion.argumentos.STORE.clave)+2;
+		tamanio_clave = strlen(la_instruccion.argumentos.STORE.clave)+1;
 		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.STORE.clave, tamanio_clave);
 	}
@@ -184,7 +184,7 @@ t_esi_operacion deserializar_instruccion(void* buffer, t_log* logger) {
 		printf("GET: %s \n", instruccion.argumentos.GET.clave);
 		break;
 	case (SET):
-		instruccion.argumentos.SET.clave = malloc(tamanio_clave)-1;
+		instruccion.argumentos.SET.clave = malloc(tamanio_clave);
 		memcpy((instruccion.argumentos.SET.clave), (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
 		memcpy(&tamanio_valor, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
 		instruccion.argumentos.SET.valor = malloc(tamanio_valor);
@@ -204,13 +204,13 @@ int tamanio_buffer_instruccion(t_esi_operacion instruccion){
 	int tamanio_base = sizeof(instruccion.valido) + sizeof(instruccion.keyword) + 3*sizeof(int);
 	switch(instruccion.keyword){
 		case GET:
-			return tamanio_base + strlen(instruccion.argumentos.GET.clave);
+			return tamanio_base + strlen(instruccion.argumentos.GET.clave)+1;
 			break;
 		case SET:
-			return tamanio_base + strlen(instruccion.argumentos.SET.clave) + strlen(instruccion.argumentos.SET.valor) + sizeof(int);
+			return tamanio_base + strlen(instruccion.argumentos.SET.clave) + 1 + strlen(instruccion.argumentos.SET.valor) + 1 + sizeof(int);
 			break;
 		case STORE:
-			return tamanio_base + strlen(instruccion.argumentos.STORE.clave);
+			return tamanio_base + strlen(instruccion.argumentos.STORE.clave) +1;
 			break;
 		default:
 			return -1;
