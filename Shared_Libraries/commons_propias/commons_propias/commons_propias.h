@@ -54,7 +54,8 @@ typedef struct{
 
 typedef struct{
 	char* clave;
-	int id_instancia;
+	int id_instancia_actual;
+	int id_instancia_nueva;
 	char* contenido;
 }status_clave;
 
