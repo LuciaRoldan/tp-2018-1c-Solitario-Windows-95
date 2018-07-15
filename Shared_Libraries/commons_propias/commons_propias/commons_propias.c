@@ -233,86 +233,6 @@ datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer) {
 	return configuracion;
 }
 
-void serializar_pedido_esi(void* buffer, pedido_esi pedido){//Hay que declarar el buffer del tamaño de tamanio_buffer_instruccion y sumarle un int
-	int tamanio_clave, tamanio_valor;
-	int tamanio_mensaje = tamanio_buffer_instruccion(pedido.instruccion) - sizeof(int);
-	int id_protocolo = 83;
-
-	memcpy(buffer, &id_protocolo, sizeof(int));
-	memcpy(buffer + sizeof(int), &tamanio_mensaje, sizeof(int));
-	memcpy(buffer + (sizeof(int)*2), &(pedido.instruccion.valido), sizeof(bool));
-	memcpy(buffer + (sizeof(int)*2 + sizeof(bool)), &(pedido.instruccion.keyword), sizeof(int));
-
-	switch(pedido.instruccion.keyword){
-	case GET:
-		tamanio_clave = strlen(pedido.instruccion.argumentos.GET.clave)+1;
-		printf("+++++ Tamaño clave GET: %d +++++ \n", tamanio_clave);
-		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool), pedido.instruccion.argumentos.GET.clave, tamanio_clave);
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tamanio_clave, &pedido.esi_id, sizeof(int));
-		printf("+++++ Id ESI: %d +++++ \n", pedido.esi_id);
-		break;
-
-	case SET:
-		tamanio_clave = strlen(pedido.instruccion.argumentos.SET.clave)+1;
-		tamanio_valor = strlen(pedido.instruccion.argumentos.SET.valor)+1;
-		printf("+++++ Tamaño clave SET: %d +++++\n", tamanio_clave);
-		printf("+++++ Tamaño valor SET: %d +++++\n", tamanio_valor);
-		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool), pedido.instruccion.argumentos.SET.clave, tamanio_clave);
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tamanio_clave, &tamanio_valor, sizeof(int));
-		memcpy(buffer + sizeof(int)*5 + sizeof(bool) + tamanio_clave, pedido.instruccion.argumentos.SET.valor, tamanio_valor);
-		memcpy(buffer + sizeof(int)*6 + sizeof(bool) + tamanio_clave + tamanio_valor, &pedido.esi_id, sizeof(int));
-		printf("+++++ Id ESI: %d +++++ \n", pedido.esi_id);
-		break;
-
-	case STORE:
-		tamanio_clave = strlen(pedido.instruccion.argumentos.STORE.clave)+1;
-		printf("+++++ Tamaño clave STORE: %d +++++\n", tamanio_clave);
-		memcpy(buffer + sizeof(int)*3 + sizeof(bool), &tamanio_clave, sizeof(int));
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool), pedido.instruccion.argumentos.STORE.clave, tamanio_clave);
-		memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tamanio_clave, &pedido.esi_id, sizeof(int));
-		printf("+++++ Id ESI: %d +++++ \n", pedido.esi_id);
-	}
-	printf("+++++ Estamos +++++ \n");
-}
-
-pedido_esi deserializar_pedido_esi(void* buffer) {
-	pedido_esi pedido;
-	int tamanio_clave, tamanio_valor;
-	memcpy(&(pedido.instruccion.valido), buffer, sizeof(bool));
-	printf("Valido: %d\n", pedido.instruccion.valido);
-	memcpy(&(pedido.instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
-	printf("Keyword: %d\n", pedido.instruccion.keyword);
-	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
-	printf("El tamaño de la clave es: %d --------------------\n", tamanio_clave);
-
-	switch (pedido.instruccion.keyword) {
-	case (GET):
-		pedido.instruccion.argumentos.GET.clave = malloc(tamanio_clave);
-		memcpy(pedido.instruccion.argumentos.GET.clave, (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
-		printf("GET: %s \n", pedido.instruccion.argumentos.GET.clave);
-		memcpy(&pedido.esi_id, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		break;
-	case (SET):
-		pedido.instruccion.argumentos.SET.clave = malloc(tamanio_clave);
-		memcpy((pedido.instruccion.argumentos.SET.clave), (buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
-		memcpy(&tamanio_valor, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		pedido.instruccion.argumentos.SET.valor = malloc(tamanio_valor);
-		memcpy((pedido.instruccion.argumentos.SET.valor), (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_valor);
-		printf("SET: %s, %s \n", pedido.instruccion.argumentos.SET.clave, pedido.instruccion.argumentos.SET.valor);
-		memcpy(&pedido.esi_id, (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_valor + tamanio_clave), sizeof(int));
-		break;
-	case (STORE):
-		pedido.instruccion.argumentos.STORE.clave = malloc(tamanio_clave);
-		memcpy((pedido.instruccion.argumentos.STORE.clave),(buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
-		printf("STORE: %s \n", pedido.instruccion.argumentos.STORE.clave);
-		memcpy(&pedido.esi_id, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
-		break;
-	}
-	return pedido;
-}
-
 void serializar_status_clave(void* buffer, status_clave status){
 	int* id_protocolo = malloc(sizeof(int));
 	*id_protocolo = 0;
@@ -369,8 +289,6 @@ int tamanio_buffer_string(char* cadena){
 
 //////////PARA PLANIFICADOR//////////
 
-void deserializar_pedido_coordinador(void* buffer, pedido_esi* pedido){ //HACER
-}
 
 // COMMONS CONEXIONES //
 

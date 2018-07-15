@@ -36,7 +36,7 @@ DE ESI A PLANIFICADOR
 41 resultado_ejecucion_esi
 
 DE COORDINADOR A PLANIFICADOR
-43 pedido_esi
+
 
 ///////////////// ESI /////////////////
 

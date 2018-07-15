@@ -91,10 +91,7 @@ typedef struct{
 } datos_configuracion;
 
 //COORDINADOR-PLANIFICADOR
-typedef struct{
-	int esi_id;
-	t_esi_operacion instruccion;
-}pedido_esi;
+
 
 /////////////////////////// CONEXIONES ///////////////////////////
 
@@ -142,18 +139,15 @@ void serializar_int(void* envio, int id, int protocolo);
 void serializar_handshake(void* buffer, t_handshake handshake);
 void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion);
 void serializar_configuracion_inicial_instancia(void* buffer, datos_configuracion configuracion);
-void serializar_pedido_esi(void* buffer, pedido_esi pedido);
 void serializar_status_clave(void* buffer, status_clave status);
 void serializar_string(void* buffer, char* cadena, int protocolo);
 
 //deserealizar
 int deserializar_id(void* buffer_mensaje);
 t_handshake deserializar_handshake(void *buffer_recepcion);
-void deserializar_pedido_coordinador(void* buffer, pedido_esi* pedido);
 t_esi_operacion deserializar_instruccion(void* buffer);
 datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer);
 status_clave deserializar_status_clave(void* buffer);
-pedido_esi deserializar_pedido_esi(void* buffer);
 void deserializar_string(void* buffer, char* mensaje);
 
 //tamaños de buffers
