@@ -17,6 +17,14 @@ int main() {
 	pthread_t hilo_coordinador;
 	//pthread_t hilo_consola;
 
+
+	//Crear listas globales
+	pcbs = list_create();
+	esis_ready = list_create();
+	esis_finalizados = list_create();
+	claves_bloqueadas = list_create();
+
+
 	void* puntero_socket_esis = &sockets_planificador.socket_esis;
 	void* puntero_socket_coordinador = &sockets_planificador.socket_coordinador;
 
