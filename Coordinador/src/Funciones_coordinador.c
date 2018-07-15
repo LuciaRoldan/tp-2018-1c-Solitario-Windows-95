@@ -18,6 +18,7 @@ int procesar_mensaje(int socket){
 
 	switch(id){
 		case 20://salio tod o ok
+			log_info(logger, "El plani respondio");
 			return 1;
 		case 21:
 			clave = recibir_pedido_clave(socket);
@@ -32,9 +33,12 @@ int procesar_mensaje(int socket){
 			break;
 		case 81:
 			el_nodo = encontrar_esi(socket);
-			resultado = pthread_join(el_nodo->hilo, NULL);
-			log_info(logger, "ya tire el join: %d", resultado);
-			return resultado;
+			hilo_a_cerrar = &el_nodo->hilo;
+			socket_esi_buscado = el_nodo->socket;
+			log_info(logger, "voy a eliminar");
+			list_remove_by_condition(lista_esis, condicion_socket_esi);
+			sem_post(&s_cerrar_hilo);
+			return -1;
 			break;
 		case 82:
 			instruccion = recibir_instruccion(socket);
@@ -323,7 +327,8 @@ void inicializar_coordinador(){
 }
 
 void inicializar_semaforos(){
-	//if (pthread_mutex_init(&m_manejador, NULL) != 0) {printf("\n mutex init failed\n");}
+	if (pthread_mutex_init(&m_cerrar_hilo, NULL) != 0) {printf("\n mutex init failed\n");}
+	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
 }
 
 void conectar_planificador(){

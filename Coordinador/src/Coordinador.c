@@ -18,12 +18,16 @@ int main(){
 
 	pthread_t hilo_escucha;
 	pthread_t hilo_planificador;
-	pthread_t manejador_listas;
 
 	pthread_create(&hilo_escucha, 0, procesar_conexion, NULL);
 	pthread_create(&hilo_planificador, 0, atender_planificador, NULL);
 
 	log_info(logger, "Hilos ya creados");
+
+	while(1){
+		sem_wait(&s_cerrar_hilo);
+		int resultado = pthread_join(*hilo_a_cerrar, NULL);
+	}
 	sleep(60);
 	log_info(logger, "Me desperte");
 	pthread_join(hilo_escucha, NULL);

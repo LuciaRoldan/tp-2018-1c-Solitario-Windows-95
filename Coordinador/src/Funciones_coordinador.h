@@ -3,6 +3,7 @@
 
 #include <commons_propias/commons_propias.h>
 #include <commons/bitarray.h>
+#include <semaphore.h>
 
 #define ABORTO_ESI -99
 #define EXITO_ESI 63
@@ -19,8 +20,10 @@ int socket_esi_buscado;
 int socket_instancia_buscado;
 t_dictionary* diccionario_claves;
 int ultima_instancia_EL;
+pthread_t* hilo_a_cerrar;
 
-pthread_mutex_t m_manejador;
+pthread_mutex_t m_cerrar_hilo;
+sem_t s_cerrar_hilo;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -55,6 +58,7 @@ typedef struct{
 void leer_archivo_configuracion();
 void inicializar_coordinador();
 void conectar_planificador();
+void inicializar_semaforos();
 
 //COMUNICACION
 int enviar_configuracion_instancia(int socket);
