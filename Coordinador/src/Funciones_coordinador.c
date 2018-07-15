@@ -77,7 +77,8 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	nodo* instancia = buscar_instancia(clave);
 	log_info(logger, "Id instancia: %d", instancia->id);
 
-	enviar_pedido_esi(esi->id, instruccion);
+	enviar_operacion(socket_planificador, instruccion);
+
 	/*void* buffercito = malloc(sizeof(int));
 	recibir(socket_planificador, buffercito, sizeof(int), logger);
 	int protocolo_plani = deserializar_id(buffercito);
@@ -356,15 +357,6 @@ int enviar_configuracion_instancia(int socket){
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_configuracion_inicial_instancia(buffer, mensaje);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*3, logger);
-	return bytes_enviados;
-}
-
-int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion){
-	pedido_esi pedido = {esi_id, instruccion};
-	void* buffer = malloc(tamanio_buffer_instruccion(instruccion) + sizeof(int));
-	serializar_pedido_esi(buffer, pedido);
-	log_info(logger, "Serialice");
-	int bytes_enviados = enviar(socket_planificador, buffer, sizeof(pedido), logger);
 	return bytes_enviados;
 }
 

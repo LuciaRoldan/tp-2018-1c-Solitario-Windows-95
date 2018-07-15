@@ -63,7 +63,6 @@ void inicializar_semaforos();
 //COMUNICACION
 int enviar_configuracion_instancia(int socket);
 int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion);
-int enviar_status_clave(int socket, status_clave status);
 int enviar_pedido_valor(int socket, char* clave, int id);
 int enviar_confirmacion(int socket, int confirmacion, int id);
 int recibir_confirmacion(int socket);
