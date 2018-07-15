@@ -314,9 +314,10 @@ void serializar_status_clave(void* buffer, status_clave status){
 	memcpy(buffer + sizeof(int), &tamanio_total, sizeof(int));
 	memcpy(buffer + sizeof(int)*2, &tamanio_clave, sizeof(int));
 	memcpy(buffer + sizeof(int)*3, &status.clave, tamanio_clave);
-	memcpy(buffer + sizeof(int)*3 + tamanio_clave, &status.id_instancia, sizeof(int));
-	memcpy(buffer + sizeof(int)*4 + tamanio_clave, &tamanio_contenido, sizeof(int));
-	memcpy(buffer + sizeof(int)*5 + tamanio_clave, &status.contenido, tamanio_contenido);
+	memcpy(buffer + sizeof(int)*3 + tamanio_clave, &status.id_instancia_actual, sizeof(int));
+	memcpy(buffer + sizeof(int)*4 + tamanio_clave, &status.id_instancia_nueva, sizeof(int));
+	memcpy(buffer + sizeof(int)*5 + tamanio_clave, &tamanio_contenido, sizeof(int));
+	memcpy(buffer + sizeof(int)*6 + tamanio_clave, &status.contenido, tamanio_contenido);
 	free(id_protocolo);
 }
 
@@ -326,15 +327,16 @@ status_clave deserializar_status_clave(void* buffer) {//Se hicieron dos recibir 
 	memcpy(&tamanio_clave, buffer, sizeof(int));
 	status.clave = malloc(tamanio_clave);
 	memcpy(&status.clave, buffer + sizeof(int), tamanio_clave);
-	memcpy(&status.id_instancia, buffer + sizeof(int) + tamanio_clave, sizeof(int));
-	memcpy(&tamanio_contenido, buffer + sizeof(int)*2 + tamanio_clave, sizeof(int));
+	memcpy(&status.id_instancia_actual, buffer + sizeof(int) + tamanio_clave, sizeof(int));
+	memcpy(&status.id_instancia_nueva, buffer + sizeof(int)*2 + tamanio_clave, sizeof(int));
+	memcpy(&tamanio_contenido, buffer + sizeof(int)*3 + tamanio_clave, sizeof(int));
 	status.contenido = malloc(tamanio_clave);
-	memcpy(&status.contenido, buffer + sizeof(int)*3 + tamanio_clave, tamanio_contenido);
+	memcpy(&status.contenido, buffer + sizeof(int)*4 + tamanio_clave, tamanio_contenido);
 	return status;
 }
 
 int tamanio_buffer_status(status_clave status){
-	return sizeof(int)*5 + (strlen(status.clave) + strlen(status.contenido) + 2) * sizeof(char);
+	return sizeof(int)*6 + (strlen(status.clave) + strlen(status.contenido) + 2) * sizeof(char);
 }
 
 void serializar_string(void* buffer, char* cadena, int protocolo){//Se guarda dos veces el tamaño para recibirlo afuera de deserializar y poder declarar el buffer y para poder recibirlo dentro de deserializacion y saber de que tamaño hacer el memcpy
