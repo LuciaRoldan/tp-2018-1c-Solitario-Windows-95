@@ -7,6 +7,7 @@
 #define ABORTO_ESI -99
 #define EXITO_ESI 63
 #define FALLO_ESI 64
+#define FIN_ESI -100
 
 t_log * logger;
 t_conexion conexionInstancia;
@@ -64,27 +65,30 @@ char* recibir_pedido_clave(int socket);
 status_clave recibir_status(int socket);
 t_esi_operacion recibir_instruccion(int socket);
 
-//FUNCIONAMIENTO INTERNO
+//CONEXION
 int handshake(int socket);
-int procesar_mensaje(int socket);
 void procesar_conexion();
 void atender_planificador();
 void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
 int desconectar_instancia(int socket);
-nodo* buscar_instancia(char* clave);
+
+//PRROCESAMIENTO
+int procesar_mensaje(int socket);
 int procesar_instruccion(t_esi_operacion instruccion, int socket);
-void agregar_nuevo_esi(int socket_esi, int id_esi);
-void agregar_nueva_instancia(int socket_instancia, int id_instancia);
-bool condicion_socket_esi(void* datos);
-bool condicion_socket_instancia(void* datos);
-int verificar_existencia_instancia(nodo nodo);
-void reemplazar_instancia(nodo nodo);
+
+//DE LISTAS
 nodo* seleccionar_instancia(char* clave);
 nodo* encontrar_esi(int socket);
-
+nodo* buscar_instancia(char* clave);
+int verificar_existencia_instancia(nodo nodo);
+void reemplazar_instancia(nodo nodo);
+bool condicion_socket_esi(void* datos);
+bool condicion_socket_instancia(void* datos);
 
 //DE HILOS
+void agregar_nuevo_esi(int socket_esi, int id_esi);
+void agregar_nueva_instancia(int socket_instancia, int id_instancia);
 void serializar_hilo_proceso(void* buffer, hilo_proceso hilo);
 hilo_proceso deserializar_hilo_proceso(void *buffer_recepcion);
 
