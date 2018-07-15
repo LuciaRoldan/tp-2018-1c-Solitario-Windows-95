@@ -275,7 +275,9 @@ pedido_esi deserializar_pedido_esi(void* buffer) {
 	pedido_esi pedido;
 	int tamanio_clave, tamanio_valor;
 	memcpy(&(pedido.instruccion.valido), buffer, sizeof(bool));
+	printf("Valido: %d\n", pedido.instruccion.valido);
 	memcpy(&(pedido.instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
+	printf("Keyword: %d\n", pedido.instruccion.keyword);
 	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
 	printf("El pedido es de un %d --------------------", pedido.instruccion.keyword);
 	switch (pedido.instruccion.keyword) {
