@@ -3,26 +3,25 @@
 
 /////////////////////// INICIALIZACION ///////////////////////
 
-void leer_archivo_configuracion(info_archivo_config* configuracion){
+void leer_archivo_configuracion(){
 	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
 	FILE* archivo = fopen("Configuracion_coordinador.txt", "r");
 
 	fscanf(archivo, "%s %d %d %d %d %d",
-			configuracion->ip,
-			&(configuracion->puerto_escucha),
-			&(configuracion->algoritmo_distribucion),
-			&(configuracion->cantidad_entradas),
-			&(configuracion->tamano_entrada),
-			&(configuracion->retardo));
+			info_coordinador.ip,
+			&(info_coordinador.puerto_escucha),
+			&(info_coordinador.algoritmo_distribucion),
+			&(info_coordinador.cantidad_entradas),
+			&(info_coordinador.tamano_entrada),
+			&(info_coordinador.retardo));
 	fclose(archivo);
 }
 
-void inicializar_coordinador(info_archivo_config configuracion){
-	socket_escucha = inicializar_servidor(configuracion.puerto_escucha, logger);
+void inicializar_coordinador(){
+	socket_escucha = inicializar_servidor(info_coordinador.puerto_escucha, logger);
 	lista_esis = list_create();
 	lista_instancias = list_create();
 	diccionario_claves = dictionary_create();
-	mi_algoritmo = configuracion.algoritmo_distribucion;
 	ultima_instancia_EL = 0;
 }
 
@@ -46,8 +45,8 @@ void conectar_planificador(){
 
 /////////////////////// COMUNICACION ///////////////////////
 
-int enviar_configuracion_instancia(int socket, info_archivo_config configuracion){
-	datos_configuracion mensaje = {configuracion.tamano_entrada, configuracion.cantidad_entradas};
+int enviar_configuracion_instancia(int socket){
+	datos_configuracion mensaje = {info_coordinador.tamano_entrada, info_coordinador.cantidad_entradas};
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_configuracion_inicial_instancia(buffer, mensaje);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*3, logger);
@@ -212,7 +211,7 @@ void atender_esi(void* datos_esi){
 
 void atender_instancia(void* datos_instancia){
 	log_info(logger, "Estoy en el hilo de la instancia!");
-	hilo_proceso mis_datos = *((hilo_proceso*)datos_instancia);
+	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_instancia);
 	while(1){
 		procesar_mensaje(mis_datos.socket);
 	}
@@ -230,9 +229,10 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
-	void* datazos = &datos_instancia;
+	void* buffer = malloc(sizeof(int)*2);
+	serializar_hilo_proceso(buffer, datos_instancia);
 	pthread_t hilo_instanica;
-	pthread_create(&hilo_instanica, 0, atender_instancia, datazos);
+	pthread_create(&hilo_instanica, 0, atender_instancia, buffer);
 	nodo nodo = {socket_instancia, id_instancia, hilo_instanica};
 	socket_instancia_buscado = nodo.socket;
 	int precencia_instancia = verificar_existencia_instancia(nodo);
@@ -317,7 +317,7 @@ nodo* buscar_instancia(char* clave){
 
 nodo* seleccionar_instancia(char* clave){
 	nodo* instancia_seleccionada;
-	switch(mi_algoritmo){
+	switch(info_coordinador.algoritmo_distribucion){
 	case EL:
 		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
 		ultima_instancia_EL++;

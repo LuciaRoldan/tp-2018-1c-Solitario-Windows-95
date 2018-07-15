@@ -10,11 +10,10 @@ int main(){
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
 	log_info(logger,"Logger creado");
 
-	info_archivo_config configuracion;
-	leer_archivo_configuracion(&configuracion);
+	leer_archivo_configuracion();
 
 	log_info(logger,"Se paso a archivo");
-	inicializar_coordinador(configuracion);
+	inicializar_coordinador();
 	conectar_planificador();
 
 	pthread_t hilo_escucha;

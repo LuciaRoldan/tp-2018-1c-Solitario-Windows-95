@@ -23,8 +23,6 @@ int ultima_instancia_EL;
 
 typedef enum {LSU, EL, KE} tipo_algoritmo_distribucion;
 
-tipo_algoritmo_distribucion mi_algoritmo;
-
 typedef struct{
 	char ip[16];
 	int puerto_escucha;
@@ -33,6 +31,8 @@ typedef struct{
 	int tamano_entrada;
 	int retardo;
 }info_archivo_config;
+
+info_archivo_config info_coordinador;
 
 typedef struct{
 	int socket;
@@ -49,12 +49,12 @@ typedef struct{
 ///////////////////////// FUNCIONES /////////////////////////
 
 //INICIALIZACION
-void leer_archivo_configuracion(info_archivo_config* configuracion);
-void inicializar_coordinador(info_archivo_config configuracion);
+void leer_archivo_configuracion();
+void inicializar_coordinador();
 void conectar_planificador();
 
 //COMUNICACION
-int enviar_configuracion_instancia(int socket, info_archivo_config configuracion);
+int enviar_configuracion_instancia(int socket);
 int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion);
 int enviar_status_clave(int socket, status_clave status);
 int enviar_pedido_valor(int socket, char* clave, int id);

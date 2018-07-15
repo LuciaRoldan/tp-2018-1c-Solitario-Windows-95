@@ -30,12 +30,18 @@ int main() {
 	handshake(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
 	char* clave;
 
+	recibir_configuracion(socket_coordinador,logger);
 
 	int espacio_para_memoria = cantidad_entradas * tamano_entrada;
 
 	diccionario_memoria = dictionary_create();
 	diccionario_memoria->table_max_size = espacio_para_memoria;
 	memoria = malloc(espacio_para_memoria);
+
+
+	while(1){
+		procesarID(socket_coordinador,logger);
+	}
 
 	free(espacio_para_memoria);
 	sleep(5);
