@@ -198,16 +198,21 @@ void manejar_coordinador(void* socket){
 		log_info(logger, "Id recibido del Coordinador: %d", id);
 
 		int tamanio;
-		pedido_esi pedido;
+		t_esi_operacion instruccion;
+		void* buffer;
 		switch(id){
-		case (83): //nuevo pedido
-				tamanio = recibir_int(socket_coordinador, logger);
-				log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
-				void* buffer = malloc(tamanio);
-				recibir(socket_coordinador, buffer, tamanio, logger);
-				pedido = deserializar_pedido_esi(buffer);
-				log_info(logger, "Recibido: %s, %d \n", pedido.instruccion.argumentos.GET.clave, pedido.instruccion.keyword);
-				procesar_pedido(pedido);
+		case (82): //nuevo pedido
+				buffer_int = malloc(sizeof(int));
+				recibir(socket, buffer_int, sizeof(int), logger);
+				tamanio = deserializar_id(buffer_int);
+
+				buffer = malloc(tamanio);
+				recibir(socket, buffer, tamanio, logger);
+				instruccion = deserializar_instruccion(buffer);
+
+				log_info(logger, "Recibido: %s, %d \n", instruccion.argumentos.GET.clave, instruccion.keyword);
+
+				procesar_pedido(instruccion);
 				free(buffer);
 		break;
 		case (0):
@@ -219,21 +224,21 @@ void manejar_coordinador(void* socket){
 	}
 }
 
-void procesar_pedido(pedido_esi pedido){
+void procesar_pedido(t_esi_operacion instruccion){
 	clave_bloqueada* nodo_clave_buscada;
 	pcb* pcb_pedido_esi;
-	id_buscado = pedido.esi_id;
+	id_buscado = id_esi_ejecutando;
 	pcb_pedido_esi = list_find(pcbs, ids_iguales_pcb);
 	if (pcb_pedido_esi != NULL){ //VERIFICO QUE EL ESI SEA VALIDO
-	switch(pedido.instruccion.keyword){
+	switch(instruccion.keyword){
 	case(GET):
-		clave_buscada = pedido.instruccion.argumentos.GET.clave;
+		clave_buscada = instruccion.argumentos.GET.clave;
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 		if(nodo_clave_buscada == NULL){
 			//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas, la creo
 			clave_bloqueada* clave_nueva = malloc(sizeof(clave_bloqueada));
-			clave_buscada = pedido.instruccion.argumentos.GET.clave;
-			clave_nueva->esi_que_la_usa = pedido.esi_id;
+			clave_buscada = instruccion.argumentos.GET.clave;
+			clave_nueva->esi_que_la_usa = id_esi_ejecutando;
 			clave_nueva->clave = clave_buscada;
 			clave_nueva->esis_en_espera = list_create();
 			list_add(claves_bloqueadas, clave_nueva);
@@ -242,19 +247,19 @@ void procesar_pedido(pedido_esi pedido){
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
 					//Existe esa clave_bloqueada en mi lista de claves pero no esta asignada a ningun ESI
-					nodo_clave_buscada->esi_que_la_usa = pedido.esi_id;
-					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, pedido.esi_id);
+					nodo_clave_buscada->esi_que_la_usa = id_esi_ejecutando;
+					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, id_esi_ejecutando);
 					informar_exito_coordinador();
 				} else {
-					if(nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
+					if(nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
 					//Me hacen un GET sobre una clave que ya tenia asignado ese ESI entonces no hago nada.
-					log_info(logger, "GET realizado por el ESI %d sobre la clave %s que ya le pertenecia", pedido.esi_id, clave_buscada);
+					log_info(logger, "GET realizado por el ESI %d sobre la clave %s que ya le pertenecia", id_esi_ejecutando, clave_buscada);
 					informar_exito_coordinador();
 					} else {
 						//Me hacen un GET sobre una clave que estaba asignada a otro ESI entonces lo pongo en
 						//la lista de espera de esa clave y lo saco de ready
-						log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
-						mover_esi_a_bloqueados(clave_buscada, nodo_clave_buscada, pedido.esi_id);
+						log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %d", id_esi_ejecutando, clave_buscada);
+						mover_esi_a_bloqueados(clave_buscada, nodo_clave_buscada, id_esi_ejecutando);
 						informar_fallo_coordinador();
 					}
 				}
@@ -262,25 +267,25 @@ void procesar_pedido(pedido_esi pedido){
 			break;
 
 	case(SET):
-		clave_buscada = pedido.instruccion.argumentos.SET.clave;
+		clave_buscada = instruccion.argumentos.SET.clave;
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 		log_info(logger, "Nodo_clave_buscada en SET el id del esi que la usa es: %d", nodo_clave_buscada->esi_que_la_usa);
 			if(nodo_clave_buscada == NULL){
-				log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, pedido.esi_id);
-				abortar_esi(pedido.esi_id);
+				log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, id_esi_ejecutando);
+				abortar_esi(id_esi_ejecutando);
 				informar_aborto_coordinador();
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
-					log_info(logger, "SET realizado por el ESI %d sobre una clave %s sin ESIS asignados", pedido.esi_id, clave_buscada);
-					abortar_esi(pedido.esi_id);
+					log_info(logger, "SET realizado por el ESI %d sobre una clave %s sin ESIS asignados", id_esi_ejecutando, clave_buscada);
+					abortar_esi(id_esi_ejecutando);
 					informar_aborto_coordinador();
 				} else {
-					if (nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
-						log_info(logger, "SET realizado por el ESI %d sobre la clave que le pertenecia %s", pedido.esi_id, clave_buscada);
+					if (nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
+						log_info(logger, "SET realizado por el ESI %d sobre la clave que le pertenecia %s", id_esi_ejecutando, clave_buscada);
 						informar_exito_coordinador();
 					} else {
-						log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %s", pedido.esi_id, clave_buscada);
-						abortar_esi(pedido.esi_id);
+						log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
+						abortar_esi(id_esi_ejecutando);
 						informar_aborto_coordinador();
 					}
 				}
@@ -288,25 +293,25 @@ void procesar_pedido(pedido_esi pedido){
 			break;
 
 	case(STORE):
-		clave_buscada = pedido.instruccion.argumentos.STORE.clave;
+		clave_buscada = instruccion.argumentos.STORE.clave;
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 			if(nodo_clave_buscada == NULL){
-				log_info(logger, "STORE realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, pedido.esi_id);
-				abortar_esi(pedido.esi_id);
+				log_info(logger, "STORE realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, id_esi_ejecutando);
+				abortar_esi(id_esi_ejecutando);
 				informar_aborto_coordinador();
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
-					log_info(logger, "STORE realizado por el ESI %d sobre una clave %s sin ESIS asignados", pedido.esi_id, clave_buscada);
-					abortar_esi(pedido.esi_id);
+					log_info(logger, "STORE realizado por el ESI %d sobre una clave %s sin ESIS asignados", id_esi_ejecutando, clave_buscada);
+					abortar_esi(id_esi_ejecutando);
 					informar_aborto_coordinador();
 				} else {
-					if (nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
-						log_info(logger, "STORE realizado por el ESI %d sobre la clave que le pertenecia %s", pedido.esi_id, clave_buscada);
+					if (nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
+						log_info(logger, "STORE realizado por el ESI %d sobre la clave que le pertenecia %s", id_esi_ejecutando, clave_buscada);
 						liberar_clave(clave_buscada);
 						informar_exito_coordinador();
 					} else {
-						log_info(logger, "STORE realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
-						abortar_esi(pedido.esi_id);
+						log_info(logger, "STORE realizado por el ESI %d sobre una clave que no le pertenece %d", id_esi_ejecutando, clave_buscada);
+						abortar_esi(id_esi_ejecutando);
 						informar_aborto_coordinador();
 					}
 				}
@@ -314,7 +319,7 @@ void procesar_pedido(pedido_esi pedido){
 	break;
 	}
 	} else {
-		log_info(logger, "Pedido invalido. No conozco al ESI %d", pedido.esi_id);
+		log_info(logger, "Pedido invalido. No conozco al ESI %d", id_esi_ejecutando);
 	}
 }
 
@@ -446,6 +451,7 @@ void planificar(){
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 61);
 	enviar(pcb_esi->socket, buffer, sizeof(int), logger);
+	id_esi_ejecutando = pcb_esi->id;
 	log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
 }
 

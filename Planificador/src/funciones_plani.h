@@ -55,7 +55,7 @@ t_list* esis_bloqueados;
 t_list* esis_finalizados;
 t_list* claves_bloqueadas;
 
-
+int id_esi_ejecutando;
 
 ///---Variables Globales Auxiliares---///
 int id_buscado;
@@ -143,7 +143,7 @@ void actualizar_pcb_esi_asignado(int id_esi); //atomico. siempre de a uno
 //////////-----HABLAR CON COORDINADOR-----//////////
 */
 void manejar_coordinador();
-void procesar_pedido(pedido_esi pedido);
+void procesar_pedido(t_esi_operacion instruccion);
 void mostrar_status_clave(status_clave status);
 void recibir_status_clave();
 
