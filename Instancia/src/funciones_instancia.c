@@ -98,12 +98,12 @@ int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(t_esi_operacion));
 	recibir(socket_coordinador,buffer,sizeof(t_esi_operacion), logger);
-	t_esi_operacion instruccion = deserializar_instruccion(buffer,logger);
+	t_esi_operacion instruccion = deserializar_instruccion(buffer);
 	free(buffer);
 	return instruccion;
 }
 
-void enviar_exito(int socket_coordinador, logger){
+void enviar_exito(int socket_coordinador, t_log* logger){
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer,20);
 	enviar(socket_coordinador, buffer, sizeof(int), logger);
@@ -117,11 +117,11 @@ void enviar_fallo(int socket_coordinador, t_log* logger){
 	free(buffer);
 }
 
-void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) { //REVISAR
-
+void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
+	char* clave;
 	switch (instruccion.keyword) {
 	case (GET):
-		char* clave = instruccion.argumentos.GET.clave;
+		clave = instruccion.argumentos.GET.clave;
 		if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
 			void* buffer = malloc(sizeof(int));
 			serializar_id(buffer,04);
