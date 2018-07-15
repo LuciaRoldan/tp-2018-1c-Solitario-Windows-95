@@ -246,6 +246,10 @@ void manejar_coordinador(void* socket){
 
 void procesar_pedido(pedido_esi pedido){
 	clave_bloqueada* nodo_clave_buscada;
+	pcb* pcb_pedido_esi;
+	id_buscado = pedido.esi_id;
+	pcb_pedido_esi = list_find(pcbs, ids_iguales_pcb);
+	if (pcb_pedido_esi != NULL){ //VERIFICO QUE EL ESI SEA VALIDO
 	switch(pedido.instruccion.keyword){
 	case(GET):
 		clave_buscada = pedido.instruccion.argumentos.GET.clave;
@@ -334,6 +338,9 @@ void procesar_pedido(pedido_esi pedido){
 			}
 	break;
 	}
+	} else {
+		log_info(logger, "Pedido invalido. No conozco al ESI %d", pedido.esi_id);
+	}
 }
 
 
@@ -374,13 +381,24 @@ void mover_esi_a_bloqueados(char* clave, clave_bloqueada* nodo_clave_buscada, in
 
 //--Abortar ESIS--//    //VER QUE ANDE
 void abortar_esi(int id_esi){
-	void* pcbb;
+	pcb* esi_abortado;
 	id_buscado = id_esi;
-	pcbb = list_remove_by_condition(pcbs, ids_iguales_pcb);
-	pcb* esi_abortado = pcbb;
+
+	pcb* primer_elem = list_get(pcbs, 0);
+	log_info(logger, "El ID del primer ESI en la lista es: %d", primer_elem->id);
+
+	esi_abortado = list_find(pcbs, ids_iguales_pcb);
+	list_remove_by_condition(pcbs, ids_iguales_pcb);
+
+	log_info(logger, "El ID del ESI de remove_by_condition es: %d", esi_abortado->id);
 	list_add(esis_finalizados, esi_abortado);
 	list_map(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
-	log_info(logger, "ESI abortado: %d", id_esi);
+	log_info(logger, "ESI abortado: %d", esi_abortado->id);
+
+	pcb* esi_finalizado = list_get(esis_finalizados, 0);
+	log_info(logger, "El ID del primer ESI finalizado es: %d", esi_finalizado->id);
+
+
 }
 
 void* quitar_esi_de_cola_bloqueados(void* clave_bloq){
