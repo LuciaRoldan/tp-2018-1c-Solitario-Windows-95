@@ -155,34 +155,6 @@ void manejar_esi(void* la_pcb){
 		planificar();
 		sleep(5);
 
-		//ENVIO DE MENSAJE TURBIO A ESI
-		/*void* buffer = malloc(sizeof(int));
-		serializar_id(buffer, 61);
-		enviar(pcb_esi.socket, buffer, sizeof(int), logger);
-		log_info(logger, "envie al esi que ejecute");*/
-
-		/*
-		//PROBANDO RECIBIR UNA INSTRUCCION
-		void* bufferEjec = malloc(sizeof(int));
-		serializar_id(bufferEjec, 61);
-		enviar(pcb_esi.socket, bufferEjec, sizeof(int), logger);
-
-		sleep(5);
-
-		int protocolo = recibir_int(pcb_esi.socket, logger);
-		log_info(logger, "Protocolo recibido deberia ser 82: %d \n", protocolo);
-		int tamanio = recibir_int(pcb_esi.socket, logger);
-		log_info(logger, "Tamanio recibido deberia ser 54: %d \n", tamanio);
-		void* buffer = malloc(tamanio);
-		recibir(pcb_esi.socket, buffer, tamanio, logger);
-		t_esi_operacion recibido = deserializar_instruccion(buffer+ sizeof(int)*2);
-		printf("Recibido: %s, %d \n", recibido.argumentos.GET.clave, recibido.keyword);
-
-		sleep(100);
-		//probando finished
-		*/
-
-
 		resultado_esi resultado = recibir_int(pcb_esi.socket, logger);
 		log_info(logger, "El ESI me envio el resultado_esi %d", resultado);
 		if (resultado >= 0){
@@ -210,16 +182,21 @@ void manejar_coordinador(void* socket){
 	while(1){
 
 			//PROBANDO LEER COSAS CREADAS DESDE OTRO HILO
-			if(list_size(pcbs)>1){
+			/*if(list_size(pcbs)>1){
 			void* primer_esi = list_get(pcbs, 1);
 			pcb* pcb_esi = primer_esi;
 			int id_primer_esi = pcb_esi->id;
 			log_info(logger, "El id del segundo ESI en las pcbs es: %d", id_primer_esi);
-			}
+			}*/
 			//FIN DE LA PRUEBA
 
 
-		int id = recibir_int(sockets_planificador.socket_coordinador, logger);
+		int id;
+		void* buffer_int = malloc(sizeof(int));
+		recibir(socket_coordinador, buffer_int, sizeof(int), logger);
+		id = deserializar_id(buffer_int);
+		log_info(logger, "Id recibido del Coordinador: %d", id);
+
 		int tamanio;
 		pedido_esi pedido;
 		switch(id){
@@ -229,14 +206,12 @@ void manejar_coordinador(void* socket){
 				void* buffer = malloc(tamanio);
 				recibir(socket_coordinador, buffer, tamanio, logger);
 				pedido = deserializar_pedido_esi(buffer);
-				printf("Recibido: %s, %d \n", pedido.instruccion.argumentos.GET.clave, pedido.instruccion.keyword);
+				log_info(logger, "Recibido: %s, %d \n", pedido.instruccion.argumentos.GET.clave, pedido.instruccion.keyword);
 				procesar_pedido(pedido);
 				free(buffer);
 		break;
-		case (11): //respuesta de un estado que pedi
-				//int tamano_status_clave = malloc(sizeof(struct status_clave));
-				//struct status_clave status = recibir_status_clave(socket_coordinador);
-				//mostrar_status_clave(status);
+		case (0):
+				recibir_status_clave();
 		break;
 		default:
 		log_info(logger, "Pedido invalido del Coordinador");
@@ -558,6 +533,39 @@ bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 }
 
 
+void recibir_status_clave(){
+	status_clave status;
+	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
+	log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
+	void* buffer = malloc(tamanio);
+	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
+	status = deserializar_status_clave(buffer);
+	printf("Recibido el status_clave de la clave: %s", status.clave);
+	mostrar_status_clave(status);
+	free(buffer);
+}
+
+void mostrar_status_clave(status_clave status){
+	if (status.contenido != NULL){
+		//mostrar valor? "El valor de la clave es: /s", status.contenido
+	} else {
+		//decir "La clave existe pero esta vacia"
+	}
+	if (status.id_instancia_actual != 0){
+		//decir "La clave se encuentra actualmente es la instancia: %s", status.id_instancia_actual
+	}
+	//decir "La clave se guardaria en la instancia: %s", status.id_instancia_nueva
+	//decir "Los ESIs a la espera de la clave son:
+	clave_buscada = status.clave;
+	clave_bloqueada* clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+	list_iterate(clave->esis_en_espera, imprimir_id_esi);
+}
+
+void imprimir_id_esi(void* esi){
+	int* id_esi = esi;
+	//mostrar "%d", id_esi;
+}
+
 /*
 
 
@@ -598,11 +606,6 @@ void kill(int id_esi){
 	//liberar los recursos. Fijarse que clave estaba ocupando y desocuparla.
 }
 
-int status(char* clave){
-	//devuelve informacion de la instancia que se consulta
-	//fijarse en la ClavesBloqueadas a ver si esta la clave
-	return 1;
-}
 
 int* deadlock(){return 0;} //va a devolver los esis con deadlocks //no se jaja
 
@@ -617,154 +620,6 @@ void killEsis(ColaDeEsi esis){
 
 
 */
-/*
-void mover_esi_a_bloqueado(int idEsi){} //hay que hacer estas funciones de encolar
-void mover_esi_a_ready(int idEsi){}
-void mover_esi_a_finalizado(int idEsi){}
-
-int clave_tomada_por_otro_esi(int clave){
-	int tomada = ";";//buscar en la estructura que tenga las claves a ver si esta bloqueada
-	return tomada;
-}
-
-//void asignar_esi_a_clave(Clave clave, int idEsi){
-//	//buscar en donde sea que tenga las claves con los esis y asignarle el esi.
-//}
 
 
-void ejecutar_proximo_esi(){}
-
-//
-//void ejecutarEsi(esi){
-//	solicitarEjecucion(esi); //le va a mandar al ESI un mensaje diciéndole que quiere
-//							//que ejecute}
-
-
-
-//hablar con coordinador
-void manejar_coordinador(void* socket_coordinador){
-
-	int tipo_mensaje = recibir_tipo_mensaje_coordinador(socket_coordinador);
-	if (tipo_mensaje == 10){ //el 10 seria un nuevo pedido
-		//int tamano_pedido_esi = malloc(sizeof(pedido_esi));
-		//struct pedido_esi* pedido = recibir_pedido_coordinador(socket_coordinador);
-		//responder_a_pedido_coordinador(socket_coordinador, pedido);
-	}
-	else if (tipo_mensaje == 11){ //el 11 es una respuesta a un estado que pedi
-		//int tamano_status_clave = malloc(sizeof(struct status_clave));
-		//struct status_clave status = recibir_status_clave(socket_coordinador);
-		//mostrar_status_clave(status);
-	}
-	else {
-		log_info(logger, "Pedido invalido del Coordinador");
-	};
-}
-
-
-void responder_a_pedido_coordinador(int socket_coordinador, pedido_esi pedido){
-	switch(pedido.instruccion.keyword){
-	case(GET):
-	case(STORE):
-			if(clave_tomada_por_otro_esi(pedido.esi_id)){
-				mover_esi_a_bloqueado(pedido.esi_id);
-				actualizar_pcb_esi_bloqueado(pedido.esi_id); //hace falta ?
-				informar_bloqueo_coordinador(socket_coordinador, pedido.esi_id);
-			}
-			else {
-				asignar_clave_esi(pedido.instruccion.argumentos.GET.clave, pedido.esi_id);
-				actualizar_pcb_esi_asignado(pedido.esi_id);
-				informar_exito_coordinador(socket_coordinador, pedido.esi_id);
-			}
-			break;
-	case(SET):
-			if(clave_tomada_por_otro_esi(pedido.esi_id)){
-				log_info(logger, "Pedido invalido! Clave tomada por otro ESI");
-			}
-			else {
-				actualizar_pcb_esi_asignado(pedido.esi_id);
-				informar_exito_coordinador(socket_coordinador, pedido.esi_id);
-			}
-			break;
-	}
-}
-
-void mostrar_status_clave(status_clave clave){
-
-}
-
-
-
-//	switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
-//				//me estan preguntando esta tomada o no
-//				case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
-//						//que retorna true o false
-//						mover_esi_a_bloqueado(idEsi);
-//						asignar_esi_a_clave(mensaje->clave, idEsi);
-//						return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
-//				break;
-//				case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
-//						asignar_esi_a_clave(mensaje->clave, idEsi);
-//						return 1; //exito
-//				break;
-//				}
-//				}
-//}
-
-
-//MENSAJES
-
-*/
-/*
-pedido_esi recibir_pedido_coordinador(int socket_coordinador){
-
-	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
-	void* buffer = malloc(tamanio);
-	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
-	pedido_esi* pedido;
-	deserializar_pedido_coordinador(buffer, pedido);
-	return *pedido;
-}
-
-
-/*
-int recibir_tipo_mensaje_coordinador(int socket_coordinador){
-	int tipo_mensaje;
-	recibir(socket_coordinador, &tipo_mensaje, sizeof(tipo_mensaje), logger);
-		//deserializar
-	return tipo_mensaje;
-}
-
-status_clave recibir_status_clave(int socket_coordinador, status_clave status);
-void informar_bloqueo_coordinador(int socket_coordinador, int id_esi){
-
-}
-
-
-
-void informar_exito_coordinador(int socket_coordinador, int id_esi){
-
-}
-
-
-
-//EN EL ESI
-
-void enviar_resultado_esi(int socket_planificador, resultado_esi resultado, t_log* logger){
-	void* buffer = malloc(sizeof(enum));
-	memcpy(buffer, &resultado, sizeof(enum));
-	enviar(socket_planificador, buffer, sizeof(enum), 41, logger);
-	//enviar(socket_planificador, buffer, sizeof(enum), logger);
-}
-
-
-//void serializar_enum(void * buffer, int id, int resultado){
-//	size_t offset =0;
-//
-//	memcpy(buffer + offset, id ,sizeof(int));
-//
-//	offset =+ sizeof(int);
-//
-//	memcpy(buffer + offset, resultado, sizeof(int));
-}
-*/
 

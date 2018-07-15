@@ -123,6 +123,8 @@ bool claves_iguales_nodo_clave(void* nodo_clave);
 
 void* quitar_esi_de_cola_bloqueados(void* clave_bloq);
 
+void imprimir_id_esi(void* esi);
+
 
 /*
 
@@ -141,17 +143,14 @@ void actualizar_pcb_esi_asignado(int id_esi); //atomico. siempre de a uno
 //////////-----HABLAR CON COORDINADOR-----//////////
 */
 void manejar_coordinador();
-
 void procesar_pedido(pedido_esi pedido);
-/*
-void responder_a_pedido_coordinador(int socket_coodinador, pedido_esi pedido);
 void mostrar_status_clave(status_clave status);
+void recibir_status_clave();
 
 //////////MENSAJES CON COORDINADOR//////////
 //RECIBIR COORDINADOR */
-pedido_esi recibir_pedido_coordinador(int socket_coordinador);
+//pedido_esi recibir_pedido_coordinador(int socket_coordinador);
 
-//status_clave recibir_status_clave(int socket_coordinador, status_clave status);
 
 //ENVIAR COORDINADOR
 void informar_aborto_coordinador();
