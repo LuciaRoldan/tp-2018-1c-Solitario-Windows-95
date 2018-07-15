@@ -90,7 +90,7 @@ void kill_esis(ColaDeEsi esis);
 
 
 */
-//manejar esis
+//MANEJAR ESIS
 void recibir_esis(void* socket_esis);
 void manejar_esi(void* pcb_esi);
 
@@ -104,7 +104,6 @@ void planificacionHRRN();
 bool algoritmo_SJF(void* pcb1, void* pcb2);
 bool algoritmo_HRRN(void* pcb1, void* pcb2);
 
-
 //Operaciones sobre PCBs
 void registrar_exito_en_pcb(int id_esi);
 void mover_esi_a_bloqueados(char* clave, clave_bloqueada* nodo_clave_buscada, int esi_id);
@@ -112,6 +111,7 @@ void abortar_esi(int id_esi);
 
 //Operaciones sobre claves_bloqueadas
 void liberar_clave(char* clave);
+
 
 ///---FUNCIONES AUXILIARES---///
 //ids_iguales
@@ -150,21 +150,22 @@ void mostrar_status_clave(status_clave status);
 //////////MENSAJES CON COORDINADOR//////////
 //RECIBIR COORDINADOR */
 pedido_esi recibir_pedido_coordinador(int socket_coordinador);
-/*
-status_clave recibir_status_clave(int socket_coordinador, status_clave status);
+
+//status_clave recibir_status_clave(int socket_coordinador, status_clave status);
 
 //ENVIAR COORDINADOR
-void informar_bloqueo_coordinador(int socket_coordinador, int id_esi);
-void informar_exito_coordinador(int socket_coordinador, int id_esi);
+void informar_aborto_coordinador();
+void informar_exito_coordinador();
+void informar_fallo_coordinador();
 
 
 //////////MENSAJES CON ESIS//////////
 //RECIBIR ESIS
-resultado_esi recibir_resultado_esi(int socket_esi);
+//resultado_esi recibir_resultado_esi(int socket_esi);
 
 
 //ENVIAR ESIS
 
-*/
+
 
 #endif /* PLANIFICADOR_FUNCIONES_H_ */

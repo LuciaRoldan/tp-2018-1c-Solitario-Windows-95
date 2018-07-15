@@ -223,14 +223,15 @@ void manejar_coordinador(void* socket){
 		int tamanio;
 		pedido_esi pedido;
 		switch(id){
-		case (10): //nuevo pedido
+		case (83): //nuevo pedido
 				tamanio = recibir_int(socket_coordinador, logger);
-				log_info(logger, "Tamanio recibido del coordinador: %d \n", tamanio);
+				log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
 				void* buffer = malloc(tamanio);
 				recibir(socket_coordinador, buffer, tamanio, logger);
-				//pedido = deserializar_pedido_esi(buffer+ sizeof(int)*2, logger);
+				pedido = deserializar_pedido_esi(buffer);
 				printf("Recibido: %s, %d \n", pedido.instruccion.argumentos.GET.clave, pedido.instruccion.keyword);
 				procesar_pedido(pedido);
+				free(buffer);
 		break;
 		case (11): //respuesta de un estado que pedi
 				//int tamano_status_clave = malloc(sizeof(struct status_clave));
@@ -249,27 +250,33 @@ void procesar_pedido(pedido_esi pedido){
 	case(GET):
 		clave_buscada = pedido.instruccion.argumentos.GET.clave;
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-			if(nodo_clave_buscada == NULL){
-				//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas
-				 clave_bloqueada clave_nueva;
-				 clave_nueva.clave = clave_buscada;
-				 clave_nueva.esi_que_la_usa = pedido.esi_id;
-				 clave_nueva.esis_en_espera = list_create();
-				 list_add(claves_bloqueadas, &clave_nueva);
-				 log_info(logger, "Nueva clave_bloqueada creada: %s", clave_buscada);
+		if(nodo_clave_buscada == NULL){
+			//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas, la creo
+			clave_bloqueada* clave_nueva = malloc(sizeof(clave_bloqueada));
+			clave_buscada = pedido.instruccion.argumentos.GET.clave;
+			clave_nueva->esi_que_la_usa = pedido.esi_id;
+			clave_nueva->clave = clave_buscada;
+			clave_nueva->esis_en_espera = list_create();
+			list_add(claves_bloqueadas, clave_nueva);
+			log_info(logger, "Nueva clave_bloqueada creada %s para el ESI %d", clave_buscada, clave_nueva->esi_que_la_usa);
+			informar_exito_coordinador();
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
 					//Existe esa clave_bloqueada en mi lista de claves pero no esta asignada a ningun ESI
 					nodo_clave_buscada->esi_que_la_usa = pedido.esi_id;
 					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, pedido.esi_id);
+					informar_exito_coordinador();
 				} else {
 					if(nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
 					//Me hacen un GET sobre una clave que ya tenia asignado ese ESI entonces no hago nada.
-					log_info(logger, "El ESI %d hizo un GET sobre la clave %s que la le pertenecia", pedido.esi_id, clave_buscada);
+					log_info(logger, "GET realizado por el ESI %d sobre la clave %s que ya le pertenecia", pedido.esi_id, clave_buscada);
+					informar_exito_coordinador();
 					} else {
 						//Me hacen un GET sobre una clave que estaba asignada a otro ESI entonces lo pongo en
 						//la lista de espera de esa clave y lo saco de ready
+						log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
 						mover_esi_a_bloqueados(clave_buscada, nodo_clave_buscada, pedido.esi_id);
+						informar_fallo_coordinador();
 					}
 				}
 			}
@@ -278,19 +285,24 @@ void procesar_pedido(pedido_esi pedido){
 	case(SET):
 		clave_buscada = pedido.instruccion.argumentos.SET.clave;
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+		log_info(logger, "Nodo_clave_buscada en SET el id del esi que la usa es: %d", nodo_clave_buscada->esi_que_la_usa);
 			if(nodo_clave_buscada == NULL){
 				log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, pedido.esi_id);
 				abortar_esi(pedido.esi_id);
+				informar_aborto_coordinador();
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
 					log_info(logger, "SET realizado por el ESI %d sobre una clave %s sin ESIS asignados", pedido.esi_id, clave_buscada);
 					abortar_esi(pedido.esi_id);
+					informar_aborto_coordinador();
 				} else {
 					if (nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
 						log_info(logger, "SET realizado por el ESI %d sobre la clave que le pertenecia %s", pedido.esi_id, clave_buscada);
+						informar_exito_coordinador();
 					} else {
-						log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
+						log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %s", pedido.esi_id, clave_buscada);
 						abortar_esi(pedido.esi_id);
+						informar_aborto_coordinador();
 					}
 				}
 			}
@@ -302,22 +314,41 @@ void procesar_pedido(pedido_esi pedido){
 			if(nodo_clave_buscada == NULL){
 				log_info(logger, "STORE realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, pedido.esi_id);
 				abortar_esi(pedido.esi_id);
+				informar_aborto_coordinador();
 			} else {
 				if (&nodo_clave_buscada->esi_que_la_usa == NULL){
 					log_info(logger, "STORE realizado por el ESI %d sobre una clave %s sin ESIS asignados", pedido.esi_id, clave_buscada);
 					abortar_esi(pedido.esi_id);
+					informar_aborto_coordinador();
 				} else {
 					if (nodo_clave_buscada->esi_que_la_usa == pedido.esi_id){
 						log_info(logger, "STORE realizado por el ESI %d sobre la clave que le pertenecia %s", pedido.esi_id, clave_buscada);
 						liberar_clave(clave_buscada);
+						informar_exito_coordinador();
 					} else {
 						log_info(logger, "STORE realizado por el ESI %d sobre una clave que no le pertenece %d", pedido.esi_id, clave_buscada);
 						abortar_esi(pedido.esi_id);
+						informar_aborto_coordinador();
 					}
 				}
 			}
 	break;
 	}
+}
+
+
+/////-----RESULTADOS PEDIDOS-----/////
+void informar_aborto_coordinador(){
+	int aborto = 22;
+	enviar(sockets_planificador.socket_coordinador, &aborto, sizeof(int), logger);
+}
+void informar_exito_coordinador(){
+	int exito = 20;
+	enviar(sockets_planificador.socket_coordinador, &exito, sizeof(int), logger);
+}
+void informar_fallo_coordinador(){
+	int fallo = 24;
+	enviar(sockets_planificador.socket_coordinador, &fallo, sizeof(int), logger);
 }
 
 
@@ -369,8 +400,14 @@ bool ids_iguales_pcb(void* pcbb){
 void liberar_clave(char* clave){
 	clave_buscada = clave;
 	clave_bloqueada* nodo_clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+
+	log_info(logger, "El ESI que ocupaba la clave era: %d", nodo_clave->esi_que_la_usa);
+
 	nodo_clave->esi_que_la_usa = NULL;
 	log_info(logger, "La clave %s se libero", clave);
+
+	log_info(logger, "Ahora es ocupada por: %d", nodo_clave->esi_que_la_usa);
+
 	if(!list_is_empty(nodo_clave->esis_en_espera)){
 		int* esi_que_ahora_va_a_tener_la_clave = list_remove(nodo_clave->esis_en_espera, 1);
 		nodo_clave->esi_que_la_usa = *esi_que_ahora_va_a_tener_la_clave;
@@ -380,8 +417,18 @@ void liberar_clave(char* clave){
 
 //FUNCIONES AUXILIARES CLAVE_BLOQUEADA//
 bool claves_iguales_nodo_clave(void* nodo_clave){
-	clave_bloqueada* clave = nodo_clave;
-	return clave->clave == clave_buscada;
+	int tamanio = list_size(claves_bloqueadas);
+	log_info(logger, "El tamanio de la lista de claves bloqueadas es %d", tamanio);
+
+	clave_bloqueada* una_clave = (clave_bloqueada*) nodo_clave;
+	log_info(logger, "La clave_buscada es: %s", clave_buscada);
+	log_info(logger, "La clave que estoy comparando es: %s", una_clave->clave);
+
+	if(strcmp(una_clave->clave, clave_buscada) == 0){
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool ids_iguales_cola_de_esis(void* id){ //cuando creo una clave, la creo con una list de ids bloqueados esperando.

@@ -23,6 +23,7 @@ int main() {
 	esis_ready = list_create();
 	esis_finalizados = list_create();
 	claves_bloqueadas = list_create();
+	clave_buscada = malloc(40);
 
 
 	void* puntero_socket_esis = &sockets_planificador.socket_esis;
