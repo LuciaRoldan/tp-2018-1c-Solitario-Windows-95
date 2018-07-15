@@ -20,7 +20,7 @@ int socket_instancia_buscado;
 t_dictionary* diccionario_claves;
 int ultima_instancia_EL;
 
-pthread_mutex_t m_plani;
+pthread_mutex_t m_manejador;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -83,7 +83,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket);
 nodo* seleccionar_instancia(char* clave);
 nodo* encontrar_esi(int socket);
 nodo* buscar_instancia(char* clave);
-int verificar_existencia_instancia(nodo nodo);
+bool verificar_existencia_instancia(nodo nodo);
 void reemplazar_instancia(nodo nodo);
 bool condicion_socket_esi(void* datos);
 bool condicion_socket_instancia(void* datos);

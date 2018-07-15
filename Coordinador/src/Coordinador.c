@@ -18,6 +18,7 @@ int main(){
 
 	pthread_t hilo_escucha;
 	pthread_t hilo_planificador;
+	pthread_t manejador_listas;
 
 	pthread_create(&hilo_escucha, 0, procesar_conexion, NULL);
 	pthread_create(&hilo_planificador, 0, atender_planificador, NULL);

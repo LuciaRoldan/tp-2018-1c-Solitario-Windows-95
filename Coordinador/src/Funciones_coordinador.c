@@ -16,8 +16,6 @@ int procesar_mensaje(int socket){
 	id = deserializar_id(buffer_int);
 	log_info(logger, "Protocolo recibido: %d", id);
 
-	int x = 1;
-
 	switch(id){
 		case 20://salio tod o ok
 			return 1;
@@ -39,14 +37,8 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 		case 82:
-		//	instruccion = recibir_instruccion(socket);
-
-			//PRUEBA
-						log_info(logger, "Entre la 82 para mandarle el pedido al Planificador");
-						instruccion = recibir_instruccion(socket);
-						enviar_pedido_esi(1, instruccion);
-
-		//	procesar_instruccion(instruccion, socket);
+			instruccion = recibir_instruccion(socket);
+			procesar_instruccion(instruccion, socket);
 			return 1;
 			break;
 		case 83:
@@ -76,12 +68,13 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	//nodo* instancia = buscar_instancia(clave);
-	//nodo* esi = encontrar_esi(socket);
+	nodo* esi = encontrar_esi(socket);
+	log_info(logger, "Id esi: %d", esi->id);
+	nodo* instancia = buscar_instancia(clave);
+	log_info(logger, "Id instancia: %d", instancia->id);
 
-	//enviar_pedido_esi(esi->id, instruccion);
-	enviar_pedido_esi(1, instruccion);
-	void* buffercito = malloc(sizeof(int));
+	enviar_pedido_esi(esi->id, instruccion);
+	/*void* buffercito = malloc(sizeof(int));
 	recibir(socket_planificador, buffercito, sizeof(int), logger);
 	int protocolo_plani = deserializar_id(buffercito);
 	int protocolo_instancia;
@@ -91,8 +84,8 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		return FALLO_ESI;
 		break;
 	case 20:
-		//enviar_operacion(instancia->socket, instruccion);
-		//recibir(instancia->socket, buffercito, sizeof(int), logger);
+		enviar_operacion(instancia->socket, instruccion);
+		recibir(instancia->socket, buffercito, sizeof(int), logger);
 		protocolo_instancia = deserializar_id(buffercito);
 		if(protocolo_instancia == 20){
 			return EXITO_ESI;
@@ -101,7 +94,8 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	default:
 		return ABORTO_ESI;
 		break;
-	}
+	}*/
+	return 1;
 }
 
 ///////////////////////////////////////////////// CONEXION ////////////////////////////////////////////////
@@ -210,8 +204,8 @@ bool condicion_socket_instancia(void* datos){
 	return un_nodo.socket == socket_instancia_buscado;
 }
 
-int verificar_existencia_instancia(nodo nodo){
-	return list_count_satisfying(lista_instancias, condicion_socket_instancia);
+bool verificar_existencia_instancia(nodo nodo){
+	return list_count_satisfying(lista_instancias, condicion_socket_instancia) > 0;
 }
 
 void reemplazar_instancia(nodo un_nodo){
@@ -234,8 +228,10 @@ nodo* seleccionar_instancia(char* clave){
 	nodo* instancia_seleccionada;
 	switch(info_coordinador.algoritmo_distribucion){
 	case EL:
-		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
-		ultima_instancia_EL++;
+		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
+		//instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
+		instancia_seleccionada = list_get(lista_instancias, 0);
+		if(ultima_instancia_EL++ == list_size(lista_instancias)){ultima_instancia_EL = 0;}
 		break;
 	case LSU:
 		break;
@@ -248,6 +244,7 @@ nodo* seleccionar_instancia(char* clave){
 nodo* encontrar_esi(int socket){
 	socket_esi_buscado = socket;
 	nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
+	log_info(logger, "Socket encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
 	return el_nodo;
 }
 
@@ -273,24 +270,31 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 	serializar_hilo_proceso(buffer, datos_esi);
 	pthread_t hilo_esi;
 	pthread_create(&hilo_esi, 0, atender_esi, buffer); //(void*) &
-	nodo nodo = {socket_esi, id_esi, hilo_esi};
-	list_add(lista_esis, &nodo);
+	nodo* el_nodo = malloc(sizeof(nodo));
+	el_nodo->socket = socket_esi;
+	el_nodo->id = id_esi;
+	el_nodo->hilo = hilo_esi;
+	list_add(lista_esis, el_nodo);
 }
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
 	void* buffer = malloc(sizeof(int)*2);
 	serializar_hilo_proceso(buffer, datos_instancia);
-	pthread_t hilo_instanica;
-	pthread_create(&hilo_instanica, 0, atender_instancia, buffer);
-	nodo nodo = {socket_instancia, id_instancia, hilo_instanica};
-	socket_instancia_buscado = nodo.socket;
-	int precencia_instancia = verificar_existencia_instancia(nodo);
+	pthread_t hilo_instancia;
+	pthread_create(&hilo_instancia, 0, atender_instancia, buffer);
+	nodo* el_nodo = malloc(sizeof(nodo));
+	el_nodo->socket = socket_instancia;
+	el_nodo->id = id_instancia;
+	el_nodo->hilo = hilo_instancia;
+	list_add(lista_instancias, el_nodo);
+	/*socket_instancia_buscado = nodo.socket;
+	bool precencia_instancia = verificar_existencia_instancia(nodo);
 	if(!precencia_instancia){
 		list_add(lista_instancias, &nodo);
 	}else{
 		reemplazar_instancia(nodo);
-	}
+	}*/
 }
 
 ///////////////////////////////////////////////// INICIALIZACION /////////////////////////////////////////////////
@@ -319,7 +323,7 @@ void inicializar_coordinador(){
 }
 
 void inicializar_semaforos(){
-	if (pthread_mutex_init(&m_plani, NULL) != 0) {printf("\n mutex init failed\n");}
+	//if (pthread_mutex_init(&m_manejador, NULL) != 0) {printf("\n mutex init failed\n");}
 }
 
 void conectar_planificador(){
