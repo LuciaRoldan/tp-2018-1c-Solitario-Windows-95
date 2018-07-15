@@ -359,7 +359,7 @@ int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion){
 	void* buffer = malloc(tamanio_buffer_instruccion(instruccion) + sizeof(int));
 	serializar_pedido_esi(buffer, pedido);
 	log_info(logger, "Serialice");
-	int bytes_enviados = enviar(socket_planificador, &pedido, sizeof(pedido), logger);
+	int bytes_enviados = enviar(socket_planificador, buffer, sizeof(pedido), logger);
 	return bytes_enviados;
 }
 
