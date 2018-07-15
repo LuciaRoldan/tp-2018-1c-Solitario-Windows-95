@@ -193,7 +193,7 @@ int handshake(int* socket_coordinador, t_log* logger, int id) {
 		int conexion_hecha = 0;
 
 		t_handshake proceso_recibido;
-		t_handshake yo = { INSTANCIA, id };
+		t_handshake yo = { id, INSTANCIA };
 		int id_recibido;
 		void* buffer_envio = malloc(sizeof(int) * 3); //Es de 3 porque tambien se manda el protocolo
 
