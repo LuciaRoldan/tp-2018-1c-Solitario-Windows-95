@@ -20,6 +20,8 @@ int socket_instancia_buscado;
 t_dictionary* diccionario_claves;
 int ultima_instancia_EL;
 
+pthread_mutex_t m_plani;
+
 ///////////////////////// STRUCTS /////////////////////////
 
 typedef enum {LSU, EL, KE} tipo_algoritmo_distribucion;

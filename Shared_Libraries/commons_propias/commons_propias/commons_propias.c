@@ -239,12 +239,10 @@ void serializar_pedido_esi(void* buffer, pedido_esi pedido){//Hay que declarar e
 	int tamanio_mensaje = tamanio_buffer_instruccion(pedido.instruccion) - sizeof(int);
 	int* id_protocolo = malloc(sizeof(int));
 	*id_protocolo = 83;
-
 	memcpy(buffer, id_protocolo, sizeof(int));
 	memcpy(buffer + sizeof(int), &tamanio_mensaje, sizeof(int));
 	memcpy(buffer + (sizeof(int)*2), &(pedido.instruccion.valido), sizeof(bool));
 	memcpy(buffer + (sizeof(int)*2 + sizeof(bool)), &(pedido.instruccion.keyword), sizeof(int));
-
 	switch(pedido.instruccion.keyword){
 	case GET:
 		tamanio_clave = strlen(pedido.instruccion.argumentos.GET.clave)+1;
@@ -270,7 +268,7 @@ void serializar_pedido_esi(void* buffer, pedido_esi pedido){//Hay que declarar e
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool) + tamanio_clave, &pedido.esi_id, sizeof(int));
 	}
 
-	free(id_protocolo);
+	//free(id_protocolo);
 }
 
 pedido_esi deserializar_pedido_esi(void* buffer) {
@@ -279,6 +277,7 @@ pedido_esi deserializar_pedido_esi(void* buffer) {
 	memcpy(&(pedido.instruccion.valido), buffer, sizeof(bool));
 	memcpy(&(pedido.instruccion.keyword), (buffer + sizeof(bool)), sizeof(int));
 	memcpy(&tamanio_clave, (buffer + sizeof(bool) + sizeof(int)), sizeof(int));
+	printf("El pedido es de un %d --------------------", pedido.instruccion.keyword);
 	switch (pedido.instruccion.keyword) {
 	case (GET):
 		pedido.instruccion.argumentos.GET.clave = malloc(tamanio_clave);

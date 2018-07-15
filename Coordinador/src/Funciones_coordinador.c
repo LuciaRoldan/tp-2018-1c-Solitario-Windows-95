@@ -16,7 +16,11 @@ int procesar_mensaje(int socket){
 	id = deserializar_id(buffer_int);
 	log_info(logger, "Protocolo recibido: %d", id);
 
+	int x = 1;
+
 	switch(id){
+		case 20://salio tod o ok
+			return 1;
 		case 21:
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
@@ -35,8 +39,14 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 		case 82:
-			instruccion = recibir_instruccion(socket);
-			procesar_instruccion(instruccion, socket);
+		//	instruccion = recibir_instruccion(socket);
+
+			//PRUEBA
+						log_info(logger, "Entre la 82 para mandarle el pedido al Planificador");
+						instruccion = recibir_instruccion(socket);
+						enviar_pedido_esi(1, instruccion);
+
+		//	procesar_instruccion(instruccion, socket);
 			return 1;
 			break;
 		case 83:
@@ -76,7 +86,6 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	int protocolo_plani = deserializar_id(buffercito);
 	int protocolo_instancia;
 	log_info(logger, "Plani dijo: %d", protocolo_plani);
-
 	switch(protocolo_plani){
 	case 24:
 		return FALLO_ESI;
@@ -306,6 +315,11 @@ void inicializar_coordinador(){
 	lista_instancias = list_create();
 	diccionario_claves = dictionary_create();
 	ultima_instancia_EL = 0;
+	inicializar_semaforos();
+}
+
+void inicializar_semaforos(){
+	if (pthread_mutex_init(&m_plani, NULL) != 0) {printf("\n mutex init failed\n");}
 }
 
 void conectar_planificador(){
@@ -340,6 +354,7 @@ int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion){
 	pedido_esi pedido = {esi_id, instruccion};
 	void* buffer = malloc(tamanio_buffer_instruccion(instruccion) + sizeof(int));
 	serializar_pedido_esi(buffer, pedido);
+	log_info(logger, "Serialice");
 	int bytes_enviados = enviar(socket_planificador, &pedido, sizeof(pedido), logger);
 	return bytes_enviados;
 }
