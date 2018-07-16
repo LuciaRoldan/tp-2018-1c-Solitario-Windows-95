@@ -4,9 +4,8 @@
 #include "commons_propias/commons_propias.h"
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
+
 datos_configuracion configuracion;
-t_dictionary* diccionario_memoria;
-char* claveActual;
 
 typedef enum {
 	LRU, CIRC, BSU
@@ -21,9 +20,17 @@ typedef struct{
 	int intervaloDump;
 }configuracion_propia;
 
+typedef struct{
+	char* clave;
+	int numero_entrada;
+	int cantidad_entradas;
+	int tamanio_valor;
+	char* valor;
+}estructura_clave;
+
 ///////////////////////// FUNCIONES /////////////////////////
 int handshake(int* socket_coordinador, t_log* logger, int id_proceso);
-void recibir_configuracion(int socket_coordinador, t_log* logger);
+datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger);
 void deserializar_configuracion(void* buffer);
 void inicializar_instancia();
 void enviar_fallo(int socket_coordinador, t_log* logger);
