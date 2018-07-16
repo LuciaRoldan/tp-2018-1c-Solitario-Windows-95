@@ -18,12 +18,9 @@ int procesar_mensaje(int socket){
 	int rta_esi;
 
 	switch(id){
-		case 20://salio tod o ok
-			log_info(logger, "El plani dio el okey");
-			sleep(1);
-			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
-			log_info(logger, "Envie a la instancia");
+		case 20:
 			return 1;
+
 		case 21:
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
@@ -31,44 +28,117 @@ int procesar_mensaje(int socket){
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
 			return resultado;
 			break;
+
 		case 23:
 			resultado = desconectar_instancia(socket);
 			return 1;
 			break;
+
 		case 24:
 			serializar_id(buffer_int, 64);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			return resultado;
 			break;
-		case 25:
-			log_info(logger, "La instancia dio el okey");
-			sleep(1);
-			rta_esi = 63;
+
+		case 25: //Exito instancia
+			log_info(logger, "Recibi confirmacion de la Instancia %d", instancia_seleccionada->id);
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			rta_esi = 84;
 			serializar_id(buffer_int, rta_esi);
-			log_info(logger, "Le voy a responder: %d al esi", rta_esi);
-			//resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-			log_info(logger, "Respondi al ESI");
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			log_info(logger, "Le digo al ESI %d que la ejecucion fue exitosa", esi_ejecutando->id);
+			pthread_mutex_unlock(&m_esi_ejecutando);
 			return resultado;
 			break;
-		case 81:
+
+		case 81: //Fin de ejecucion del ESI
 			el_nodo = encontrar_esi(socket);
+			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &el_nodo->hilo;
+			pthread_mutex_lock(&m_socket_esi_buscado);
 			socket_esi_buscado = el_nodo->socket;
 			log_info(logger, "Voy a eliminar");
+			pthread_mutex_lock(&m_lista_esis);
 			list_remove_by_condition(lista_esis, condicion_socket_esi);
+			pthread_mutex_unlock(&m_lista_esis);
+			pthread_mutex_unlock(&m_socket_esi_buscado);
 			sem_post(&s_cerrar_hilo);
 			return -1;
 			break;
-		case 82:
+
+		case 82: //Instruccion
 			instruccion = recibir_instruccion(socket);
 			procesar_instruccion(instruccion, socket);
 			return 1;
 			break;
-		case 83:
+
+		case 83: //Status clave
 			status = recibir_status(socket);
 			resultado = enviar_status_clave(socket_planificador, status);
 			return resultado;
 			break;
+
+		case 84: //Exito Planificador
+			log_info(logger, "Recibi confirmacion del Planificador");
+			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
+			pthread_mutex_unlock(&m_operacion_ejecutando);
+			log_info(logger, "Envie la instruccion a la instancia %d", instancia_seleccionada->id);
+			return 1;
+
+		case 85: //Fallo
+			//Falta implementar, minimizar uso
+			return -1;
+			break;
+
+		case 87: //Fallo clave no identificada
+			log_info(logger, "Fallo por clave no identificada, ID ESI: %d", esi_ejecutando->id);
+			rta_esi = 87;
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			pthread_mutex_lock(&m_hilo_a_cerrar);
+			hilo_a_cerrar = &esi_ejecutando->hilo;
+			sem_post(&s_cerrar_hilo);
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			pthread_mutex_unlock(&m_esi_ejecutando);
+			return resultado;
+			break;
+
+		case 88://Fallo clave inaccesible
+			log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
+			rta_esi = 88;
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			pthread_mutex_lock(&m_hilo_a_cerrar);
+			hilo_a_cerrar = &esi_ejecutando->hilo;
+			sem_post(&s_cerrar_hilo);
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			pthread_mutex_unlock(&m_esi_ejecutando);
+			return resultado;
+			break;
+
+		case 89://Fallo clave no bloqueada
+			log_info(logger, "Fallo por clave no bloqueada, ID ESI: %d", esi_ejecutando->id);
+			rta_esi = 89;
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			pthread_mutex_lock(&m_hilo_a_cerrar);
+			hilo_a_cerrar = &esi_ejecutando->hilo;
+			sem_post(&s_cerrar_hilo);
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			pthread_mutex_unlock(&m_esi_ejecutando);
+			return resultado;
+
+		case 90://Hay que bloquear al ESI
+			log_info(logger, "Le digo al ESI %d que esta bloqueado", esi_ejecutando->id);
+			rta_esi = 90;
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			pthread_mutex_lock(&m_hilo_a_cerrar);
+			hilo_a_cerrar = &esi_ejecutando->hilo;
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			pthread_mutex_unlock(&m_esi_ejecutando);
+			return resultado;
+
 		default:
 			return -1;
 			break;
@@ -91,10 +161,13 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
+	pthread_mutex_lock(&m_esi_ejecutando);
+	pthread_mutex_lock(&m_instancia_seleccionada);
 	esi_ejecutando = encontrar_esi(socket);
 	log_info(logger, "Id esi: %d", esi_ejecutando->id);
 	instancia_seleccionada = buscar_instancia(clave);
 	log_info(logger, "Id instancia: %d", instancia_seleccionada->id);
+	pthread_mutex_lock(&m_operacion_ejecutando);
 	operacion_ejecutando = instruccion;
 
 	enviar_operacion(socket_planificador, instruccion);
@@ -188,8 +261,14 @@ void atender_instancia(void* datos_instancia){
 }
 
 int desconectar_instancia(int socket){
+	pthread_mutex_lock(&m_socket_instancia_buscado);
 	socket_instancia_buscado = socket;
+	pthread_mutex_lock(&m_lista_instancias);
+	pthread_mutex_lock(&m_lista_instancias);
 	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
+	pthread_mutex_unlock(&m_lista_instancias);
+	pthread_mutex_unlock(&m_lista_instancias);
+	pthread_mutex_unlock(&m_socket_instancia_buscado);
 	int resultado = pthread_join(el_nodo->hilo, NULL);
 	log_info(logger, "ya tire el join: %d", resultado);
 	return resultado;
@@ -207,10 +286,6 @@ bool condicion_socket_instancia(void* datos){
 	return un_nodo.socket == socket_instancia_buscado;
 }
 
-bool verificar_existencia_instancia(nodo nodo){
-	return list_count_satisfying(lista_instancias, condicion_socket_instancia) > 0;
-}
-
 void reemplazar_instancia(nodo un_nodo){
 	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
 	list_add(lista_instancias, &un_nodo);
@@ -218,12 +293,14 @@ void reemplazar_instancia(nodo un_nodo){
 
 nodo* buscar_instancia(char* clave){
 	nodo* nodo_instancia;
+	pthread_mutex_lock(&m_diccionario_claves);
 	if(dictionary_has_key(diccionario_claves, clave)){
 		nodo_instancia = dictionary_get(diccionario_claves, clave);
 	} else {
 		nodo_instancia = seleccionar_instancia(clave);
+		//agregar clave al diccionario
 	}
-
+	pthread_mutex_unlock(&m_diccionario_claves);
 	return nodo_instancia;
 }
 
@@ -231,10 +308,14 @@ nodo* seleccionar_instancia(char* clave){
 	nodo* instancia_seleccionada;
 	switch(info_coordinador.algoritmo_distribucion){
 	case EL:
+		pthread_mutex_lock(&m_lista_instancias);
 		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
+		pthread_mutex_lock(&m_ultima_instancia_EL);
 		//instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
 		instancia_seleccionada = list_get(lista_instancias, 0);
 		if(ultima_instancia_EL++ == list_size(lista_instancias)){ultima_instancia_EL = 0;}
+		pthread_mutex_unlock(&m_ultima_instancia_EL);
+		pthread_mutex_unlock(&m_lista_instancias);
 		break;
 	case LSU:
 		break;
@@ -244,9 +325,13 @@ nodo* seleccionar_instancia(char* clave){
 	return instancia_seleccionada;
 }
 
-nodo* encontrar_esi(int socket){
+nodo* encontrar_esi(int socket){//verificar semaforos
+	pthread_mutex_lock(&m_socket_esi_buscado);
 	socket_esi_buscado = socket;
+	pthread_mutex_lock(&m_lista_esis);
 	nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
+	pthread_mutex_unlock(&m_lista_esis);
+	pthread_mutex_unlock(&m_socket_esi_buscado);
 	log_info(logger, "Socket encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
 	return el_nodo;
 }
@@ -277,7 +362,9 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 	el_nodo->socket = socket_esi;
 	el_nodo->id = id_esi;
 	el_nodo->hilo = hilo_esi;
+	pthread_mutex_lock(&m_lista_esis);
 	list_add(lista_esis, el_nodo);
+	pthread_mutex_unlock(&m_lista_esis);
 }
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
@@ -290,7 +377,9 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	el_nodo->socket = socket_instancia;
 	el_nodo->id = id_instancia;
 	el_nodo->hilo = hilo_instancia;
+	pthread_mutex_lock(&m_lista_instancias);
 	list_add(lista_instancias, el_nodo);
+	pthread_mutex_unlock(&m_lista_instancias);
 	/*socket_instancia_buscado = nodo.socket;
 	bool precencia_instancia = verificar_existencia_instancia(nodo);
 	if(!precencia_instancia){
@@ -326,7 +415,16 @@ void inicializar_coordinador(){
 }
 
 void inicializar_semaforos(){
-	if (pthread_mutex_init(&m_cerrar_hilo, NULL) != 0) {printf("\n mutex init failed\n");}
+	if (pthread_mutex_init(&m_operacion_ejecutando, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_esi_ejecutando, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_instancia_seleccionada, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_hilo_a_cerrar, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_ultima_instancia_EL, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_diccionario_claves, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_socket_instancia_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_socket_esi_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_lista_instancias, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_lista_esis, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
 }
 
@@ -421,10 +519,11 @@ t_esi_operacion recibir_instruccion(int socket){
 	return instruccion;
 }
 
-void enviar_operacion(int socket, t_esi_operacion instruccion){
+int enviar_operacion(int socket, t_esi_operacion instruccion){
 	int tamanio = tamanio_buffer_instruccion(instruccion);
 	void* buffer = malloc(tamanio);
 	serializar_instruccion(buffer, instruccion);
-	enviar(socket, buffer, tamanio, logger);
+	int resultado = enviar(socket, buffer, tamanio, logger);
+	return resultado;
 }
 

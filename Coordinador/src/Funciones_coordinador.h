@@ -5,11 +5,6 @@
 #include <commons/bitarray.h>
 #include <semaphore.h>
 
-#define ABORTO_ESI -99
-#define EXITO_ESI 63
-#define FALLO_ESI 64
-#define FIN_ESI -100
-
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -38,22 +33,33 @@ typedef struct{
 ///////////////////// VARIABLES GLOBALES ////////////////////
 
 t_log * logger;
-t_conexion conexionInstancia;
-int socket_planificador;
-int socket_escucha;
-info_archivo_config info_coordinador;
-t_list* lista_esis;
-t_list* lista_instancias;
-int socket_esi_buscado;
-int socket_instancia_buscado;
-t_dictionary* diccionario_claves;
-int ultima_instancia_EL;
-pthread_t* hilo_a_cerrar;
-nodo* instancia_seleccionada;
-nodo* esi_ejecutando;
-t_esi_operacion operacion_ejecutando;
 
-pthread_mutex_t m_cerrar_hilo;
+//Ya tienen semaforo
+t_esi_operacion operacion_ejecutando;
+nodo* esi_ejecutando;
+nodo* instancia_seleccionada;
+pthread_t* hilo_a_cerrar;
+int ultima_instancia_EL;
+t_dictionary* diccionario_claves;
+int socket_instancia_buscado;
+int socket_esi_buscado;
+info_archivo_config info_coordinador;
+t_list* lista_instancias;
+t_list* lista_esis;
+int socket_planificador; //Deberia poner un semaforo para esta variable?
+int socket_escucha;
+
+
+pthread_mutex_t m_operacion_ejecutando;
+pthread_mutex_t m_esi_ejecutando;
+pthread_mutex_t m_instancia_seleccionada;
+pthread_mutex_t m_hilo_a_cerrar;
+pthread_mutex_t m_ultima_instancia_EL;
+pthread_mutex_t m_diccionario_claves;
+pthread_mutex_t m_socket_instancia_buscado;
+pthread_mutex_t m_socket_esi_buscado;
+pthread_mutex_t m_lista_instancias;
+pthread_mutex_t m_lista_esis;
 sem_t s_cerrar_hilo;
 
 ///////////////////////// FUNCIONES /////////////////////////
@@ -66,14 +72,15 @@ void inicializar_semaforos();
 
 //COMUNICACION
 int enviar_configuracion_instancia(int socket);
-int enviar_pedido_esi(int esi_id, t_esi_operacion instruccion);
+int enviar_status_clave(int socket, status_clave status);
 int enviar_pedido_valor(int socket, char* clave, int id);
 int enviar_confirmacion(int socket, int confirmacion, int id);
+int enviar_operacion(int socket, t_esi_operacion instruccion);
 int recibir_confirmacion(int socket);
 char* recibir_pedido_clave(int socket);
 status_clave recibir_status(int socket);
 t_esi_operacion recibir_instruccion(int socket);
-void enviar_operacion(int socket, t_esi_operacion instruccion);
+
 
 //CONEXION
 int handshake(int socket);
@@ -91,7 +98,6 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket);
 nodo* seleccionar_instancia(char* clave);
 nodo* encontrar_esi(int socket);
 nodo* buscar_instancia(char* clave);
-bool verificar_existencia_instancia(nodo nodo);
 void reemplazar_instancia(nodo nodo);
 bool condicion_socket_esi(void* datos);
 bool condicion_socket_instancia(void* datos);

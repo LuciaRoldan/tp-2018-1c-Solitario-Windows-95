@@ -28,6 +28,7 @@ int main(){
 		sem_wait(&s_cerrar_hilo);
 		pthread_join(*hilo_a_cerrar, NULL);
 		log_info(logger, "Hilo cerrado");
+		pthread_mutex_unlock(&m_hilo_a_cerrar);
 	}
 	sleep(60);
 	log_info(logger, "Me desperte");
