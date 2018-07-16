@@ -148,26 +148,30 @@ int procesar_mensaje(int socket){
 
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	char* clave;
+	pthread_mutex_lock(&m_esi_ejecutando);
+	esi_ejecutando = encontrar_esi(socket);
+
+	pthread_mutex_lock(&m_log_operaciones);
 	switch(instruccion.keyword){
 	case GET:
-		clave = malloc(sizeof(instruccion.argumentos.GET.clave));
+		log_info(log_operaciones, "ESI %d GET %s", esi_ejecutando->id, instruccion.argumentos.GET.clave);
+		clave = malloc(strlen(instruccion.argumentos.GET.clave)+1);
 		memcpy(clave, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
 		break;
 	case SET:
-		clave = malloc(sizeof(instruccion.argumentos.SET.clave));
+		log_info(log_operaciones, "ESI %d GET %s %s", esi_ejecutando->id, instruccion.argumentos.SET.clave, instruccion.argumentos.SET.valor);
+		clave = malloc(strlen(instruccion.argumentos.SET.clave)+1);
 		memcpy(clave, instruccion.argumentos.SET.clave, strlen(instruccion.argumentos.SET.clave)+1);
 		break;
 	case STORE:
-		clave = malloc(sizeof(instruccion.argumentos.STORE.clave));
+		log_info(log_operaciones, "ESI %d STORE %s", esi_ejecutando->id, instruccion.argumentos.STORE.clave);
+		clave = malloc(strlen(instruccion.argumentos.STORE.clave)+1);
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	pthread_mutex_lock(&m_esi_ejecutando);
+	pthread_mutex_unlock(&m_log_operaciones);
 	pthread_mutex_lock(&m_instancia_seleccionada);
-	esi_ejecutando = encontrar_esi(socket);
-	log_info(logger, "Id esi: %d", esi_ejecutando->id);
 	instancia_seleccionada = buscar_instancia(clave);
-	log_info(logger, "Id instancia: %d", instancia_seleccionada->id);
 	pthread_mutex_lock(&m_operacion_ejecutando);
 	operacion_ejecutando = instruccion;
 
@@ -187,9 +191,6 @@ int handshake(int socket_cliente){
 
 	recibir(socket_cliente, buffer_recepcion, sizeof(int)*2, logger);
 	proceso_recibido = deserializar_handshake(buffer_recepcion);
-
-	log_info(logger, "Proceso recibido %d", proceso_recibido.proceso);
-	log_info(logger, "Id proceso recibido %d", proceso_recibido.id);
 
 	free(buffer_recepcion);
 
@@ -426,6 +427,7 @@ void inicializar_semaforos(){
 	if (pthread_mutex_init(&m_socket_esi_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_lista_instancias, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_lista_esis, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_log_operaciones, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
 }
 
