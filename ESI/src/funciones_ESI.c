@@ -118,7 +118,7 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 		case 84:
 			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
 			break;
-		case 85:
+		/*case 85:
 			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
 			break;
 		case 86:
@@ -132,9 +132,11 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 			break;
 		case 89:
 			log_info(logger_esi, "Error de clave no bloqueada.");
-			break;
+			break;*/ // YA NO ES NECESARIO PORQUE CHEQUEA ANTES DE ENTRAR
 		case 90:
 			log_info(logger_esi, "Bloquear ESI.");
+			break;
+		default:
 			break;
 	}
 	void* buffer_confirmacion = malloc(sizeof(int));
@@ -143,11 +145,17 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 	free(buffer_confirmacion);
 }
 
-void informar_fin_de_programa(sockets_conexiones conexiones){
+void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
 	int envio;
 	serializar_id(&envio, 81);
-	enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
 	enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
+	if(flag == 0){
+	enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
+	} else{
+		int aborto;
+		serializar_id(&aborto, 85);
+		enviar(conexiones.socket_plani, &aborto, sizeof(int), logger_esi);
+	}
 }
 
 // Serializacion/Deserializacion

@@ -44,40 +44,6 @@ int main() {
 
 
 
-/*	struct mensaje mensaje = listen(); //o sea, espera a que le llegue CUALQUIER cosa
-	switch (puertoDeLlegada){
-		case (PUERTO_ESI):
-			switch (idEsi()){ //no se como obtener el id del esi que me llega. AYUDA
-			case (!esi_existente()):
-					agregar_a_cola_de_ready(idEsi()); //como puedo saber el id del Esi? fork?
-											//idEsi NO va a ser una func, pero no se de dd sale
-			break;
-			case(esi_existente()):
-					recibir_exito_o_error(mensaje);
-					ejecutar_proximo_esi();
-			break;
-		case (PUERTO_COORDINADOR):
-			switch (mensaje->clave){ //o sea me fijo en el header si la clave por la que
-			//me estan preguntando esta tomada o no
-			case (clave_tomada(mensaje->clave)): //aca ve que la clave que me pedian esta tomada. Es una funcion
-					//que retorna true o false
-					mover_esi_a_bloqueado(idEsi);
-					asignar_esi_a_clave(mensaje->clave, idEsi);
-					return -1;//le dice al coordinador que no le puede asignar la clave a un Esi.
-			break;
-			case (!clave_tomada(mensaje->clave)): //la clave no esta tomada por ningun Esi
-					asignar_esi_a_clave(mensaje->clave, idEsi);
-					return 1; //exito
-			break;
-			}
-			}
-	}
-	}
-
-*/
-
-
-
 
 /*
    int ID;
