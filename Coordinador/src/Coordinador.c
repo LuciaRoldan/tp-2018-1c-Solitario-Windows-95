@@ -26,7 +26,8 @@ int main(){
 
 	while(1){
 		sem_wait(&s_cerrar_hilo);
-		int resultado = pthread_join(*hilo_a_cerrar, NULL);
+		pthread_join(*hilo_a_cerrar, NULL);
+		log_info(logger, "Hilo cerrado");
 	}
 	sleep(60);
 	log_info(logger, "Me desperte");

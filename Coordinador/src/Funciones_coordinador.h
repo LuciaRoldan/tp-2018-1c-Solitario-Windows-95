@@ -10,20 +10,6 @@
 #define FALLO_ESI 64
 #define FIN_ESI -100
 
-t_log * logger;
-t_conexion conexionInstancia;
-int socket_planificador;
-int socket_escucha;
-t_list* lista_esis;
-t_list* lista_instancias;
-int socket_esi_buscado;
-int socket_instancia_buscado;
-t_dictionary* diccionario_claves;
-int ultima_instancia_EL;
-pthread_t* hilo_a_cerrar;
-
-pthread_mutex_t m_cerrar_hilo;
-sem_t s_cerrar_hilo;
 
 ///////////////////////// STRUCTS /////////////////////////
 
@@ -38,8 +24,6 @@ typedef struct{
 	int retardo;
 }info_archivo_config;
 
-info_archivo_config info_coordinador;
-
 typedef struct{
 	int socket;
 	int id;
@@ -51,6 +35,26 @@ typedef struct{
 	pthread_t hilo;
 }nodo;
 
+///////////////////// VARIABLES GLOBALES ////////////////////
+
+t_log * logger;
+t_conexion conexionInstancia;
+int socket_planificador;
+int socket_escucha;
+info_archivo_config info_coordinador;
+t_list* lista_esis;
+t_list* lista_instancias;
+int socket_esi_buscado;
+int socket_instancia_buscado;
+t_dictionary* diccionario_claves;
+int ultima_instancia_EL;
+pthread_t* hilo_a_cerrar;
+nodo* instancia_seleccionada;
+nodo* esi_ejecutando;
+t_esi_operacion operacion_ejecutando;
+
+pthread_mutex_t m_cerrar_hilo;
+sem_t s_cerrar_hilo;
 
 ///////////////////////// FUNCIONES /////////////////////////
 
@@ -69,6 +73,7 @@ int recibir_confirmacion(int socket);
 char* recibir_pedido_clave(int socket);
 status_clave recibir_status(int socket);
 t_esi_operacion recibir_instruccion(int socket);
+void enviar_operacion(int socket, t_esi_operacion instruccion);
 
 //CONEXION
 int handshake(int socket);

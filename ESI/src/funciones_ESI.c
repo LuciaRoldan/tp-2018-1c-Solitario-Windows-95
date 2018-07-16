@@ -80,15 +80,12 @@ t_esi_operacion parsear_linea(FILE* archivo){
 	ssize_t read;
 	read = getline(&line, &len, archivo);
 	t_esi_operacion parsed = parse(line);
-	log_info(logger_esi, "Id: %d, Clave: %s", parsed.keyword, parsed.argumentos.GET.clave);
 	return parsed;
 }
 
 int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
 	puts("--> Entré a enviar");
 	int tamanio_buffer = tamanio_buffer_instruccion(instruccion);
-	log_info(logger_esi, "Tamaño: %d", tamanio_buffer);
-	log_info(logger_esi, "Tamaño clave: %d", strlen(instruccion.argumentos.GET.clave));
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
 	puts("--> Fin de serializacion de instruccion");
@@ -101,7 +98,6 @@ int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
 	puts("--> Estoy por parsear");
 	t_esi_operacion operacion = parsear_linea(archivo);
-	log_info(logger_esi, "Id: %d, Clave: %s", operacion.keyword, operacion.argumentos.GET.clave);
 	puts("--> Parseado completo");
 	ultima_instruccion = operacion;
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
@@ -117,9 +113,11 @@ void ejecutar_ultima_instruccion(int socket_destino){
 	enviar_instruccion(ultima_instruccion, socket_destino);
 }
 
-void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger_esi){
-	resultado_esi confirmacion = deserializar_confirmacion(msj_recibido);
+void informar_confirmacion(resultado_esi confirmacion, int socket_destino, t_log* logger_esi){
 	switch(confirmacion){
+		case 63:
+			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
+			break;
 		case EXITO:
 			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
 			break;

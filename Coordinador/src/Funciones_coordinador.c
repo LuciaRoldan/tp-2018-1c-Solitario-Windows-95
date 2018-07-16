@@ -15,10 +15,14 @@ int procesar_mensaje(int socket){
 	recibir(socket, buffer_int, sizeof(int), logger);
 	id = deserializar_id(buffer_int);
 	log_info(logger, "Protocolo recibido: %d", id);
+	int rta_esi;
 
 	switch(id){
 		case 20://salio tod o ok
-			log_info(logger, "El plani respondio");
+			log_info(logger, "El plani dio el okey");
+			sleep(1);
+			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
+			log_info(logger, "Envie a la instancia");
 			return 1;
 		case 21:
 			clave = recibir_pedido_clave(socket);
@@ -31,11 +35,26 @@ int procesar_mensaje(int socket){
 			resultado = desconectar_instancia(socket);
 			return 1;
 			break;
+		case 24:
+			serializar_id(buffer_int, 64);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			return resultado;
+			break;
+		case 25:
+			log_info(logger, "La instancia dio el okey");
+			sleep(1);
+			rta_esi = 63;
+			serializar_id(buffer_int, rta_esi);
+			log_info(logger, "Le voy a responder: %d al esi", rta_esi);
+			//resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			log_info(logger, "Respondi al ESI");
+			return resultado;
+			break;
 		case 81:
 			el_nodo = encontrar_esi(socket);
 			hilo_a_cerrar = &el_nodo->hilo;
 			socket_esi_buscado = el_nodo->socket;
-			log_info(logger, "voy a eliminar");
+			log_info(logger, "Voy a eliminar");
 			list_remove_by_condition(lista_esis, condicion_socket_esi);
 			sem_post(&s_cerrar_hilo);
 			return -1;
@@ -72,34 +91,13 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	nodo* esi = encontrar_esi(socket);
-	log_info(logger, "Id esi: %d", esi->id);
-	nodo* instancia = buscar_instancia(clave);
-	log_info(logger, "Id instancia: %d", instancia->id);
+	esi_ejecutando = encontrar_esi(socket);
+	log_info(logger, "Id esi: %d", esi_ejecutando->id);
+	instancia_seleccionada = buscar_instancia(clave);
+	log_info(logger, "Id instancia: %d", instancia_seleccionada->id);
+	operacion_ejecutando = instruccion;
 
 	enviar_operacion(socket_planificador, instruccion);
-
-	/*void* buffercito = malloc(sizeof(int));
-	recibir(socket_planificador, buffercito, sizeof(int), logger);
-	int protocolo_plani = deserializar_id(buffercito);
-	int protocolo_instancia;
-	log_info(logger, "Plani dijo: %d", protocolo_plani);
-	switch(protocolo_plani){
-	case 24:
-		return FALLO_ESI;
-		break;
-	case 20:
-		enviar_operacion(instancia->socket, instruccion);
-		recibir(instancia->socket, buffercito, sizeof(int), logger);
-		protocolo_instancia = deserializar_id(buffercito);
-		if(protocolo_instancia == 20){
-			return EXITO_ESI;
-		}
-		return FALLO_ESI;
-	default:
-		return ABORTO_ESI;
-		break;
-	}*/
 	return 1;
 }
 
@@ -418,7 +416,7 @@ t_esi_operacion recibir_instruccion(int socket){
 	recibir(socket, buffercito, sizeof(int), logger);
 	tamanio = deserializar_id(buffercito);
 	void* buffer = malloc(tamanio);
-	int resultado = recibir(socket, buffer, tamanio, logger);
+	recibir(socket, buffer, tamanio, logger);
 	instruccion = deserializar_instruccion(buffer);
 	return instruccion;
 }

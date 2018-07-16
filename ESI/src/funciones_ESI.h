@@ -34,7 +34,7 @@ t_esi_operacion parsear_linea(FILE* archivo);
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador);
 int enviar_instruccion(t_esi_operacion operacion, int socket_destino);
 void ejecutar_ultima_instruccion(int socket_destino);
-void informar_confirmacion(void* msj_recibido, int socket_destino, t_log* logger);
+void informar_confirmacion(resultado_esi confirmacion, int socket_destino, t_log* logger_esi);
 void informar_fin_de_programa(sockets_conexiones conexiones);
 
 // Serializacion-Deserializacion

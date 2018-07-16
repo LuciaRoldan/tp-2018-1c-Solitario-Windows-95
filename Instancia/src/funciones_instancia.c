@@ -105,9 +105,10 @@ t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 
 void enviar_exito(int socket_coordinador, t_log* logger){
 	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer,20);
+	serializar_id(buffer,25);
 	enviar(socket_coordinador, buffer, sizeof(int), logger);
 	free(buffer);
+	log_info(logger, "Le respondi al coordinador");
 }
 
 void enviar_fallo(int socket_coordinador, t_log* logger){
@@ -123,15 +124,15 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	case (GET):
 		clave = instruccion.argumentos.GET.clave;
 		if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
-			void* buffer = malloc(sizeof(int));
-			serializar_id(buffer,04);
-			enviar(socket_coordinador,buffer,sizeof(int),logger);
+			/*void* buffer = malloc(sizeof(int));
+			serializar_id(buffer,25);
+			enviar(socket_coordinador,buffer,sizeof(int),logger);*/
 		} else{
 			dictionary_put(diccionario_memoria,clave,""); //esta bien hacer esto para crear una key?
 			memcpy(&claveActual,clave,sizeof(clave));
-			void* buffer = malloc(sizeof(int));
-			serializar_id(buffer,05);
-			enviar(socket_coordinador,buffer, sizeof(int),logger);
+			/*void* buffer = malloc(sizeof(int));
+			serializar_id(buffer,25);
+			enviar(socket_coordinador,buffer, sizeof(int),logger);*/
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;

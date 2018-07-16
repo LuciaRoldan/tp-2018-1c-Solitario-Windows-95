@@ -23,11 +23,12 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 
 
 ///////////////// COORDINADOR /////////////////
-20 NULL exito
+20 NULL exito planificador
 21 char* (clave)
 22 NULL esi abortado
 23 NULL desconexion instancia
 24 NULL fallo
+25 NULL exito instancia
 
 
 

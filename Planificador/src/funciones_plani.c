@@ -203,11 +203,11 @@ void manejar_coordinador(void* socket){
 		switch(id){
 		case (82): //nuevo pedido
 				buffer_int = malloc(sizeof(int));
-				recibir(socket, buffer_int, sizeof(int), logger);
+				recibir(socket_coordinador, buffer_int, sizeof(int), logger);
 				tamanio = deserializar_id(buffer_int);
 
 				buffer = malloc(tamanio);
-				recibir(socket, buffer, tamanio, logger);
+				recibir(socket_coordinador, buffer, tamanio, logger);
 				instruccion = deserializar_instruccion(buffer);
 
 				log_info(logger, "Recibido: %s, %d \n", instruccion.argumentos.GET.clave, instruccion.keyword);
