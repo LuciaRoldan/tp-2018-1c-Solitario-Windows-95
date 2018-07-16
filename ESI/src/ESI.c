@@ -14,6 +14,11 @@ int main(int argc, char* argv[]){
 	logger_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
 	log_info(logger_esi,"Inicio de ESI %d ---> Logger creado.", idEsi);
 
+	/*printf("El argv[0] es: %s\n", argv[0]);
+	printf("El argv[1] es: %s\n", argv[1]);
+	printf("El argv[2] es: %s\n", argv[2]);*/
+
+	//char * path = string_from_format("%s", argv[0]);
 	FILE* script_prueba = fopen(argv[1], "r");
 	if (script_prueba == NULL){
 		perror("Error al abrir el archivo: ");
@@ -51,7 +56,9 @@ int main(int argc, char* argv[]){
 				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
 				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				if((confirmacion > 84) && (confirmacion < 90)){
+					abortoESI = 1;
+				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
 				break;
 			case 62: //abortar ESI
 				abortoESI = 1;
@@ -64,7 +71,7 @@ int main(int argc, char* argv[]){
 	}
 	fclose(script_prueba);
 	codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
-	informar_fin_de_programa(conexiones);
+	informar_fin_de_programa(conexiones, abortoESI);
 	free(mensaje_coordi);
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);

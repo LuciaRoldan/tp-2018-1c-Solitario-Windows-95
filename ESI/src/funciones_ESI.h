@@ -36,7 +36,7 @@ int enviar_instruccion(t_esi_operacion operacion, int socket_destino);
 void ejecutar_ultima_instruccion(int socket_destino);
 void procesar_confirmacion(int confirmacion, int socket_destino);
 void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi);
-void informar_fin_de_programa(sockets_conexiones conexiones);
+void informar_fin_de_programa(sockets_conexiones conexiones, int flag);
 
 // Serializacion-Deserializacion
 void serializar_confirmacion(void* buffer, resultado_esi *msj_confirmacion);
