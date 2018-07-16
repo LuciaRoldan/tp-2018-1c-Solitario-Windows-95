@@ -65,7 +65,7 @@ typedef struct {
 	estado estado;
 	int retardo; //tiempo en ser atendido el esi la ultima vez que ejecuto
 	int ultimaRafaga; //con el retardo y la ultimaRafaga se calcula la estimacion ?
-	int ultimaEstimacion;
+	float ultimaEstimacion;
 	int socket;
 } pcb;
 
