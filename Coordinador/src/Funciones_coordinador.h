@@ -30,6 +30,11 @@ typedef struct{
 	pthread_t hilo;
 }nodo;
 
+typedef struct{
+	nodo nodo_instancia;
+	char* clave;
+}nodo_clave;
+
 ///////////////////// VARIABLES GLOBALES ////////////////////
 
 t_log * logger;
@@ -41,7 +46,7 @@ nodo* esi_ejecutando;
 nodo* instancia_seleccionada;
 pthread_t* hilo_a_cerrar;
 int ultima_instancia_EL;
-t_dictionary* diccionario_claves;
+t_list* lista_claves;
 int socket_instancia_buscado;
 int socket_esi_buscado;
 info_archivo_config info_coordinador;
@@ -49,6 +54,7 @@ t_list* lista_instancias;
 t_list* lista_esis;
 int socket_planificador; //Deberia poner un semaforo para esta variable?
 int socket_escucha;
+char* clave_buscada;
 
 
 pthread_mutex_t m_operacion_ejecutando;
@@ -56,12 +62,13 @@ pthread_mutex_t m_esi_ejecutando;
 pthread_mutex_t m_instancia_seleccionada;
 pthread_mutex_t m_hilo_a_cerrar;
 pthread_mutex_t m_ultima_instancia_EL;
-pthread_mutex_t m_diccionario_claves;
+pthread_mutex_t m_lista_claves;
 pthread_mutex_t m_socket_instancia_buscado;
 pthread_mutex_t m_socket_esi_buscado;
 pthread_mutex_t m_lista_instancias;
 pthread_mutex_t m_lista_esis;
 pthread_mutex_t m_log_operaciones;
+pthread_mutex_t m_clave_buscada;
 sem_t s_cerrar_hilo;
 
 ///////////////////////// FUNCIONES /////////////////////////
@@ -103,6 +110,7 @@ nodo* buscar_instancia(char* clave);
 void reemplazar_instancia(nodo nodo);
 bool condicion_socket_esi(void* datos);
 bool condicion_socket_instancia(void* datos);
+bool condicion_clave(void* datos);
 
 //DE HILOS
 void agregar_nuevo_esi(int socket_esi, int id_esi);

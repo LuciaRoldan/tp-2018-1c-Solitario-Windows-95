@@ -172,6 +172,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	pthread_mutex_unlock(&m_log_operaciones);
 	pthread_mutex_lock(&m_instancia_seleccionada);
 	instancia_seleccionada = buscar_instancia(clave);
+
 	pthread_mutex_lock(&m_operacion_ejecutando);
 	operacion_ejecutando = instruccion;
 
@@ -257,6 +258,7 @@ void atender_esi(void* datos_esi){
 void atender_instancia(void* datos_instancia){
 	log_info(logger, "Estoy en el hilo de la instancia!");
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_instancia);
+	enviar_configuracion_instancia(mis_datos.socket);
 	while(1){
 		procesar_mensaje(mis_datos.socket);
 	}
@@ -288,6 +290,14 @@ bool condicion_socket_instancia(void* datos){
 	return un_nodo.socket == socket_instancia_buscado;
 }
 
+bool condicion_clave(void* datos){
+	nodo_clave un_nodo = *((nodo_clave*) datos);
+	pthread_mutex_lock(&m_clave_buscada);
+	pthread_mutex_unlock(&m_clave_buscada);
+	return strcmp(un_nodo.clave, clave_buscada);
+
+}
+
 void reemplazar_instancia(nodo un_nodo){
 	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
 	list_add(lista_instancias, &un_nodo);
@@ -295,14 +305,20 @@ void reemplazar_instancia(nodo un_nodo){
 
 nodo* buscar_instancia(char* clave){
 	nodo* nodo_instancia;
-	pthread_mutex_lock(&m_diccionario_claves);
-	if(dictionary_has_key(diccionario_claves, clave)){
-		nodo_instancia = dictionary_get(diccionario_claves, clave);
+	pthread_mutex_lock(&m_lista_claves);
+	clave_buscada = malloc(strlen(clave)+1);
+	memcpy(clave_buscada, clave, strlen(clave)+1);
+	if(list_any_satisfy(lista_claves, condicion_clave)){
+		nodo_instancia = list_find(lista_claves, condicion_clave);
 	} else {
 		nodo_instancia = seleccionar_instancia(clave);
-		//agregar clave al diccionario
+		nodo_clave* nodo_ = malloc(sizeof(nodo_clave));
+		nodo_->clave = clave;
+		nodo_->nodo_instancia = *nodo_instancia;
+		list_add(lista_claves, nodo_);
 	}
-	pthread_mutex_unlock(&m_diccionario_claves);
+	free(clave_buscada);
+	pthread_mutex_unlock(&m_lista_claves);
 	return nodo_instancia;
 }
 
@@ -320,6 +336,7 @@ nodo* seleccionar_instancia(char* clave){
 		pthread_mutex_unlock(&m_lista_instancias);
 		break;
 	case LSU:
+
 		break;
 	case KE:
 		break;
@@ -411,7 +428,7 @@ void inicializar_coordinador(){
 	socket_escucha = inicializar_servidor(info_coordinador.puerto_escucha, logger);
 	lista_esis = list_create();
 	lista_instancias = list_create();
-	diccionario_claves = dictionary_create();
+	lista_claves = list_create();
 	ultima_instancia_EL = 0;
 	inicializar_semaforos();
 }
@@ -422,12 +439,13 @@ void inicializar_semaforos(){
 	if (pthread_mutex_init(&m_instancia_seleccionada, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_hilo_a_cerrar, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_ultima_instancia_EL, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_diccionario_claves, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_lista_claves, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_socket_instancia_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_socket_esi_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_lista_instancias, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_lista_esis, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_log_operaciones, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
 }
 
