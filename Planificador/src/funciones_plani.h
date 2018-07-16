@@ -101,29 +101,39 @@ void planificacionSJF_CD();
 void planificacionSJF_SD();
 void planificacionHRRN();
 
-bool algoritmo_SJF(void* pcb1, void* pcb2);
+bool algoritmo_SJF_SD(void* pcb1, void* pcb2);
+bool algoritmo_SJF_CD(void* pcb_1, void* pcb_2);
 bool algoritmo_HRRN(void* pcb1, void* pcb2);
 
 //Operaciones sobre PCBs
 void registrar_exito_en_pcb(int id_esi);
-void mover_esi_a_bloqueados(char* clave, clave_bloqueada* nodo_clave_buscada, int esi_id);
+void mover_esi_a_bloqueados(clave_bloqueada* nodo_clave_buscada, int esi_id);
 void abortar_esi(int id_esi);
 
 //Operaciones sobre claves_bloqueadas
 void liberar_clave(char* clave);
 
 
+
 ///---FUNCIONES AUXILIARES---///
 //ids_iguales
 bool ids_iguales_pcb(void* pcbb);
 bool ids_iguales_cola_de_esis(void* id);
+bool es_el_primer_esi_ready(void *pcbb);
+bool no_es_el_primer_esi_ready(void *pcbb);
 
 //claves_iguales
 bool claves_iguales_nodo_clave(void* nodo_clave);
 
-void* quitar_esi_de_cola_bloqueados(void* clave_bloq);
+void quitar_esi_de_cola_bloqueados(void* clave_bloq);
 
 void imprimir_id_esi(void* esi);
+
+void sumar_ultima_rafaga(int id_esi);
+
+void sumar_retardo(void* pcbb);
+
+void sumar_retardo_otros_ready();
 
 
 /*
