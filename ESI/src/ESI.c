@@ -40,37 +40,18 @@ int main(int argc, char* argv[]){
 		log_info(logger_esi, "Plani me dijo: %d", codigo_plani);
 		sleep(2);
 		switch(codigo_plani){
-			case 45: //desbloqueo ESI
+			case 60: //desbloqueo ESI
 				ejecutar_ultima_instruccion(conexiones.socket_coordi);
-				codigo_coordi = recibir_int(conexiones.socket_coordi, logger_esi);
-				recibir(conexiones.socket_coordi, mensaje_coordi, sizeof(int), logger_esi);
-				confirmacion = deserializar_confirmacion(mensaje_coordi);
+				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
+				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
 				informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
-				/*if(cumple_protocolo(codigo_coordi, 20)){
-					recibir(conexiones.socket_coordi, mensaje_coordi, sizeof(resultado_esi), logger_esi);
-					informar_confirmacion(mensaje_coordi, conexiones.socket_plani, logger_esi);
-				} else{
-					_exit_with_error(conexiones.socket_coordi, "Error en el intercambio de mensajes", mensaje_coordi, logger_esi);
-				}*/
 				break;
 			case 61: //solicitud de ejecucion
 				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
-				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
-				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
-				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
-				/*recibir(conexiones.socket_coordi, mensaje_coordi, sizeof(int), logger_esi);
-				confirmacion = deserializar_confirmacion(mensaje_coordi);
+				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);*/
-
-				//codigo_coordi = recibir_int(conexiones.socket_coordi, logger_esi);
-				/*if(cumple_protocolo(codigo_coordi, 20)){
-					recibir(conexiones.socket_coordi, mensaje_coordi, sizeof(resultado_esi), logger_esi);
-					informar_confirmacion(mensaje_coordi, conexiones.socket_plani, logger_esi);
-				} else{
-					_exit_with_error(conexiones.socket_coordi, "Error en el intercambio de mensajes", mensaje_coordi, logger_esi);
-				}*/
+				informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
 				break;
 			case 62: //abortar ESI
 				abortoESI = 1;
@@ -82,6 +63,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	fclose(script_prueba);
+	codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 	informar_fin_de_programa(conexiones);
 	free(mensaje_coordi);
 	close(conexiones.socket_plani);
