@@ -234,20 +234,18 @@ datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer) {
 }
 
 void serializar_status_clave(void* buffer, status_clave status){
-	int* id_protocolo = malloc(sizeof(int));
-	*id_protocolo = 0;
-	int tamanio_clave = (strlen(status.clave)+1)*sizeof(char);
+	int id_protocolo = 83;
+	int tamanio_clave = strlen(status.clave)+1;
 	int tamanio_contenido = (strlen(status.contenido)+1)*sizeof(char);
 	int tamanio_total = tamanio_buffer_status(status)- sizeof(int)*2;
-	memcpy(buffer, id_protocolo, sizeof(int));
+	memcpy(buffer, &id_protocolo, sizeof(int));
 	memcpy(buffer + sizeof(int), &tamanio_total, sizeof(int));
 	memcpy(buffer + sizeof(int)*2, &tamanio_clave, sizeof(int));
-	memcpy(buffer + sizeof(int)*3, &status.clave, tamanio_clave);
+	memcpy(buffer + sizeof(int)*3, status.clave, tamanio_clave);
 	memcpy(buffer + sizeof(int)*3 + tamanio_clave, &status.id_instancia_actual, sizeof(int));
 	memcpy(buffer + sizeof(int)*4 + tamanio_clave, &status.id_instancia_nueva, sizeof(int));
 	memcpy(buffer + sizeof(int)*5 + tamanio_clave, &tamanio_contenido, sizeof(int));
-	memcpy(buffer + sizeof(int)*6 + tamanio_clave, &status.contenido, tamanio_contenido);
-	free(id_protocolo);
+	memcpy(buffer + sizeof(int)*6 + tamanio_clave, status.contenido, tamanio_contenido);
 }
 
 status_clave deserializar_status_clave(void* buffer) {//Se hicieron dos recibir antes, uno para el protocolo y otro para el tamaño del buffer
@@ -255,12 +253,12 @@ status_clave deserializar_status_clave(void* buffer) {//Se hicieron dos recibir 
 	int tamanio_clave, tamanio_contenido;
 	memcpy(&tamanio_clave, buffer, sizeof(int));
 	status.clave = malloc(tamanio_clave);
-	memcpy(&status.clave, buffer + sizeof(int), tamanio_clave);
+	memcpy(status.clave, buffer + sizeof(int), tamanio_clave);
 	memcpy(&status.id_instancia_actual, buffer + sizeof(int) + tamanio_clave, sizeof(int));
 	memcpy(&status.id_instancia_nueva, buffer + sizeof(int)*2 + tamanio_clave, sizeof(int));
 	memcpy(&tamanio_contenido, buffer + sizeof(int)*3 + tamanio_clave, sizeof(int));
 	status.contenido = malloc(tamanio_clave);
-	memcpy(&status.contenido, buffer + sizeof(int)*4 + tamanio_clave, tamanio_contenido);
+	memcpy(status.contenido, buffer + sizeof(int)*4 + tamanio_clave, tamanio_contenido);
 	return status;
 }
 

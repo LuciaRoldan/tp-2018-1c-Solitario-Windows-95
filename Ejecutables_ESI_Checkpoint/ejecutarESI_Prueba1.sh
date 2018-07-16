@@ -9,4 +9,4 @@ make all
 
 cd ../../
 
-./ESI/Debug/ESI "/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/ESI/Pruebas-ESI/ESI_1" 1
+./ESI/Debug/ESI "ESI/Pruebas-ESI/ESI_1" 1

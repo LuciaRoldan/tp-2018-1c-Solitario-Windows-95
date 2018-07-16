@@ -31,19 +31,12 @@ void enviar_exito(int socket_coordinador, t_log* logger) {
 	free(buffer);
 }
 
-void recibir_configuracion(int socket_coordinador, t_log* logger) {
+datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(datos_configuracion));
 	recibir(socket_coordinador, buffer, sizeof(datos_configuracion), logger);
-	deserializar_configuracion(buffer);
-	//enviar_exito(socket_coordinador,logger);
-		//Ivi, no tenés que responder a esto
-//	agregar caso de fallo
+	datos_configuracion configuracion = deserializar_configuracion_inicial_instancia(buffer);
 	free(buffer);
-}
-
-void deserializar_configuracion(void* buffer) {
-	memcpy(&(configuracion.cantidad_entradas), buffer, sizeof(int));
-	memcpy(&(configuracion.tamano_entrada), (buffer + (sizeof(int))), sizeof(int));
+	return configuracion;
 }
 
 void procesarID(int socket_coordinador, t_log* logger) {
@@ -53,10 +46,6 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	char* clave;
 
 	switch (id) {
-	case (00):
-		log_info(logger, "Recibí configuracion");
-		recibir_configuracion(socket_coordinador, logger);
-		break;
 	/*case (80):
 		recibir(socket_coordinador, (void*) &handshake_coordi,sizeof(t_handshake), logger);
 		deserializar_handshake((void*) &handshake_coordi);
@@ -96,7 +85,7 @@ char* recibe_pedido_status(int socket_coordinador, t_log* logger){
 
 int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
 	char* valor;
-	valor = dictionary_get(diccionario_memoria,clave);
+//	valor = dictionary_get(diccionario_memoria,clave);
 //	int idInstancia = mi_configuracion.nombreInstancia;
 	status_clave status = {clave,0,valor};
 	int tamanio_buffer = tamanio_buffer_status(status);
@@ -132,22 +121,20 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
 		clave = instruccion.argumentos.GET.clave;
+		int tamanio_clave = sizeof(clave);
 		printf("La clave es: %s\n", clave);
-		/*if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
-			void* buffer = malloc(sizeof(int));
-			serializar_id(buffer,25);
-			enviar(socket_coordinador,buffer,sizeof(int),logger);
+		if (existe_clave(clave)){
+
 		} else{
-			dictionary_put(diccionario_memoria,clave,""); //esta bien hacer esto para crear una key?
-			memcpy(&claveActual,clave,sizeof(clave));
-			/*void* buffer = malloc(sizeof(int));
-			serializar_id(buffer,25);
-			enviar(socket_coordinador,buffer, sizeof(int),logger);
-		}*/
+			estructura_clave clave_nueva;
+			memcpy(clave_nueva->clave,clave,tamanio_clave);
+			list_add(tabla_entradas, &clave_nueva);
+		}
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
 		log_info(logger, "Se pidio operacion con SET");
+
 		// dictionary_put(diccionario_memoria,instruccion.argumentos.SET.clave,instruccion.argumentos.SET.valor);
 		enviar_exito(socket_coordinador,logger);
 		break;
@@ -160,6 +147,19 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	}
 }
 
+bool existe_clave(char* clave){
+	estructura_clave clave_encontrada;
+	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
+		clave_encontrada = list_get(tabla_entradas, i);
+		if (clave_encontrada.clave == clave){
+			return true;
+		}
+	   }
+	return false;
+
+
+
+/*
 void guardar_archivo(char* clave, t_log* logger){
 
 	//		No se si es el path que hay que usar o donde guardariamos los archivos?
@@ -170,8 +170,8 @@ void guardar_archivo(char* clave, t_log* logger){
 			int fd;
 			char* puntero_memoria;
 
-			char* valor = dictionary_get(diccionario_memoria,clave);
-			int tamanio_valor = sizeof(valor);
+//			char* valor = dictionary_get(diccionario_memoria,clave);
+//			int tamanio_valor = sizeof(valor);
 
 			fd =  open(real_path, O_RDWR | O_CREAT, S_IRWXU);
 
@@ -187,7 +187,7 @@ void guardar_archivo(char* clave, t_log* logger){
 			msync(puntero_memoria, tamanio_valor, MS_SYNC);
 
 			munmap(puntero_memoria, tamanio_valor);
-}
+}*/
 
 	void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
 		void* buffer = malloc(sizeof(int)+ sizeof(clave));
@@ -202,7 +202,7 @@ void guardar_archivo(char* clave, t_log* logger){
 	}
 
 
-int handshake_instancia(int* socket_coordinador, t_log* logger, int id) {
+int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
 		int conexion_hecha = 0;
 
 		t_handshake proceso_recibido;
@@ -211,13 +211,13 @@ int handshake_instancia(int* socket_coordinador, t_log* logger, int id) {
 		void* buffer_envio = malloc(sizeof(int) * 3); //Es de 3 porque tambien se manda el protocolo
 
 		serializar_handshake(buffer_envio, yo);
-		enviar(*socket_coordinador, buffer_envio, sizeof(int) * 3, logger);
+		enviar(socket_coordinador, buffer_envio, sizeof(int) * 3, logger);
 
 		free(buffer_envio);
 		void* buffer_recepcion = malloc(sizeof(int) * 2);
 
-		recibir(*socket_coordinador, &id_recibido, sizeof(int), logger);
-		recibir(*socket_coordinador, buffer_recepcion, sizeof(int) * 2, logger);
+		recibir(socket_coordinador, &id_recibido, sizeof(int), logger);
+		recibir(socket_coordinador, buffer_recepcion, sizeof(int) * 2, logger);
 		proceso_recibido = deserializar_handshake(buffer_recepcion);
 
 		printf("Proceso: %d\n", proceso_recibido.proceso);

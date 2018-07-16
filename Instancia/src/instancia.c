@@ -27,17 +27,27 @@ int main() {
 
 	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
 
-	handshake_instancia(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
-	char* clave;
+	log_info(logger,"Hay socket con el Coordinador");
 
-	/*recibir_configuracion(socket_coordinador,logger);
+	handshake_instancia(socket_coordinador,logger, mi_configuracion.nombreInstancia);
 
-	int espacio_para_memoria = cantidad_entradas * tamano_entrada;
+	int id = recibir_int(socket_coordinador,logger);
+	log_info(logger,"recibo un int ");
 
-	diccionario_memoria = dictionary_create();
-	diccionario_memoria->table_max_size = espacio_para_memoria;
-	memoria = malloc(espacio_para_memoria);*/
-		// COMENTO PARA PRUEBAS
+	while(id != 00){
+		log_info(logger,"Pero no es el de configuracion :( ");
+		id = recibir_int(socket_coordinador,logger);
+	}
+	configuracion = recibir_configuracion(socket_coordinador,logger);
+	log_info(logger,"Recibi la configuracion! ");
+
+//	int cantidad_entradas = configuracion.cantidad_entradas;
+//	estructura_clave** tabla_entradas = (estructura_clave**) malloc(sizeof(estructura_clave)*cantidad_entradas);
+//	log_info(logger,"Creo la tabla de entradas");
+	int tamanio_memoria = configuracion.cantidad_entradas * configuracion.tamano_entrada;
+	char* inicio_memoria = malloc(tamanio_memoria);
+	log_info(logger,"Guardo la memoria para los valores");
+	tabla_entradas = list_create();
 
 	while(1){
 		log_info(logger, "Entré al while");
