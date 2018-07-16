@@ -341,17 +341,6 @@ void informar_fallo_coordinador(){
 
 /////-----OPERACIONES SOBRE PCBS-----/////
 //--Registrar exito ESIS--// ANDA!
-/*void registrar_exito_en_pcb(int id_esi){
-	void* pcbb;
-	id_buscado = id_esi;
-	pcbb = list_find(pcbs, ids_iguales_pcb);
-	pcb* esi_que_ejecuto = pcbb;
-	esi_que_ejecuto->ultimaRafaga++;
-	log_info(logger, "La ultima rafaga del ESI que acaba de ejecutar es: %d\n", esi_que_ejecuto->ultimaRafaga);
-}*/
-
-
-//--Registrar exito ESIS--// ANDA!
 void registrar_exito_en_pcb(int id_esi){
 	sumar_ultima_rafaga(id_esi);
 }
