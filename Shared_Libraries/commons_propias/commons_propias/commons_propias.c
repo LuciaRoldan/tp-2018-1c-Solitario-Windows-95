@@ -36,9 +36,10 @@ int inicializar_servidor(int puerto, t_log * logger){
 	configuracion.sin_addr.s_addr = INADDR_ANY;
 	configuracion.sin_port = htons( puerto );
 
-	if( bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0) {
+	/*if( bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0) {
 		_exit_with_error(servidor, "Fallo el bind", NULL, logger);
-	}
+	}*/
+	while(bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0){}
 
 	listen(servidor, 100);
 	log_info(logger, "Soy servidor y estoy escuchando!");
