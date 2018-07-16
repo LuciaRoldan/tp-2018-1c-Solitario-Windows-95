@@ -27,23 +27,25 @@ int main() {
 
 	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
 
-	handshake(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
+	handshake_instancia(&socket_coordinador,logger, mi_configuracion.nombreInstancia);
 	char* clave;
 
-	recibir_configuracion(socket_coordinador,logger);
+	/*recibir_configuracion(socket_coordinador,logger);
 
 	int espacio_para_memoria = cantidad_entradas * tamano_entrada;
 
 	diccionario_memoria = dictionary_create();
 	diccionario_memoria->table_max_size = espacio_para_memoria;
-	memoria = malloc(espacio_para_memoria);
-
+	memoria = malloc(espacio_para_memoria);*/
+		// COMENTO PARA PRUEBAS
 
 	while(1){
+		log_info(logger, "Entré al while");
 		procesarID(socket_coordinador,logger);
+		log_info(logger, "Procesé. Vuelvo a entrar al while");
 	}
 
-	free(espacio_para_memoria);
+	//free(espacio_para_memoria);
 	sleep(5);
 	return 0;
 }
