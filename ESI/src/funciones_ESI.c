@@ -113,30 +113,33 @@ void ejecutar_ultima_instruccion(int socket_destino){
 	enviar_instruccion(ultima_instruccion, socket_destino);
 }
 
-void informar_confirmacion(resultado_esi confirmacion, int socket_destino, t_log* logger_esi){
+void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi){
 	switch(confirmacion){
-		case 63:
+		case 84:
 			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
 			break;
-		case EXITO:
-			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
-			break;
-		case FALLO:
+		case 85:
 			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
 			break;
-		case PEDIUNACLAVEMUYLARGA:
+		case 86:
 			log_info(logger_esi, "Error de clave muy larga.");
 			break;
-		case PEDIUNACLAVENOID:
+		case 87:
 			log_info(logger_esi, "Error de clave no identificada.");
 			break;
-		case PEDIUNACLAVEINACC:
+		case 88:
 			log_info(logger_esi, "Error de clave inaccesible.");
 			break;
+		case 89:
+			log_info(logger_esi, "Error de clave no bloqueada.");
+			break;
+		case 90:
+			log_info(logger_esi, "Bloquear ESI.");
+			break;
 	}
-	void* buffer_confirmacion = malloc(sizeof(resultado_esi) + sizeof(int));
-	serializar_confirmacion(buffer_confirmacion, &confirmacion);
-	enviar(socket_destino, buffer_confirmacion, sizeof(resultado_esi) + sizeof(int), logger_esi);
+	void* buffer_confirmacion = malloc(sizeof(int));
+	serializar_id(buffer_confirmacion, &confirmacion);
+	enviar(socket_destino, buffer_confirmacion, sizeof(int), logger_esi);
 	free(buffer_confirmacion);
 }
 

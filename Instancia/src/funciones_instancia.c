@@ -23,11 +23,20 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 	fclose(archivo);
 }
 
+void enviar_exito(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 25);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Le respondi al coordinador");
+	free(buffer);
+}
+
 void recibir_configuracion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(datos_configuracion));
 	recibir(socket_coordinador, buffer, sizeof(datos_configuracion), logger);
 	deserializar_configuracion(buffer);
-	enviar_exito(socket_coordinador,logger);
+	//enviar_exito(socket_coordinador,logger);
+		//Ivi, no tenés que responder a esto
 //	agregar caso de fallo
 	free(buffer);
 }
@@ -39,20 +48,24 @@ void deserializar_configuracion(void* buffer) {
 
 void procesarID(int socket_coordinador, t_log* logger) {
 	int id = recibir_int(socket_coordinador, logger);
-	t_handshake handshake_coordi;
 	t_esi_operacion instruccion;
+	// t_handshake handshake_coordi;
 	char* clave;
 
 	switch (id) {
 	case (00):
+		log_info(logger, "Recibí configuracion");
 		recibir_configuracion(socket_coordinador, logger);
 		break;
-	case (80):
+	/*case (80):
 		recibir(socket_coordinador, (void*) &handshake_coordi,sizeof(t_handshake), logger);
 		deserializar_handshake((void*) &handshake_coordi);
-		break;
+		log_info(logger, "Hice el handshake");
+		break;*/
 	case (82):
+		log_info(logger, "Recibi una instruccion");
 		instruccion = recibir_instruccion(socket_coordinador, logger);
+		log_info(logger, "La deserialicé");
 		procesar_instruccion(socket_coordinador, instruccion, logger);
 		break;
 	case (83):
@@ -96,25 +109,20 @@ int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
 
 
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
-	void* buffer = malloc(sizeof(t_esi_operacion));
-	recibir(socket_coordinador,buffer,sizeof(t_esi_operacion), logger);
+	int tamanio_operacion = recibir_int(socket_coordinador, logger);
+	void* buffer = malloc(tamanio_operacion);
+	recibir(socket_coordinador, buffer, tamanio_operacion, logger);
 	t_esi_operacion instruccion = deserializar_instruccion(buffer);
 	free(buffer);
+	log_info(logger, "Recibi instrucccion del COORDINADOR");
 	return instruccion;
-}
-
-void enviar_exito(int socket_coordinador, t_log* logger){
-	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer,25);
-	enviar(socket_coordinador, buffer, sizeof(int), logger);
-	free(buffer);
-	log_info(logger, "Le respondi al coordinador");
 }
 
 void enviar_fallo(int socket_coordinador, t_log* logger){
 	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer,24);
+	serializar_id(buffer, 24);
 	enviar(socket_coordinador,buffer,sizeof(int),logger);
+	log_info(logger, "Le respondi al coordinador");
 	free(buffer);
 }
 
@@ -122,27 +130,31 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	char* clave;
 	switch (instruccion.keyword) {
 	case (GET):
+		log_info(logger, "Se pidio operacion con GET");
 		clave = instruccion.argumentos.GET.clave;
-		if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
-			/*void* buffer = malloc(sizeof(int));
+		printf("La clave es: %s\n", clave);
+		/*if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
+			void* buffer = malloc(sizeof(int));
 			serializar_id(buffer,25);
-			enviar(socket_coordinador,buffer,sizeof(int),logger);*/
+			enviar(socket_coordinador,buffer,sizeof(int),logger);
 		} else{
 			dictionary_put(diccionario_memoria,clave,""); //esta bien hacer esto para crear una key?
 			memcpy(&claveActual,clave,sizeof(clave));
 			/*void* buffer = malloc(sizeof(int));
 			serializar_id(buffer,25);
-			enviar(socket_coordinador,buffer, sizeof(int),logger);*/
-		}
+			enviar(socket_coordinador,buffer, sizeof(int),logger);
+		}*/
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
-		dictionary_put(diccionario_memoria,instruccion.argumentos.SET.clave,instruccion.argumentos.SET.valor);
+		log_info(logger, "Se pidio operacion con SET");
+		// dictionary_put(diccionario_memoria,instruccion.argumentos.SET.clave,instruccion.argumentos.SET.valor);
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (STORE):
-		guardar_archivo(instruccion.argumentos.STORE.clave, logger);
-		enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger);
+		log_info(logger, "Se pidio operacion con STORE");
+		/*guardar_archivo(instruccion.argumentos.STORE.clave, logger);
+		enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger);*/
 		enviar_exito(socket_coordinador,logger);
 		break;
 	}
@@ -185,12 +197,12 @@ void guardar_archivo(char* clave, t_log* logger){
 	}
 
 	void serializar_pedido_desbloqueo(void* buffer, char* clave){
-		serializar_id(buffer,03);
-		memcpy(buffer,clave,sizeof(clave));
+		serializar_id(buffer,83);
+		memcpy(buffer + sizeof(int),clave, strlen(clave));
 	}
 
 
-int handshake(int* socket_coordinador, t_log* logger, int id) {
+int handshake_instancia(int* socket_coordinador, t_log* logger, int id) {
 		int conexion_hecha = 0;
 
 		t_handshake proceso_recibido;
@@ -208,8 +220,8 @@ int handshake(int* socket_coordinador, t_log* logger, int id) {
 		recibir(*socket_coordinador, buffer_recepcion, sizeof(int) * 2, logger);
 		proceso_recibido = deserializar_handshake(buffer_recepcion);
 
-		printf("%d\n", proceso_recibido.proceso);
-		printf("%d\n", proceso_recibido.id);
+		printf("Proceso: %d\n", proceso_recibido.proceso);
+		printf("Id del proceso: %d\n", proceso_recibido.id);
 
 		if (proceso_recibido.proceso != COORDINADOR) {
 

@@ -27,7 +27,13 @@ void recibir_configuracion(int socket_coordinador, t_log* logger);
 void deserializar_configuracion(void* buffer);
 void inicializar_instancia();
 void enviar_fallo(int socket_coordinador, t_log* logger);
-void enviar_exito(int socket_coordinador, t_log* logger);
+void enviar_exito(int socket_coordinador, t_log* logger);/* {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 25);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Le respondi al coordinador");
+	free(buffer);
+}*/
 void leer_configuracion_propia(configuracion_propia* configuracion,t_log* logger);
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger);
 t_esi_operacion deserializar_instruccion(void* buffer);
