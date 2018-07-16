@@ -33,6 +33,7 @@ typedef struct{
 ///////////////////// VARIABLES GLOBALES ////////////////////
 
 t_log * logger;
+t_log* log_operaciones;
 
 //Ya tienen semaforo
 t_esi_operacion operacion_ejecutando;
@@ -60,6 +61,7 @@ pthread_mutex_t m_socket_instancia_buscado;
 pthread_mutex_t m_socket_esi_buscado;
 pthread_mutex_t m_lista_instancias;
 pthread_mutex_t m_lista_esis;
+pthread_mutex_t m_log_operaciones;
 sem_t s_cerrar_hilo;
 
 ///////////////////////// FUNCIONES /////////////////////////
