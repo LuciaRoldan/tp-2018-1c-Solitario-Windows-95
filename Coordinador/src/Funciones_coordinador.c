@@ -12,8 +12,9 @@ int procesar_mensaje(int socket){
 	t_esi_operacion instruccion;
 	status_clave status;
 	void* buffer_int = malloc(sizeof(int));
-	recibir(socket, buffer_int, sizeof(int), logger);
-	id = deserializar_id(buffer_int);
+	/*recibir(socket, buffer_int, sizeof(int), logger);
+	id = deserializar_id(buffer_int);*/
+	id = recibir_int(socket, logger);
 	log_info(logger, "Protocolo recibido: %d", id);
 	int rta_esi;
 
@@ -46,7 +47,7 @@ int procesar_mensaje(int socket){
 			rta_esi = 63;
 			serializar_id(buffer_int, rta_esi);
 			log_info(logger, "Le voy a responder: %d al esi", rta_esi);
-			//resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			log_info(logger, "Respondi al ESI");
 			return resultado;
 			break;
