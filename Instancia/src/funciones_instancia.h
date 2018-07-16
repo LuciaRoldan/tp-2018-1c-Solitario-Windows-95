@@ -6,6 +6,7 @@
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
 
 datos_configuracion configuracion;
+t_list* tabla_entradas;
 
 typedef enum {
 	LRU, CIRC, BSU

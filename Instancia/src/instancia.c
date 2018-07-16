@@ -41,12 +41,13 @@ int main() {
 	configuracion = recibir_configuracion(socket_coordinador,logger);
 	log_info(logger,"Recibi la configuracion! ");
 
-	int cantidad_entradas = configuracion.cantidad_entradas;
-	estructura_clave** tabla_entradas = (estructura_clave**) malloc(sizeof(estructura_clave)*cantidad_entradas);
-	log_info(logger,"Creo la tabla de entradas");
+//	int cantidad_entradas = configuracion.cantidad_entradas;
+//	estructura_clave** tabla_entradas = (estructura_clave**) malloc(sizeof(estructura_clave)*cantidad_entradas);
+//	log_info(logger,"Creo la tabla de entradas");
 	int tamanio_memoria = configuracion.cantidad_entradas * configuracion.tamano_entrada;
 	char* inicio_memoria = malloc(tamanio_memoria);
 	log_info(logger,"Guardo la memoria para los valores");
+	tabla_entradas = list_create();
 
 	while(1){
 		log_info(logger, "Entré al while");
