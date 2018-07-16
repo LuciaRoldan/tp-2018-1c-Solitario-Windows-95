@@ -14,6 +14,7 @@ sockets inicializar_planificador(){
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
+	inicializar_semaforos();
 	return sockets_planificador;
 }
 
@@ -39,8 +40,9 @@ void conectarse_al_coordinador(int socket_coordinador){
 }
 
 void inicializar_semaforos(){
-	if (pthread_mutex_init(&un_mutex, NULL) != 0){printf("Fallo al inicializar mutex\n");}
-	sem_init(&un_semaforo, 0, 0); //el segundo numerito es el valor inicial. el primero es 0.
+	if (pthread_mutex_init(&m_recibir_resultado_esi, NULL) != 0){printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_hilo_a_cerrar, NULL) != 0){printf("Fallo al inicializar mutex\n");}
+	sem_init(&s_cerrar_un_hilo, 0, 0); //el segundo numerito es el valor inicial. el primero es 0.
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -134,19 +136,23 @@ void recibir_esis(void* socket_esis){
 			id_esi_nuevo = handshake_esi(socket_esi_nuevo);
 
 			if (id_esi_nuevo){
+				pthread_t hilo_escucha_esi;
 				pcb pcb_esi_nuevo;
-				pcb_esi_nuevo = crear_pcb_esi(socket_esi_nuevo, id_esi_nuevo);
+				pcb_esi_nuevo = crear_pcb_esi(socket_esi_nuevo, id_esi_nuevo, hilo_escucha_esi);
 				list_add(pcbs, &pcb_esi_nuevo); //agrego PCB ESI a mi lista de ESIs
 				list_add(esis_ready, &pcb_esi_nuevo); //agrego PCB ESI a cola ready
-				pthread_t hilo_escucha_esi;
 				if (pthread_create(&hilo_escucha_esi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
 					perror("No se pudo crear el hilo");
 				}
-
-				//pthread_join(hilo_escucha_esi , 0);
 			}
 		} else { //socket_esi_nuevo < 0
 	        perror("Fallo en el accept");
+		}
+		if (!sem_wait(&s_cerrar_un_hilo)){
+			log_info(logger, "Vine a cerrar el hilo");
+			pthread_join(hilo_a_cerrar, NULL);
+			log_info(logger, "Hilo cerrado");
+			pthread_mutex_unlock(&m_hilo_a_cerrar);
 		}
 	}
 }
@@ -156,10 +162,16 @@ void manejar_esi(void* la_pcb){
 	pcb pcb_esi = *((pcb*) la_pcb);
 
 	while(1){
+
+		pthread_mutex_lock(&m_recibir_resultado_esi);
+		log_info(logger, "Unlock al m_recibir_resultado_esi");
+
 		log_info(logger, "En manejar ESI");
 		planificar();
 		sleep(5);
-		int resultado = recibir_int(pcb_esi.socket, logger);
+		void* buffer_resultado = malloc(sizeof(int));
+		recibir(pcb_esi.socket, buffer_resultado, sizeof(int), logger);
+		int resultado = deserializar_id(buffer_resultado);
 		log_info(logger, "El ESI me envio el resultado_esi %d", resultado);
 
 		if (resultado >= 0){
@@ -169,6 +181,9 @@ void manejar_esi(void* la_pcb){
 				break;
 				case (90):
 					mover_esi_a_bloqueados(clave_buscada, id_esi_ejecutando); //tambien saca de ready
+				break;
+				case (81):
+					mover_esi_a_finalizados(id_esi_ejecutando);
 				break;
 				default:
 					abortar_esi(pcb_esi.id);
@@ -249,6 +264,7 @@ void procesar_pedido(t_esi_operacion instruccion){
 					nodo_clave_buscada->esi_que_la_usa = id_esi_ejecutando;
 					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, id_esi_ejecutando);
 					informar_exito_coordinador();
+
 				}
 
 				else {
@@ -261,7 +277,7 @@ void procesar_pedido(t_esi_operacion instruccion){
 					else {
 						//Me hacen un GET sobre una clave que estaba asignada a otro ESI entonces lo pongo en
 						//la lista de espera de esa clave y lo saco de ready
-						log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %d", id_esi_ejecutando, clave_buscada);
+						log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
 						//clave_buscada se mantiene igual para que la use la funcion de mover_esi_a_bloqueados cuando recibo respuesta del esi!!
 						informar_bloqueo_coordinador();
 					}
@@ -329,6 +345,8 @@ void procesar_pedido(t_esi_operacion instruccion){
 			}
 	break;
 	}
+		pthread_mutex_unlock(&m_recibir_resultado_esi);
+		log_info(logger, "Lock al m_recibir_resultado_esi");
 	} else {
 		log_info(logger, "Pedido invalido. No conozco al ESI %d", id_esi_ejecutando);
 	}
@@ -357,12 +375,13 @@ void informar_bloqueo_coordinador(){
 /////-----OPERACIONES SOBRE PCBS-----/////
 
 //--Crear PCB--//
-pcb crear_pcb_esi(int socket_esi_nuevo, int id_esi){
+pcb crear_pcb_esi(int socket_esi_nuevo, int id_esi, pthread_t hilo_esi){
 	pcb pcb_esi;
 	pcb_esi.id = id_esi;
 	pcb_esi.socket = socket_esi_nuevo;
 	pcb_esi.ultimaEstimacion = estimacion_inicial;
 	pcb_esi.ultimaRafaga = 0;
+	pcb_esi.hilo = hilo_esi;
 	return pcb_esi;
 }
 
@@ -585,31 +604,82 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 //--Abortar ESI--//
 void abortar_esi(int id_esi){
 	pcb* esi_abortado;
+
 	id_buscado = id_esi;
+	esi_abortado = list_find(pcbs, ids_iguales_pcb);
+	int id_esi_abortado = esi_abortado->id;
+
+	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
+	log_info(logger, "ESI abortado: %d", esi_abortado->id);
+
+	cerrar_cosas_de_un_esi(esi_abortado);
+	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+
+	list_remove_by_condition(pcbs, ids_iguales_pcb);
+	free(esi_abortado);
+
+	log_info(logger, "El ID del ESI de remove_and_destroy_by_condition es: %d", id_esi_abortado);
+
+	int* id = malloc(sizeof(int));
+	memcpy(id, &id_esi_abortado, sizeof(int));
+	list_add(esis_finalizados, &id_esi_abortado); //va o no?
+}
+
+//--Mover ESI a finalizados--//
+void mover_esi_a_finalizados(int id_esi){
+	pcb* esi_finalizado;
 
 	pcb* primer_elem = list_get(pcbs, 0);
 	log_info(logger, "El ID del primer ESI en la lista es: %d", primer_elem->id);
 
-	esi_abortado = list_find(pcbs, ids_iguales_pcb);
-	list_remove_by_condition(pcbs, ids_iguales_pcb);
+	id_buscado = id_esi;
+	esi_finalizado = list_find(pcbs, ids_iguales_pcb);
+	int id_esi_finalizado = esi_finalizado->id;
 
-	log_info(logger, "El ID del ESI de remove_by_condition es: %d", esi_abortado->id);
-	list_add(esis_finalizados, esi_abortado);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
-	log_info(logger, "ESI abortado: %d", esi_abortado->id);
+	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);
 
-	pcb* esi_finalizado = list_get(esis_finalizados, 0);
-	log_info(logger, "El ID del primer ESI finalizado es: %d", esi_finalizado->id);
+	cerrar_cosas_de_un_esi(esi_finalizado);
+	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+	//log_info(logger, "El ID del ESI de remove_and_destroy_by_condition es: %d", id_esi_finalizado);
 
-	int aborto = 62;
-	enviar(esi_abortado->socket, &aborto, sizeof(int), logger);
+	list_remove_by_condition(pcbs, ids_iguales_pcb);
+	free(esi_abortado);
+
+	id_buscado = id_esi_finalizado;
+	int* id = malloc(sizeof(int));
+	memcpy(id, &id_esi_finalizado, sizeof(int));
+	list_add(esis_finalizados, &id_esi_finalizado);
+	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_finalizado);
+}
+
+//--Destruir PCB y liberar memoria--//
+void destruir_pcb(void* pcbb){ //borrar
+	pcb* pcb_esi = pcbb;
+	free(pcb_esi);
+}
+
+//--Cerrar hilo y socket ESI abortado--//
+void cerrar_cosas_de_un_esi(pcb* esi_a_cerrar){
+	close(esi_a_cerrar->socket);
+	pthread_mutex_lock(&m_hilo_a_cerrar);
+	hilo_a_cerrar = esi_a_cerrar->hilo;
+	sem_post(&s_cerrar_un_hilo);
 }
 
 //--Sacar ESI de la cola de bloqueados de una clave--//
 void quitar_esi_de_cola_bloqueados(void* clave_bloq){
 	clave_bloqueada* clave = clave_bloq;
-	list_remove_by_condition(clave->esis_en_espera, ids_iguales_cola_de_esis); //tiene que ser t_list pero todavia no tengo claves
+	log_info(logger, "to piola");
+	if(!list_is_empty(clave->esis_en_espera)){
+		if(list_find(clave->esis_en_espera, ids_iguales_cola_de_esis) != NULL){
+			log_info(logger, "Voy a remover de esis_en_espera");
+			list_remove_by_condition(clave->esis_en_espera, ids_iguales_cola_de_esis);
+		}
+	}
+	log_info(logger, "no entre al if");
 }
+
 
 //--Informar motivo aborto ESI--//
 void procesar_motivo_aborto(int protocolo){
@@ -719,7 +789,7 @@ void imprimir_id_esi(void* esi){
 //pthread_mutex_unlock(&un_mutex); //SIGNAL
 
 //SEM
-//sem_wait(&un_semaforo); //SIGNAL
+//sem_wait(&un_semaforo); //WAIT
 //sem_post(&un_semaforo); //SIGNAL
 
 /*

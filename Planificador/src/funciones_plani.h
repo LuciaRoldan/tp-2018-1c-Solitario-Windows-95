@@ -55,10 +55,13 @@ int id_buscado;
 int id_esi_ejecutando;
 char* clave_buscada;
 pcb* esi_abortado;
+pthread_t hilo_a_cerrar;
 
 
 ///---SEMAFOROS---///
-pthread_mutex_t un_mutex;
+pthread_mutex_t m_recibir_resultado_esi;
+pthread_mutex_t m_hilo_a_cerrar;
+sem_t s_cerrar_un_hilo;
 sem_t un_semaforo;
 
 //FUNCIONES
@@ -69,10 +72,11 @@ sem_t un_semaforo;
 //////////-----INICIALIZACION-----//////////
 int handshake_esi(int socket_esi);
 void handshake_coordinador(int socket_coordinador);
-pcb crear_pcb_esi(int socket_cliente, int id_esi);
+pcb crear_pcb_esi(int socket_cliente, int id_esi, pthread_t hilo_esi);
 sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
+void inicializar_semaforos();
 
 
 /*
@@ -114,6 +118,7 @@ void calcular_estimacion_HRRN(void* pcb);
 void registrar_exito_en_pcb(int id_esi);
 void mover_esi_a_bloqueados(char* clave_buscada, int esi_id);
 void abortar_esi(int id_esi);
+void mover_esi_a_finalizados(int id_esi);
 
 //Operaciones sobre claves_bloqueadas
 void liberar_clave(char* clave);
@@ -127,7 +132,6 @@ bool ids_iguales_cola_de_esis(void* id);
 bool es_el_primer_esi_ready(void *pcbb);
 bool no_es_el_primer_esi_ready(void *pcbb);
 
-//claves_iguales
 bool claves_iguales_nodo_clave(void* nodo_clave);
 void quitar_esi_de_cola_bloqueados(void* clave_bloq);
 void imprimir_id_esi(void* esi);
@@ -135,6 +139,8 @@ void sumar_ultima_rafaga(int id_esi);
 void sumar_retardo(void* pcbb);
 void sumar_retardo_otros_ready();
 void procesar_motivo_aborto(int protocolo);
+void cerrar_cosas_de_un_esi(pcb* pcb_esi);
+void destruir_pcb(void* pcb);
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 
