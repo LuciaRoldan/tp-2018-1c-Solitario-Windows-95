@@ -34,12 +34,6 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 
 ///////////////// PLANIFICADOR /////////////////
 DE ESI A PLANIFICADOR
-40 exito en ejecucion
-41 fallo tamaño clave
-42 fallo clave no identificada
-43 error de comunicacion
-44 fallo clave inaccesible
-45 fallo clave no bloqueada
 
 
 DE COORDINADOR A PLANIFICADOR
@@ -48,20 +42,23 @@ DE COORDINADOR A PLANIFICADOR
 ///////////////// ESI /////////////////
 
 DE PLANIFICADOR A ESI
+60 desbloquear ESI --> Ejecutar ultima instruccion
 61 solicitud_ejecutar_instruccion
 62 aborto
 
 DE COORDINADOR A ESI
-63 NULL exito
-64 NULL fallo
-65 fallo tamaño clave
-66 fallo clave no identificada
-67 error de comunicacion
-68 fallo clave inaccesible
-69 fallo clave no bloqueada
 
 ///////////////// TODOS /////////////////
 80 t_handshake
 81 NULL el esi termino
 82 t_esi_operacion
 83 status_clave
+
+RESULTADOS OPERACION
+84 exito
+85 fallo
+86 fallo tamaño clave
+87 fallo clave no identificada
+88 fallo clave inaccesible
+89 fallo clave no bloqueada
+90 bloqueate
