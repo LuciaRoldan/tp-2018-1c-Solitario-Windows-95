@@ -296,6 +296,11 @@ bool condicion_clave(void* datos){
 
 }
 
+bool condicion_socket_clave(void* datos){
+	nodo_clave un_nodo = *((nodo_clave*) datos);
+	return un_nodo.nodo_instancia.socket == socket_instancia_buscado;
+}
+
 void reemplazar_instancia(nodo un_nodo){
 	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
 	list_add(lista_instancias, &un_nodo);
@@ -324,6 +329,8 @@ nodo* buscar_instancia(char* clave){
 
 nodo* seleccionar_instancia(char* clave){
 	nodo* instancia_seleccionada;
+	nodo* nodo_auxiliar;
+	int minimo_LSU = 1000000;
 	switch(info_coordinador.algoritmo_distribucion){
 	case EL:
 		pthread_mutex_lock(&m_lista_instancias);
@@ -336,7 +343,13 @@ nodo* seleccionar_instancia(char* clave){
 		pthread_mutex_unlock(&m_lista_instancias);
 		break;
 	case LSU:
-
+		for(int contador = 0; contador < list_size(lista_instancias); contador++){
+			nodo_auxiliar = list_get(lista_instancias, contador);
+			socket_instancia_buscado = nodo_auxiliar->socket;
+			if(list_count_satisfying(lista_claves, condicion_socket_clave) < minimo_LSU){
+				instancia_seleccionada = nodo_auxiliar;
+			}
+		}
 		break;
 	case KE:
 		break;
@@ -399,13 +412,6 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	pthread_mutex_lock(&m_lista_instancias);
 	list_add(lista_instancias, el_nodo);
 	pthread_mutex_unlock(&m_lista_instancias);
-	/*socket_instancia_buscado = nodo.socket;
-	bool precencia_instancia = verificar_existencia_instancia(nodo);
-	if(!precencia_instancia){
-		list_add(lista_instancias, &nodo);
-	}else{
-		reemplazar_instancia(nodo);
-	}*/
 }
 
 ///////////////////////////////////////////////// INICIALIZACION /////////////////////////////////////////////////
