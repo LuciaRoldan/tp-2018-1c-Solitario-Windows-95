@@ -117,6 +117,8 @@ void enviar_fallo(int socket_coordinador, t_log* logger){
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
 	char* clave;
+	char* valor;
+	int tamanio_valor = 0;
 	switch (instruccion.keyword) {
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
@@ -124,19 +126,23 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		int tamanio_clave = sizeof(clave);
 		printf("La clave es: %s\n", clave);
 		if (existe_clave(clave) == 0){
-			estructura_clave clave_nueva;
-			memcpy(clave_nueva.clave,clave,tamanio_clave);
-			list_add(tabla_entradas, &clave_nueva);
+			estructura_clave entrada_nueva;
+			entrada_nueva->clave = (char*) malloc(sizeof(char)*40); // 40 porque es el tamaño máximo de la clave y guardo el espacio porque es un variable
+			memcpy(entrada_nueva.clave,clave,tamanio_clave);
+			list_add_in_index(tabla_entradas,indice, &entrada_nueva);
+			indice ++;
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
 
 		log_info(logger, "Se pidio operacion con SET");
-		estructura_clave entrada_encontrada = list_find(tabla_entradas,)
+		valor = instruccion.argumentos.SET.valor;
+		tamanio_valor = sizeof(valor);
+		estructura_clave entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
+		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+		memcpy(entrada_encontrada.cantidad_entradas,cantidad_entradas,sizeof(int));
 
-
-		// dictionary_put(diccionario_memoria,instruccion.argumentos.SET.clave,instruccion.argumentos.SET.valor);
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (STORE):
@@ -158,19 +164,16 @@ int existe_clave(char* clave, estructura_clave* clave_encontrada) {
 	return 0;
 }
 
-bool condicion_socket_instancia(void* datos){
+bool condicion_clave_entrada(void* datos){
 	estructura_clave entrada = *((estructura_clave*) datos);
 	return entrada.clave == clave_buscada;
 }
 
-
-estructura_clave traer_estructura(char*clave){
-	estructura_clave* clave_encontrada;
-	for(int i = 0; i < configuracion.cantidad_entradas; i++){
-		clave_encontrada = (estructura_clave*) list_get(tabla_entradas,i);
-
-	}
+int cantidad_entradas_ocupa(int tamanio_valor){
+	return tamanio_valor/configuracion.tamano_entrada;
 }
+
+
 
 
 /*
