@@ -61,7 +61,19 @@ pthread_t hilo_a_cerrar;
 ///---SEMAFOROS---///
 pthread_mutex_t m_recibir_resultado_esi;
 pthread_mutex_t m_hilo_a_cerrar;
+
+//inicializar
+pthread_mutex_t m_lista_pcbs;
+pthread_mutex_t m_lista_esis_ready;
+pthread_mutex_t m_lista_claves_bloqueadas;
+pthread_mutex_t m_id_buscado;
+pthread_mutex_t m_clave_buscada;
+pthread_mutex_t m_id_esi_ejecutando;
+
 sem_t s_cerrar_un_hilo;
+
+
+
 sem_t un_semaforo;
 
 //FUNCIONES
