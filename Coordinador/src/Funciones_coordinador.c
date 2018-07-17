@@ -12,8 +12,6 @@ int procesar_mensaje(int socket){
 	t_esi_operacion instruccion;
 	status_clave status;
 	void* buffer_int = malloc(sizeof(int));
-	/*recibir(socket, buffer_int, sizeof(int), logger);
-	id = deserializar_id(buffer_int);*/
 	id = recibir_int(socket, logger);
 	log_info(logger, "Protocolo recibido: %d", id);
 	int rta_esi;
@@ -28,11 +26,6 @@ int procesar_mensaje(int socket){
 			protocolo_extra = 1;
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
 			return resultado;
-			break;
-
-		case 23:
-			resultado = desconectar_instancia(socket);
-			return 1;
 			break;
 
 		case 24:
@@ -241,9 +234,11 @@ void procesar_conexion(){
 
 void atender_planificador(){
 	log_info(logger, "Entre en el hilo del planificador");
-	while(1){
-		procesar_mensaje(socket_planificador);
+	int resultado = 1;
+	while(resultado > 0){
+		resultado = procesar_mensaje(socket_planificador);
 	}
+	log_error(logger, "Fallo en la conexion con el Planificador");
 }
 
 void atender_esi(void* datos_esi){
@@ -259,23 +254,23 @@ void atender_instancia(void* datos_instancia){
 	log_info(logger, "Estoy en el hilo de la instancia!");
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_instancia);
 	enviar_configuracion_instancia(mis_datos.socket);
-	while(1){
-		procesar_mensaje(mis_datos.socket);
+	int resultado = 1;
+	while(resultado > 0){
+		resultado = procesar_mensaje(mis_datos.socket);
 	}
+	log_info(logger, "RIP instancia");
+	desconectar_instancia(mis_datos.socket);
 }
 
-int desconectar_instancia(int socket){
+void desconectar_instancia(int socket){
 	pthread_mutex_lock(&m_socket_instancia_buscado);
 	socket_instancia_buscado = socket;
 	pthread_mutex_lock(&m_lista_instancias);
-	pthread_mutex_lock(&m_lista_instancias);
 	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
 	pthread_mutex_unlock(&m_lista_instancias);
-	pthread_mutex_unlock(&m_lista_instancias);
 	pthread_mutex_unlock(&m_socket_instancia_buscado);
-	int resultado = pthread_join(el_nodo->hilo, NULL);
-	log_info(logger, "ya tire el join: %d", resultado);
-	return resultado;
+	hilo_a_cerrar = &el_nodo->hilo;
+	sem_post(&s_cerrar_hilo);
 }
 
 /////////////////////////////////////////////// FUNCIONES DE LISTAS ///////////////////////////////////////////////
@@ -340,6 +335,7 @@ nodo* seleccionar_instancia(char* clave){
 
 	char char_KE;
 	int cantidad_letras_KE, id_instancia;
+	div_t resultado_KE;
 
 	pthread_mutex_lock(&m_lista_instancias);
 	switch(info_coordinador.algoritmo_distribucion){
@@ -367,13 +363,15 @@ nodo* seleccionar_instancia(char* clave){
 		if( 25 % list_size(lista_instancias) == 0){
 			cantidad_letras_KE = 25 / list_size(lista_instancias);
 		} else {
-			//cantidad_letras_KE = (int) ceil(25 / list_size(lista_instancias));
+			resultado_KE = div(25,list_size(lista_instancias));
+			cantidad_letras_KE = resultado_KE.quot + 1;
 		}
 
 		if( cantidad_letras_KE % (int)char_KE == 0){
 			id_instancia = cantidad_letras_KE / (int)char_KE;
 		} else {
-			//id_instancia = (int) ceil(cantidad_letras_KE / (int)char_KE);
+			resultado_KE = div(cantidad_letras_KE,(int)char_KE); //(int)'a' = 97
+			id_instancia = resultado_KE.quot + 1;
 		}
 		pthread_mutex_lock(&m_id_instancia_buscado);
 		id_instancia_buscado = id_instancia;
@@ -428,6 +426,18 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 }
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
+
+	int optval = 1;
+	socklen_t optlen = sizeof(optval);
+	setsockopt(socket_instancia, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
+	if(getsockopt(socket_instancia, SOL_SOCKET, SO_KEEPALIVE, &optval, &optlen) < 0) {
+	     perror("getsockopt()");
+	     close(socket_instancia);
+	     exit(EXIT_FAILURE);
+	}
+	printf("SO_KEEPALIVE is %s\n", (optval ? "ON" : "OFF"));
+
+
 	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
 	void* buffer = malloc(sizeof(int)*2);
 	serializar_hilo_proceso(buffer, datos_instancia);

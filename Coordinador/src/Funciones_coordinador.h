@@ -4,7 +4,6 @@
 #include <commons_propias/commons_propias.h>
 #include <commons/bitarray.h>
 #include <semaphore.h>
-#include <math.h>
 
 
 ///////////////////////// STRUCTS /////////////////////////
@@ -100,7 +99,7 @@ void procesar_conexion();
 void atender_planificador();
 void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
-int desconectar_instancia(int socket);
+void desconectar_instancia(int socket);
 
 //PRROCESAMIENTO
 int procesar_mensaje(int socket);
