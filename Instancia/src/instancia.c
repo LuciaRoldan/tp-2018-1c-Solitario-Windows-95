@@ -36,11 +36,12 @@ int main() {
 	for(int i = 0; i< cantidad_entradas; i++){
 		acceso_tabla[i]=0;
 	}
+	memoria_usada = 0;
 	log_info(logger,"Creo un array para saber las entradas ocupadas y la vacio para que la tabla de entradas comience vacia");
 	tabla_entradas = list_create();
 	log_info(logger,"Creo la tabla de entradas");
-	int tamanio_memoria = configuracion.cantidad_entradas * configuracion.tamano_entrada;
-	char* inicio_memoria = malloc(tamanio_memoria);
+	memoria_total = configuracion.cantidad_entradas * configuracion.tamano_entrada;
+	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
 	while(1){

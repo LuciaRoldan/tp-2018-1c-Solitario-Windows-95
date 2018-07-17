@@ -33,11 +33,17 @@ void enviar_exito(int socket_coordinador, t_log* logger) {
 
 bool condicion_clave_entrada(void* datos){
 	estructura_clave entrada = *((estructura_clave*) datos);
-	return entrada.clave == clave_buscada;
+	return strcmp(entrada.clave, clave_buscada);
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
-	return tamanio_valor/configuracion.tamano_entrada;
+	if(tamanio_valor%configuracion.tamano_entrada == 0){
+		return tamanio_valor/configuracion.tamano_entrada;
+	} else {
+		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
+				return resultado.quot +1;
+	}
+
 }
 
 datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger) {
@@ -139,6 +145,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	char* clave;
 	char* valor;
 	int tamanio_valor = 0;
+	int tamanio_clave = 0;
 	switch (instruccion.keyword) {
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
@@ -159,45 +166,99 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	case (SET):
 
 		log_info(logger, "Se pidio operacion con SET");
-		valor = instruccion.argumentos.SET.valor;
-		tamanio_valor = sizeof(valor);
+		tamanio_valor = strlen(instruccion.argumentos.SET.valor)+1;
+		tamanio_clave = strlen(instruccion.argumentos.SET.clave)+1;
+		valor = malloc(tamanio_valor);
+		clave_buscada = malloc(tamanio_clave);
+		memcpy(valor, instruccion.argumentos.SET.valor, tamanio_valor);
+		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 		estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
-		memcpy(entrada_encontrada->cantidad_entradas,cantidad_entradas,sizeof(int));
-		for(int i = 1; i < cantidad_entradas; i++){
-			/*if(indice[(entrada_encontrada->numero_entrada) + i] == 1){
-				//asignar ultimo valor indice
-			}*/
-			// Ivi, en el .h declaraste 'indice' como un int. Rompe si acá querés usarlo como vector de ints.
-		}
-
+		entrada_encontrada->tamanio_valor = tamanio_valor;
+		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
+		asignar_memoria(*entrada_encontrada, cantidad_entradas);
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (STORE):
 		log_info(logger, "Se pidio operacion con STORE");
-		/*guardar_archivo(instruccion.argumentos.STORE.clave, logger);
-		enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger);*/
+		tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
+		guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave, logger);
+		enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger);
 		enviar_exito(socket_coordinador,logger);
 		break;
 	}
 }
 
+void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias){
+	int contador = 0;
+	int posicion_actual = 0;
+	//busca entradas vacias contiguas hasta que no haya mas
+	while(contador == entradas_contiguas_necesarias){
+		if (acceso_tabla[clave.cantidad_entradas + posicion_actual] == 0){
+			posicion_actual += 1;
+			contador += 1;
+//			encaso de que no haya mas entradas aplica algoritmo de reemplazo
+			if(clave.cantidad_entradas + posicion_actual == configuracion.cantidad_entradas){
+				implementar_algoritmo();
+			}
+		else{
+			posicion_actual += 1;
+			contador == 0;
+			if(clave.cantidad_entradas + posicion_actual == configuracion.cantidad_entradas){
+							implementar_algoritmo();
+				}
+			}
+		}
+	}
+//	cuando encontro las entradas contiguas almacena el valor
+	for(int i = 0; i < entradas_contiguas_necesarias; i++){
+		int numero_entrada = clave.cantidad_entradas + posicion_actual;
+		acceso_tabla[numero_entrada - i] = 1;
+		clave.numero_entrada = numero_entrada;
+		almacenar_valor(clave.valor, clave.tamanio_valor);
 
-/*
-void guardar_archivo(char* clave, t_log* logger){
+	}
+}
 
-	//		No se si es el path que hay que usar o donde guardariamos los archivos?
-			char* path = "/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Instancia";
-			char* real_path = malloc(sizeof(path));
-			memcpy(real_path,path,sizeof(path));
+void implementar_algoritmo(){
+
+}
+
+void compactar(){
+
+}
+
+void almacenar_valor(char* valor, int tamanio_valor){
+//	 si no alcanza el espacio en memoria lo compacta
+	if(memoria_usada + tamanio_valor > memoria_total){
+		compactar();
+	} else{
+//	si no lo guarda directamente
+	memcpy(inicio_memoria + memoria_usada, valor,tamanio_valor);
+	memoria_usada += tamanio_valor;
+	}
+}
+
+
+
+void guardar_archivo(char* clave,int tamanio_clave, t_log* logger){
+
+			char* path;
+			char* valor;
+			int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
+			path = malloc(tamanio_path);
+			memcpy(path,mi_configuracion.puntoDeMontaje,sizeof(path));
 
 			int fd;
 			char* puntero_memoria;
 
-//			char* valor = dictionary_get(diccionario_memoria,clave);
-//			int tamanio_valor = sizeof(valor);
+			memcpy(clave_buscada, clave,tamanio_clave);
+			estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
+			int tamanio_valor = entrada_encontrada->tamanio_valor;
+			valor = malloc(tamanio_valor);
+			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
 
-			fd =  open(real_path, O_RDWR | O_CREAT, S_IRWXU);
+			fd =  open(path, O_RDWR | O_CREAT, S_IRWXU);
 
 			if (fd < 0) {
 				log_info(logger, "No se pudo abrir el archivo");
@@ -211,7 +272,7 @@ void guardar_archivo(char* clave, t_log* logger){
 			msync(puntero_memoria, tamanio_valor, MS_SYNC);
 
 			munmap(puntero_memoria, tamanio_valor);
-}*/
+}
 
 	void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
 		void* buffer = malloc(sizeof(int)+ sizeof(clave));

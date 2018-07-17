@@ -10,6 +10,10 @@ int* acceso_tabla;
 t_list* tabla_entradas;
 char* clave_buscada;
 int indice;
+char* inicio_memoria;
+int memoria_total;
+int memoria_usada;
+
 
 typedef enum {
 	LRU, CIRC, BSU
@@ -19,7 +23,7 @@ typedef struct{
 	char ipCoordinador[20];
 	char puertoCoordinador[5];
 	char algoritmoDeReemplazo[6];
-	char puntoDeMontaje[100];
+	char* puntoDeMontaje;
 	int nombreInstancia;
 	int intervaloDump;
 }configuracion_propia;
@@ -68,12 +72,16 @@ char* recibe_pedido_status(int socket_coordinador, t_log* logger);
 void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger);
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,t_log* logger);
 void serializar_pedido_desbloqueo(void* buffer, char* clave);
-void guardar_archivo(char* clave, t_log* logger);
+void guardar_archivo(char* clave,int tamanio_clave, t_log* logger);
 
 // AGREGO LAS QUE FALTABAN
+void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias);
 int existe_clave(char* clave);
 int cantidad_entradas_ocupa(int tamanio_valor);
 bool condicion_clave_entrada(void* datos);
+void almacenar_valor(char* valor, int tamanio_valor);
+void compactar();
+void implementar_algoritmo();
 
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
