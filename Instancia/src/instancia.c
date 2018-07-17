@@ -30,6 +30,8 @@ int main() {
 	}
 	configuracion = recibir_configuracion(socket_coordinador,logger);
 	log_info(logger,"Recibi la configuracion! ");
+	log_info(logger,"Mi cantidad de entradas es: %d ", configuracion.cantidad_entradas);
+	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion.tamano_entrada);
 
 	const int cantidad_entradas = configuracion.cantidad_entradas;
 	acceso_tabla = (int*) malloc(cantidad_entradas*sizeof(int));
@@ -37,6 +39,7 @@ int main() {
 		acceso_tabla[i]=0;
 	}
 	memoria_usada = 0;
+	indice = 0;
 	log_info(logger,"Creo un array para saber las entradas ocupadas y la vacio para que la tabla de entradas comience vacia");
 	tabla_entradas = list_create();
 	log_info(logger,"Creo la tabla de entradas");

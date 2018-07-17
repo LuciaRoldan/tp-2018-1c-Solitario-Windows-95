@@ -131,7 +131,6 @@ void enviar_fallo(int socket_coordinador, t_log* logger){
 }
 
 bool existe_clave(char* clave) {
-	//estructura_clave* clave_encontrada;
 	log_info(logger, "++++ %d ++++", strlen(clave)+1);
 	clave_buscada = malloc(strlen(clave)+1);
 	log_info(logger, "wi");
@@ -140,15 +139,6 @@ bool existe_clave(char* clave) {
 	bool resultado = list_any_satisfy(tabla_entradas, condicion_clave_entrada);
 	free(clave_buscada);
 	return resultado;
-	/*for (int i = 0; i < configuracion.cantidad_entradas; i++) {
-		log_info(logger, "Entre al for");
-		clave_encontrada = list_get(tabla_entradas, i);
-		log_info(logger, "Clave encontrada: %s", clave_encontrada->clave);
-		if (strcmp(clave_encontrada->clave, clave)) {
-			return 1;
-		}
-	}
-	return 0;*/
 }
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
@@ -159,35 +149,57 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	switch (instruccion.keyword) {
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
-		clave = instruccion.argumentos.GET.clave;
-		int tamanio_clave = sizeof(clave);
-		printf("La clave es: %s\n", clave);
-		if (existe_clave(clave) == 0){ // REVISAR PORQUE ESTO ROMPE. CAUSA UN SEGMENTATION FAULT.
-			printf("No existe la clave %s. Creando nueva. \n", clave);
-			estructura_clave entrada_nueva;
-			entrada_nueva.clave = (char*) malloc(sizeof(char)*40); // 40 porque es el tamaño máximo de la clave y guardo el espacio porque es un variable
-			memcpy(entrada_nueva.clave,clave,tamanio_clave);
-			list_add_in_index(tabla_entradas, indice, &entrada_nueva);
+		tamanio_clave = strlen(instruccion.argumentos.GET.clave)+1;
+		clave_buscada = malloc(tamanio_clave);
+		strcpy(clave_buscada,instruccion.argumentos.GET.clave);
+
+		if (!list_any_satisfy(tabla_entradas,existe_clave)){
+			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
+			estructura_clave* entrada_nueva = (estructura_clave*)malloc(sizeof (estructura_clave));
+//			entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
+			entrada_nueva->clave = clave_buscada;
+			entrada_nueva->numero_entrada = &indice;
+//			memcpy(entrada_nueva->clave,clave_buscada,tamanio_clave);
 			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
+//			entrada_nueva->numero_entrada = indice;
+			list_add_in_index(tabla_entradas, indice, &entrada_nueva);
+
+			estructura_clave* prueba = list_get(tabla_entradas, 0);
+			printf("entrada de prueba tiene clave %s: ", prueba->clave);
+			printf("entrada de prueba tiene numero entrada %d: ", prueba->numero_entrada);
 			indice ++;
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
-
 		log_info(logger, "Se pidio operacion con SET");
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor)+1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave)+1;
+
 		valor = malloc(tamanio_valor);
 		clave_buscada = malloc(tamanio_clave);
+		log_info(logger,"el tamanio del valor es %d: y el de la clave %d: ", tamanio_valor, tamanio_clave);
+
 		memcpy(valor, instruccion.argumentos.SET.valor, tamanio_valor);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
-		estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
+
+		printf("La clave es: %s\n", clave_buscada);
+		printf("La clave es: %s\n", valor);
+
+		estructura_clave* entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
+		log_info(logger,"////////////////////////////////////////Encontre la clave: %s ", entrada_encontrada->clave);
+
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+		log_info(logger,"ocupa %d entradas ", cantidad_entradas);
 		entrada_encontrada->tamanio_valor = tamanio_valor;
+		log_info(logger,"el tamanio del valor es: %d ", tamanio_valor);
+		log_info(logger,"el valor es: %s", valor);
 		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
-		asignar_memoria(*entrada_encontrada, cantidad_entradas);
+		log_info(logger, "asigno el valor");
+		asignar_memoria(*entrada_encontrada, cantidad_entradas, valor, logger);
 		enviar_exito(socket_coordinador,logger);
+		free(valor);
+		free(clave_buscada);
 		break;
 	case (STORE):
 		log_info(logger, "Se pidio operacion con STORE");
@@ -199,53 +211,57 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	}
 }
 
-void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias){
-	int contador = 0;
-	int posicion_actual = 0;
+void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor, t_log* logger){
+	int contador = 1; //porque la primera ya la tengo reservada del GET
+	int posicion_siguiente = 1; //la primera que quiero reservar
+	log_info(logger,"entro a asignar memoria");
+	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
 	//busca entradas vacias contiguas hasta que no haya mas
-	while(contador == entradas_contiguas_necesarias){
-		if (acceso_tabla[clave.cantidad_entradas + posicion_actual] == 0){
-			posicion_actual += 1;
+	while(contador != entradas_contiguas_necesarias){
+		if (acceso_tabla[clave.numero_entrada + posicion_siguiente] == 0){
+			posicion_siguiente += 1;
 			contador += 1;
 //			encaso de que no haya mas entradas aplica algoritmo de reemplazo
-			if(clave.cantidad_entradas + posicion_actual == configuracion.cantidad_entradas){
+			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
 				implementar_algoritmo();
 			}
 		else{
-			posicion_actual += 1;
+			posicion_siguiente += 1;
 			contador == 0;
-			if(clave.cantidad_entradas + posicion_actual == configuracion.cantidad_entradas){
+			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
 							implementar_algoritmo();
 				}
 			}
 		}
 	}
-//	cuando encontro las entradas contiguas almacena el valor
+//	cuando encontro las entradas contiguas almacena el valor}
+	log_info(logger, "termine el while");
 	for(int i = 0; i < entradas_contiguas_necesarias; i++){
-		int numero_entrada = clave.cantidad_entradas + posicion_actual;
+		int numero_entrada = clave.numero_entrada;
+		log_info(logger, " el numero_entrada es %d ", numero_entrada);
 		acceso_tabla[numero_entrada - i] = 1;
-		clave.numero_entrada = numero_entrada;
-		almacenar_valor(clave.valor, clave.tamanio_valor);
-
+		log_info(logger,"va a almacenar el valor");
+		almacenar_valor(valor, clave.tamanio_valor);
 	}
 }
 
 void implementar_algoritmo(){
-
+	printf("Quiso entrar en el algoritmo");
 }
 
 void compactar(){
-
+	printf("Quiso compactar");
 }
 
 void almacenar_valor(char* valor, int tamanio_valor){
-//	 si no alcanza el espacio en memoria lo compacta
-	if(memoria_usada + tamanio_valor > memoria_total){
-		compactar();
+	printf("paso por almacenar");
+//	si alcanza la memoria lo guarda
+	if((memoria_usada + tamanio_valor) <= memoria_total){
+		memcpy((inicio_memoria + memoria_usada), valor,tamanio_valor);
+		memoria_usada += tamanio_valor;
 	} else{
-//	si no lo guarda directamente
-	memcpy(inicio_memoria + memoria_usada, valor,tamanio_valor);
-	memoria_usada += tamanio_valor;
+//	 si no compacta
+		compactar();
 	}
 }
 

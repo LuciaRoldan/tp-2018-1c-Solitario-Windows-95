@@ -75,8 +75,8 @@ void serializar_pedido_desbloqueo(void* buffer, char* clave);
 void guardar_archivo(char* clave,int tamanio_clave, t_log* logger);
 
 // AGREGO LAS QUE FALTABAN
-void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias);
-int existe_clave(char* clave);
+void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor, t_log* logger);
+bool existe_clave(char* clave);
 int cantidad_entradas_ocupa(int tamanio_valor);
 bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
