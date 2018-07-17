@@ -9,7 +9,7 @@ datos_configuracion configuracion;
 int* acceso_tabla;
 t_list* tabla_entradas;
 char* clave_buscada;
-int indice = 0;
+int indice;
 
 typedef enum {
 	LRU, CIRC, BSU
@@ -32,8 +32,24 @@ typedef struct{
 	char* valor;
 }estructura_clave;
 
+
+configuracion_propia mi_configuracion;
+char* ipCoordinador;
+int puertoCoordinador;
+tipo_algoritmo_reemplazo algoritmo_reemplazo;
+int idInstancia;
+int intervaloDump;
+int cantidad_entradas;
+int tamano_entrada;
+char* memoria;
+FILE* archivo_configuracion;
+FILE*archivo;
+t_log * logger;
+
+int socket_coordinador;
+
 ///////////////////////// FUNCIONES /////////////////////////
-int handshake(int* socket_coordinador, t_log* logger, int id_proceso);
+int handshake_instancia(int socket_coordinador, t_log* logger, int id_proceso);
 datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger);
 void deserializar_configuracion(void* buffer);
 void inicializar_instancia();
@@ -53,6 +69,11 @@ void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logg
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,t_log* logger);
 void serializar_pedido_desbloqueo(void* buffer, char* clave);
 void guardar_archivo(char* clave, t_log* logger);
+
+// AGREGO LAS QUE FALTABAN
+int existe_clave(char* clave);
+int cantidad_entradas_ocupa(int tamanio_valor);
+bool condicion_clave_entrada(void* datos);
 
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

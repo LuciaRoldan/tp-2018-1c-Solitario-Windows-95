@@ -1,24 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "funciones_instancia.h"
 
-configuracion_propia mi_configuracion;
-char* ipCoordinador;
-int puertoCoordinador;
-tipo_algoritmo_reemplazo algoritmo_reemplazo;
-int idInstancia;
-int intervaloDump;
-int cantidad_entradas;
-int tamano_entrada;
-char* memoria;
-FILE* archivo_configuracion;
-FILE*archivo;
-t_log * logger;
-
-int socket_coordinador;
-
-
 
 int main() {
+	indice = 0;
 
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 
@@ -34,8 +21,8 @@ int main() {
 	printf("Mi nombre es: %d ", mi_configuracion.nombreInstancia);
 
 	int id = recibir_int(socket_coordinador,logger);
-	log_info(logger,"recibo un int ");
-	printf("El int es: %d ", id);
+	log_info(logger,"recibo un int \n");
+	printf("El int es: %d \n", id);
 
 	while(id != 00){
 		log_info(logger,"Pero no es el de configuracion :( ");
@@ -56,11 +43,11 @@ int main() {
 	char* inicio_memoria = malloc(tamanio_memoria);
 	log_info(logger,"Guardo la memoria para los valores");
 //
-//	while(1){
-//		log_info(logger, "Entré al while");
-//		procesarID(socket_coordinador,logger);
-//		log_info(logger, "Procesé. Vuelvo a entrar al while");
-//	}
+	while(1){
+		log_info(logger, "Entré al while");
+		procesarID(socket_coordinador,logger);
+		log_info(logger, "Procesé. Vuelvo a entrar al while");
+	}
 
 	//free(espacio_para_memoria);
 	sleep(5);
