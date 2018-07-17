@@ -292,8 +292,6 @@ bool condicion_socket_instancia(void* datos){
 
 bool condicion_clave(void* datos){
 	nodo_clave un_nodo = *((nodo_clave*) datos);
-	pthread_mutex_lock(&m_clave_buscada);
-	pthread_mutex_unlock(&m_clave_buscada);
 	return strcmp(un_nodo.clave, clave_buscada);
 
 }
@@ -306,6 +304,7 @@ void reemplazar_instancia(nodo un_nodo){
 nodo* buscar_instancia(char* clave){
 	nodo* nodo_instancia;
 	pthread_mutex_lock(&m_lista_claves);
+	pthread_mutex_lock(&m_clave_buscada);
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
@@ -318,6 +317,7 @@ nodo* buscar_instancia(char* clave){
 		list_add(lista_claves, nodo_);
 	}
 	free(clave_buscada);
+	pthread_mutex_unlock(&m_clave_buscada);
 	pthread_mutex_unlock(&m_lista_claves);
 	return nodo_instancia;
 }
