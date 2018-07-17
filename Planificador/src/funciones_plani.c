@@ -47,10 +47,14 @@ void inicializar_semaforos(){
 	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0){printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_id_esi_ejecutando, NULL) != 0){printf("Fallo al inicializar mutex\n");}
 
-	sem_init(&s_recibir_resultado_esi, 0, 0);
 	sem_init(&s_cerrar_un_hilo, 0, 0); //el segundo numerito es el valor inicial. el primero es 0.
 	sem_init(&s_hilo_cerrado, 0, 0);
 	sem_init(&s_eliminar_pcb, 0, 0);
+	sem_init(&s_podes_procesar_un_mensaje, 0, 0);
+	sem_init(&s_planificar, 0, 0);
+	//sem_init(&s_fijate_si_hay_esis, 0, 1);
+	//sem_init(&s_procesa_un_pedido, 0, 0);
+	//sem_init(&s_coordi_manejado, 0, 0);
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -128,12 +132,31 @@ int handshake_esi(int socket_esi){
 
 
 //--MANEJAR ESIS--//
+void manejar_esis(){
+
+	while(1){
+		if(list_size(esis_ready) > 0){
+		log_info(logger, "En manejar ESI");
+
+			sem_wait(&s_planificar);
+			planificar();
+			sem_post(&s_podes_procesar_un_mensaje);
+			log_info(logger, "Podes procesar un mensaje desde manejar_esis");
+
+			sleep(1);
+		}
+	}
+}
+
+//--RECIBIR ESIS--//
 void recibir_esis(void* socket_esis){
 	int int_socket_esis = *((int*) socket_esis);
 	log_info(logger, "Entre al hilo recibir_esis y el socket es %d\n", int_socket_esis);
 
 	int socket_esi_nuevo;
 	while(1){
+		//log_info(logger, "holaaaaaaaaa");
+		//sem_wait(&s_fijate_si_hay_esis);
 		log_info(logger, "Esperando un ESI. Adentro de recibir_esis");
 
 		//sleep(1);
@@ -159,34 +182,35 @@ void recibir_esis(void* socket_esis){
 				if (pthread_create(&hilo_escucha_esi, 0 , manejar_esi, (void*) &pcb_esi_nuevo) < 0){
 					perror("No se pudo crear el hilo");
 				}
-				sem_post(&s_recibir_resultado_esi);
 			}
 		} else { //socket_esi_nuevo < 0
 	        perror("Fallo en el accept");
 		}
-		//CIERRO HILOS
-		sem_wait(&s_cerrar_un_hilo);
-		log_info(logger, "Vine a cerrar el hilo");
-		pthread_join(*hilo_a_cerrar, NULL);
-		log_info(logger, "Hilo cerrado");
-		pthread_mutex_unlock(&m_hilo_a_cerrar);
-		sem_post(&s_hilo_cerrado);
-		sem_post(&s_eliminar_pcb);
+		//sem_post(&s_podes_procesar_un_mensaje);
+		//log_info(logger, "Podes procesar un mensaje");
+		sem_post(&s_planificar);
 	}
 }
 
-
+//--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
 	log_info(logger, "Entre a manejar ESI");
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
 
 	while(chau){
+		log_info(logger, "En manejar ESI: %d", pcb_esi.id);
+		sem_wait(&s_podes_procesar_un_mensaje);
 
-		sem_wait(&s_recibir_resultado_esi);
+		//int cant_ready;
+		//cant_ready = list_size(esis_ready);
 
-		log_info(logger, "En manejar ESI");
-		planificar();
+		//if(cant_ready>1){
+
+		//planificar();
+		//sem_post(&s_procesa_un_pedido);
+		//log_info(logger, "Procesa un pedido del Cordi");
+		//sem_wait(&s_coordi_manejado);
 		sleep(1);
 
 		void* buffer_resultado = malloc(sizeof(int));
@@ -202,11 +226,9 @@ void manejar_esi(void* la_pcb){
 					pthread_mutex_lock(&m_lista_pcbs);
 					registrar_exito_en_pcb(pcb_esi.id);
 					pthread_mutex_unlock(&m_lista_pcbs);
-					sem_post(&s_recibir_resultado_esi);
 				break;
 				case (90):
 					mover_esi_a_bloqueados(clave_buscada, id_esi_ejecutando);
-					sem_post(&s_recibir_resultado_esi);
 				break;
 				case (81):
 					mover_esi_a_finalizados(id_esi_ejecutando);
@@ -219,6 +241,8 @@ void manejar_esi(void* la_pcb){
 				break;
 			}
 		}
+		sem_post(&s_planificar);
+		//log_info(logger, "Fijate si hay esis desde manejar_esis");
 	}
 }
 
@@ -228,6 +252,8 @@ void manejar_coordinador(void* socket){
 	log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
 
 	while(1){
+
+		//sem_wait(&s_procesa_un_pedido);
 
 		int id;
 		void* buffer_int = malloc(sizeof(int));
@@ -254,6 +280,8 @@ void manejar_coordinador(void* socket){
 				log_info(logger, "Recibido: %s, %d \n", instruccion.argumentos.GET.clave, instruccion.keyword);
 
 				procesar_pedido(instruccion);
+				//sem_post(&s_coordi_manejado);
+				//log_info(logger, "Podes procesar un mensaje desde manejar_coordinador");
 		break;
 		case (0):
 			recibir_status_clave();
@@ -682,10 +710,6 @@ void abortar_esi(int id_esi){
 
 	log_info(logger, "ESI abortado: %d", esi_abortado->id);
 
-	cerrar_cosas_de_un_esi(esi_abortado);
-	sem_wait(&s_eliminar_pcb);
-	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
-
 	list_remove_by_condition(pcbs, ids_iguales_pcb);
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 
@@ -696,6 +720,10 @@ void abortar_esi(int id_esi){
 	memcpy(id, &id_esi_abortado, sizeof(int));
 	list_add(esis_finalizados, &id_esi_abortado); //va o no?
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_abortado);
+
+	cerrar_cosas_de_un_esi(esi_abortado);
+	sem_wait(&s_eliminar_pcb);
+	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
 }
 
 //--Mover ESI a finalizados--//
@@ -720,18 +748,11 @@ void mover_esi_a_finalizados(int id_esi){
 
 	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);
 
-	cerrar_cosas_de_un_esi(esi_finalizado);
-	sem_wait(&s_eliminar_pcb);
 	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
 	//log_info(logger, "El ID del ESI de remove_and_destroy_by_condition es: %d", id_esi_finalizado);
 
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 	list_remove_by_condition(pcbs, ids_iguales_pcb);
-
-	//BORRAR
-	if(list_is_empty(esis_ready)){
-		log_info(logger, "No hay ESIs ready");
-	}
 
 	pthread_mutex_unlock(&m_id_buscado);
 	//free(esi_finalizado); //NO ME DEJA HACER FREE
@@ -741,6 +762,9 @@ void mover_esi_a_finalizados(int id_esi){
 	memcpy(id, &id_esi_finalizado, sizeof(int));
 	list_add(esis_finalizados, &id_esi_finalizado);
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_finalizado);
+
+	cerrar_cosas_de_un_esi(esi_finalizado);
+	sem_wait(&s_eliminar_pcb);
 }
 
 //--Destruir PCB y liberar memoria--// NO SIRVE
@@ -753,8 +777,10 @@ void destruir_pcb(void* pcbb){
 void cerrar_cosas_de_un_esi(pcb* esi_a_cerrar){
 	close(esi_a_cerrar->socket);
 	log_info(logger, "Entre en cerrar_cosas");
+	sem_post(&s_podes_procesar_un_mensaje);
 	pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
+	hay_hilos_por_cerrar = 1;
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }

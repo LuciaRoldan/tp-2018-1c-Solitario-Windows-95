@@ -56,6 +56,7 @@ int id_esi_ejecutando;
 char* clave_buscada;
 pcb* esi_abortado;
 pthread_t* hilo_a_cerrar;
+int hay_hilos_por_cerrar;
 
 
 ///---SEMAFOROS---///
@@ -72,8 +73,13 @@ pthread_mutex_t m_id_esi_ejecutando;
 
 sem_t s_cerrar_un_hilo;
 sem_t s_hilo_cerrado;
-sem_t s_recibir_resultado_esi;
 sem_t s_eliminar_pcb;
+
+sem_t s_podes_procesar_un_mensaje;
+sem_t s_planificar;
+//sem_t s_fijate_si_hay_esis;
+//sem_t s_procesa_un_pedido;
+//sem_t s_coordi_manejado;
 
 
 
@@ -110,6 +116,7 @@ void kill_esis(ColaDeEsi esis);
 */
 //MANEJAR ESIS
 void recibir_esis(void* socket_esis);
+void manejar_esis();
 void manejar_esi(void* pcb_esi);
 
 //Planificar
