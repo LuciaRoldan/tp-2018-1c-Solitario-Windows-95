@@ -34,7 +34,8 @@ int main() {
 	pthread_create(&hilo_coordinador, 0, manejar_coordinador, puntero_socket_coordinador);
 	//pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
 
-	pthread_join(hilo_escucha_esis, NULL);
+	//pthread_join(hilo_escucha_esis, NULL);
+	pthread_join(hilo_coordinador, NULL);
 	return 0;
 }
 

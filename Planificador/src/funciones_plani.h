@@ -55,7 +55,7 @@ int id_buscado;
 int id_esi_ejecutando;
 char* clave_buscada;
 pcb* esi_abortado;
-pthread_t hilo_a_cerrar;
+pthread_t* hilo_a_cerrar;
 
 
 ///---SEMAFOROS---///
@@ -71,6 +71,9 @@ pthread_mutex_t m_clave_buscada;
 pthread_mutex_t m_id_esi_ejecutando;
 
 sem_t s_cerrar_un_hilo;
+sem_t s_hilo_cerrado;
+sem_t s_recibir_resultado_esi;
+sem_t s_eliminar_pcb;
 
 
 
