@@ -124,15 +124,25 @@ void enviar_fallo(int socket_coordinador, t_log* logger){
 	free(buffer);
 }
 
-int existe_clave(char* clave) {
-	estructura_clave* clave_encontrada = malloc(sizeof(estructura_clave));
-	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
-		clave_encontrada = (estructura_clave*) list_get(tabla_entradas, i);
-		if (clave_encontrada->clave == clave) {
+bool existe_clave(char* clave) {
+	//estructura_clave* clave_encontrada;
+	log_info(logger, "++++ %d ++++", strlen(clave)+1);
+	clave_buscada = malloc(strlen(clave)+1);
+	log_info(logger, "wi");
+	memcpy(clave_buscada, clave, strlen(clave)+1);
+
+	bool resultado = list_any_satisfy(tabla_entradas, condicion_clave_entrada);
+	free(clave_buscada);
+	return resultado;
+	/*for (int i = 0; i < configuracion.cantidad_entradas; i++) {
+		log_info(logger, "Entre al for");
+		clave_encontrada = list_get(tabla_entradas, i);
+		log_info(logger, "Clave encontrada: %s", clave_encontrada->clave);
+		if (strcmp(clave_encontrada->clave, clave)) {
 			return 1;
 		}
 	}
-	return 0;
+	return 0;*/
 }
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
@@ -163,13 +173,14 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		tamanio_valor = sizeof(valor);
 		estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
-		memcpy(entrada_encontrada->cantidad_entradas,cantidad_entradas,sizeof(int));
-		for(int i = 1; i < cantidad_entradas; i++){
-			/*if(indice[(entrada_encontrada->numero_entrada) + i] == 1){
+		entrada_encontrada->cantidad_entradas = cantidad_entradas;
+		//memcpy(entrada_encontrada->cantidad_entradas,cantidad_entradas,sizeof(int)); Ivi no necesitas hacer memcpy para ints
+		/*for(int i = 1; i < cantidad_entradas; i++){
+			if(indice[(entrada_encontrada->numero_entrada) + i] == 1){
 				//asignar ultimo valor indice
-			}*/
+			}
 			// Ivi, en el .h declaraste 'indice' como un int. Rompe si acá querés usarlo como vector de ints.
-		}
+		}*/
 
 		enviar_exito(socket_coordinador,logger);
 		break;
