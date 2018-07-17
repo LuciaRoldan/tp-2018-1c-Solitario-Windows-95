@@ -140,7 +140,7 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 			break;
 	}
 	void* buffer_confirmacion = malloc(sizeof(int));
-	serializar_id(buffer_confirmacion, &confirmacion);
+	serializar_id(buffer_confirmacion, confirmacion);
 	enviar(socket_destino, buffer_confirmacion, sizeof(int), logger_esi);
 	free(buffer_confirmacion);
 }

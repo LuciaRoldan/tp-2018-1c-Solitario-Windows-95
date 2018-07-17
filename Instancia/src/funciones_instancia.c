@@ -121,23 +121,20 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
 		clave = instruccion.argumentos.GET.clave;
+		int tamanio_clave = sizeof(clave);
 		printf("La clave es: %s\n", clave);
+		if (existe_clave(clave)){
 
-		/*if((dictionary_has_key(diccionario_memoria, clave))){ //devuelve true si la tiene
-			void* buffer = malloc(sizeof(int));
-			serializar_id(buffer,25);
-			enviar(socket_coordinador,buffer,sizeof(int),logger);
 		} else{
-			dictionary_put(diccionario_memoria,clave,""); //esta bien hacer esto para crear una key?
-			memcpy(&claveActual,clave,sizeof(clave));
-			/*void* buffer = malloc(sizeof(int));
-			serializar_id(buffer,25);
-			enviar(socket_coordinador,buffer, sizeof(int),logger);
-		}*/
+			estructura_clave clave_nueva;
+			memcpy(clave_nueva->clave,clave,tamanio_clave);
+			list_add(tabla_entradas, &clave_nueva);
+		}
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
 		log_info(logger, "Se pidio operacion con SET");
+
 		// dictionary_put(diccionario_memoria,instruccion.argumentos.SET.clave,instruccion.argumentos.SET.valor);
 		enviar_exito(socket_coordinador,logger);
 		break;
@@ -149,6 +146,19 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		break;
 	}
 }
+
+bool existe_clave(char* clave){
+	estructura_clave clave_encontrada;
+	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
+		clave_encontrada = list_get(tabla_entradas, i);
+		if (clave_encontrada.clave == clave){
+			return true;
+		}
+	   }
+	return false;
+
+
+
 /*
 void guardar_archivo(char* clave, t_log* logger){
 
