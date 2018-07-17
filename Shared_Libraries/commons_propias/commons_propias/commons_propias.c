@@ -61,9 +61,9 @@ int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger
 int recibir(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, t_log* logger){
 
 	int bytes_recibidos = recv(socket_receptor, buffer_receptor, tamanio_que_recibo, MSG_WAITALL);
-	if (bytes_recibidos <= 0) {
+	/*if (bytes_recibidos <= 0) {
 			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
-		}
+		}*/
 
 	return bytes_recibidos;
 }

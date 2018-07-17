@@ -31,8 +31,7 @@ int main(){
 		log_info(logger, "Hilo cerrado");
 		pthread_mutex_unlock(&m_hilo_a_cerrar);
 	}
-	sleep(60);
-	log_info(logger, "Me desperte");
+
 	pthread_join(hilo_escucha, NULL);
 	pthread_join(hilo_planificador, NULL);
 	close(socket_escucha);

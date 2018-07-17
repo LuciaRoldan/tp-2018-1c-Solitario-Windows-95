@@ -184,9 +184,21 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 		estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+<<<<<<< HEAD
 		entrada_encontrada->tamanio_valor = tamanio_valor;
 		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
 		asignar_memoria(*entrada_encontrada, cantidad_entradas);
+=======
+		entrada_encontrada->cantidad_entradas = cantidad_entradas;
+		//memcpy(entrada_encontrada->cantidad_entradas,cantidad_entradas,sizeof(int)); Ivi no necesitas hacer memcpy para ints
+		/*for(int i = 1; i < cantidad_entradas; i++){
+			if(indice[(entrada_encontrada->numero_entrada) + i] == 1){
+				//asignar ultimo valor indice
+			}
+			// Ivi, en el .h declaraste 'indice' como un int. Rompe si acá querés usarlo como vector de ints.
+		}*/
+
+>>>>>>> 8341c5004527ed63e84172f43ba8fb0d65f2d206
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (STORE):
