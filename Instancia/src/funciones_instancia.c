@@ -130,6 +130,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_nueva->clave = (char*) malloc(sizeof(char)*40); // 40 porque es el tamaño máximo de la clave y guardo el espacio porque es un variable
 			memcpy(entrada_nueva.clave,clave,tamanio_clave);
 			list_add_in_index(tabla_entradas,indice, &entrada_nueva);
+			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
 			indice ++;
 		}
 		enviar_exito(socket_coordinador,logger);
@@ -142,6 +143,11 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		estructura_clave entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		memcpy(entrada_encontrada.cantidad_entradas,cantidad_entradas,sizeof(int));
+		for(int i = 1; i > cantidad_entradas; i++){
+			if(indice[entrada_encontrada.numero_entrada + i] == 1){
+				//asignar ultimo valor indice
+			}
+		}
 
 		enviar_exito(socket_coordinador,logger);
 		break;
