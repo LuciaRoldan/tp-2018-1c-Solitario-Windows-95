@@ -123,17 +123,18 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		clave = instruccion.argumentos.GET.clave;
 		int tamanio_clave = sizeof(clave);
 		printf("La clave es: %s\n", clave);
-		if (existe_clave(clave)){
-
-		} else{
+		if (existe_clave(clave) == 0){
 			estructura_clave clave_nueva;
-			memcpy(clave_nueva->clave,clave,tamanio_clave);
+			memcpy(clave_nueva.clave,clave,tamanio_clave);
 			list_add(tabla_entradas, &clave_nueva);
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
+
 		log_info(logger, "Se pidio operacion con SET");
+		estructura_clave entrada_encontrada = list_find(tabla_entradas,)
+
 
 		// dictionary_put(diccionario_memoria,instruccion.argumentos.SET.clave,instruccion.argumentos.SET.valor);
 		enviar_exito(socket_coordinador,logger);
@@ -147,16 +148,29 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	}
 }
 
-bool existe_clave(char* clave){
-	estructura_clave clave_encontrada;
+int existe_clave(char* clave, estructura_clave* clave_encontrada) {
 	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
-		clave_encontrada = list_get(tabla_entradas, i);
-		if (clave_encontrada.clave == clave){
-			return true;
+		clave_encontrada = (estructura_clave*) list_get(tabla_entradas, i);
+		if (clave_encontrada->clave == clave) {
+			return 1;
 		}
-	   }
-	return false;
+	}
+	return 0;
+}
 
+bool condicion_socket_instancia(void* datos){
+	estructura_clave entrada = *((estructura_clave*) datos);
+	return entrada.clave == clave_buscada;
+}
+
+
+estructura_clave traer_estructura(char*clave){
+	estructura_clave* clave_encontrada;
+	for(int i = 0; i < configuracion.cantidad_entradas; i++){
+		clave_encontrada = (estructura_clave*) list_get(tabla_entradas,i);
+
+	}
+}
 
 
 /*
