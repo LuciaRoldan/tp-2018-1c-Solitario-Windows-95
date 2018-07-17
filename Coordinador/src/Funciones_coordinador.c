@@ -162,15 +162,28 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	pthread_mutex_unlock(&m_log_operaciones);
-	pthread_mutex_lock(&m_instancia_seleccionada);
-	instancia_seleccionada = buscar_instancia(clave);
+	if(strlen(clave) > 40){
+		log_info(logger, "Fallo por clave muy larga, ID ESI: %d", esi_ejecutando->id);
+		int rta_esi = 86;
+		void* buffer_int = malloc(sizeof(int));
+		serializar_id(buffer_int, rta_esi);
+		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+		pthread_mutex_lock(&m_hilo_a_cerrar);
+		hilo_a_cerrar = &esi_ejecutando->hilo;
+		sem_post(&s_cerrar_hilo);
+		pthread_mutex_unlock(&m_esi_ejecutando);
+		return -1;
+	} else {
+		pthread_mutex_unlock(&m_log_operaciones);
+		pthread_mutex_lock(&m_instancia_seleccionada);
+		instancia_seleccionada = buscar_instancia(clave);
 
-	pthread_mutex_lock(&m_operacion_ejecutando);
-	operacion_ejecutando = instruccion;
+		pthread_mutex_lock(&m_operacion_ejecutando);
+		operacion_ejecutando = instruccion;
 
-	enviar_operacion(socket_planificador, instruccion);
-	return 1;
+		enviar_operacion(socket_planificador, instruccion);
+		return 1;
+	}
 }
 
 //////////////////////////////////////////////////// CONEXION /////////////////////////////////////////////////////
