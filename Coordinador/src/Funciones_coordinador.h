@@ -4,6 +4,7 @@
 #include <commons_propias/commons_propias.h>
 #include <commons/bitarray.h>
 #include <semaphore.h>
+#include <math.h>
 
 
 ///////////////////////// STRUCTS /////////////////////////
@@ -55,6 +56,7 @@ t_list* lista_esis;
 int socket_planificador; //Deberia poner un semaforo para esta variable?
 int socket_escucha;
 char* clave_buscada;
+int id_instancia_buscado;
 
 
 pthread_mutex_t m_operacion_ejecutando;
@@ -69,6 +71,7 @@ pthread_mutex_t m_lista_instancias;
 pthread_mutex_t m_lista_esis;
 pthread_mutex_t m_log_operaciones;
 pthread_mutex_t m_clave_buscada;
+pthread_mutex_t m_id_instancia_buscado;
 sem_t s_cerrar_hilo;
 
 ///////////////////////// FUNCIONES /////////////////////////
@@ -111,6 +114,8 @@ void reemplazar_instancia(nodo nodo);
 bool condicion_socket_esi(void* datos);
 bool condicion_socket_instancia(void* datos);
 bool condicion_clave(void* datos);
+bool condicion_id_instancia(void* datos);
+bool condicion_socket_clave(void* datos);
 
 //DE HILOS
 void agregar_nuevo_esi(int socket_esi, int id_esi);

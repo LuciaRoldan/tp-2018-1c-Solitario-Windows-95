@@ -301,6 +301,11 @@ bool condicion_socket_clave(void* datos){
 	return un_nodo.nodo_instancia.socket == socket_instancia_buscado;
 }
 
+bool condicion_id_instancia(void* datos){
+	nodo un_nodo = *((nodo*) datos);
+	return un_nodo.id == id_instancia_buscado;
+}
+
 void reemplazar_instancia(nodo un_nodo){
 	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
 	list_add(lista_instancias, &un_nodo);
@@ -329,20 +334,25 @@ nodo* buscar_instancia(char* clave){
 
 nodo* seleccionar_instancia(char* clave){
 	nodo* instancia_seleccionada;
+
 	nodo* nodo_auxiliar;
 	int minimo_LSU = 1000000;
+
+	char char_KE;
+	int cantidad_letras_KE, id_instancia;
+
+	pthread_mutex_lock(&m_lista_instancias);
 	switch(info_coordinador.algoritmo_distribucion){
 	case EL:
-		pthread_mutex_lock(&m_lista_instancias);
 		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
 		pthread_mutex_lock(&m_ultima_instancia_EL);
 		//instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
 		instancia_seleccionada = list_get(lista_instancias, 0);
 		if(ultima_instancia_EL++ == list_size(lista_instancias)){ultima_instancia_EL = 0;}
 		pthread_mutex_unlock(&m_ultima_instancia_EL);
-		pthread_mutex_unlock(&m_lista_instancias);
 		break;
 	case LSU:
+		pthread_mutex_lock(&m_lista_claves);
 		for(int contador = 0; contador < list_size(lista_instancias); contador++){
 			nodo_auxiliar = list_get(lista_instancias, contador);
 			socket_instancia_buscado = nodo_auxiliar->socket;
@@ -350,10 +360,28 @@ nodo* seleccionar_instancia(char* clave){
 				instancia_seleccionada = nodo_auxiliar;
 			}
 		}
+		pthread_mutex_unlock(&m_lista_claves);
 		break;
 	case KE:
+		memcpy(&char_KE, clave, sizeof(char));
+		if( 25 % list_size(lista_instancias) == 0){
+			cantidad_letras_KE = 25 / list_size(lista_instancias);
+		} else {
+			//cantidad_letras_KE = (int) ceil(25 / list_size(lista_instancias));
+		}
+
+		if( cantidad_letras_KE % (int)char_KE == 0){
+			id_instancia = cantidad_letras_KE / (int)char_KE;
+		} else {
+			//id_instancia = (int) ceil(cantidad_letras_KE / (int)char_KE);
+		}
+		pthread_mutex_lock(&m_id_instancia_buscado);
+		id_instancia_buscado = id_instancia;
+		list_find(lista_instancias, condicion_id_instancia);
+		pthread_mutex_unlock(&m_id_instancia_buscado);
 		break;
 	}
+	pthread_mutex_unlock(&m_lista_instancias);
 	return instancia_seleccionada;
 }
 
@@ -452,6 +480,7 @@ void inicializar_semaforos(){
 	if (pthread_mutex_init(&m_lista_esis, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_log_operaciones, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_id_instancia_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
 }
 
