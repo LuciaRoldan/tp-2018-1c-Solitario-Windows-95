@@ -326,7 +326,7 @@ nodo* buscar_instancia(char* clave){
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
-		nodo_instancia = list_find(lista_claves, condicion_clave);
+		nodo_instancia = list_find(lista_claves, condicion_clave); //Esto no deberia funcionar?????
 	} else {
 		nodo_instancia = seleccionar_instancia(clave);
 		nodo_clave* nodo_ = malloc(sizeof(nodo_clave));
@@ -439,18 +439,6 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 }
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
-
-	int optval = 1;
-	socklen_t optlen = sizeof(optval);
-	setsockopt(socket_instancia, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
-	if(getsockopt(socket_instancia, SOL_SOCKET, SO_KEEPALIVE, &optval, &optlen) < 0) {
-	     perror("getsockopt()");
-	     close(socket_instancia);
-	     exit(EXIT_FAILURE);
-	}
-	printf("SO_KEEPALIVE is %s\n", (optval ? "ON" : "OFF"));
-
-
 	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
 	void* buffer = malloc(sizeof(int)*2);
 	serializar_hilo_proceso(buffer, datos_instancia);
