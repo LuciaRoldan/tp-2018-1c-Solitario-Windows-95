@@ -3,6 +3,7 @@
 
 #include "commons_propias/commons_propias.h"
 
+
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
 
 datos_configuracion configuracion;
@@ -82,6 +83,6 @@ bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
 void compactar();
 void implementar_algoritmo();
-
+void procesarID(int socket_coordinador, t_log* logger);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

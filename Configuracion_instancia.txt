@@ -1,1 +1,1 @@
-127.0.0.1 8001 BSU /home/utnso/instancia1/ 1 10
+127.0.0.1 8001 BSU "/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/instancia1/" 1 10
