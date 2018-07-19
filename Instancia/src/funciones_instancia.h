@@ -24,7 +24,7 @@ typedef struct{
 	char ipCoordinador[20];
 	char puertoCoordinador[5];
 	char algoritmoDeReemplazo[6];
-	char* puntoDeMontaje;
+	char puntoDeMontaje[100];
 	int nombreInstancia;
 	int intervaloDump;
 }configuracion_propia;

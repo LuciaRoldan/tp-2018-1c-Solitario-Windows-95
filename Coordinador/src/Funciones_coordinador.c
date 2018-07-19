@@ -14,13 +14,11 @@ int procesar_mensaje(int socket){
 	void* buffer_int = malloc(sizeof(int));
 	id = recibir_int(socket, logger);
 	log_info(logger, "Protocolo recibido: %d", id);
+	free(buffer_int);
 	int rta_esi;
 
 	switch(id){
-		case 20:
-			return 1;
-
-		case 21:
+		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
 			protocolo_extra = 1;
@@ -28,19 +26,15 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 
-		case 24:
-			serializar_id(buffer_int, 64);
-			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-			return resultado;
-			break;
-
 		case 25: //Exito instancia
 			log_info(logger, "Recibi confirmacion de la Instancia %d", instancia_seleccionada->id);
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			rta_esi = 84;
+			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			log_info(logger, "Le digo al ESI %d que la ejecucion fue exitosa", esi_ejecutando->id);
+			free(buffer_int);
 			pthread_mutex_unlock(&m_esi_ejecutando);
 			return resultado;
 			break;
@@ -53,9 +47,10 @@ int procesar_mensaje(int socket){
 			socket_esi_buscado = el_nodo->socket;
 			log_info(logger, "Voy a eliminar");
 			pthread_mutex_lock(&m_lista_esis);
-			list_remove_by_condition(lista_esis, condicion_socket_esi);
+			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			pthread_mutex_unlock(&m_lista_esis);
 			pthread_mutex_unlock(&m_socket_esi_buscado);
+			close(socket);
 			sem_post(&s_cerrar_hilo);
 			return -1;
 			break;
@@ -75,6 +70,7 @@ int procesar_mensaje(int socket){
 		case 84: //Exito Planificador
 			log_info(logger, "Recibi confirmacion del Planificador");
 			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
+			liberar_instruccion();
 			pthread_mutex_unlock(&m_operacion_ejecutando);
 			log_info(logger, "Envie la instruccion a la instancia %d", instancia_seleccionada->id);
 			return 1;
@@ -87,21 +83,12 @@ int procesar_mensaje(int socket){
 		case 87: //Fallo clave no identificada
 			log_info(logger, "Fallo por clave no identificada, ID ESI: %d", esi_ejecutando->id);
 			rta_esi = 87;
+			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-			pthread_mutex_lock(&m_hilo_a_cerrar);
-			hilo_a_cerrar = &esi_ejecutando->hilo;
-			sem_post(&s_cerrar_hilo);
-			pthread_mutex_unlock(&m_instancia_seleccionada);
-			pthread_mutex_unlock(&m_esi_ejecutando);
-			return resultado;
-			break;
-
-		case 88://Fallo clave inaccesible
-			log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
-			rta_esi = 88;
-			serializar_id(buffer_int, rta_esi);
-			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			free(buffer_int);
+			liberar_instruccion();
+			pthread_mutex_unlock(&m_operacion_ejecutando);
 			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
@@ -113,8 +100,12 @@ int procesar_mensaje(int socket){
 		case 89://Fallo clave no bloqueada
 			log_info(logger, "Fallo por clave no bloqueada, ID ESI: %d", esi_ejecutando->id);
 			rta_esi = 89;
+			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			free(buffer_int);
+			liberar_instruccion();
+			pthread_mutex_unlock(&m_operacion_ejecutando);
 			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
@@ -125,8 +116,10 @@ int procesar_mensaje(int socket){
 		case 90://Hay que bloquear al ESI
 			log_info(logger, "Le digo al ESI %d que esta bloqueado", esi_ejecutando->id);
 			rta_esi = 90;
+			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			free(buffer_int);
 			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			pthread_mutex_unlock(&m_instancia_seleccionada);
@@ -143,6 +136,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	char* clave;
 	pthread_mutex_lock(&m_esi_ejecutando);
 	esi_ejecutando = encontrar_esi(socket);
+	int rta_esi;
 
 	pthread_mutex_lock(&m_log_operaciones);
 	switch(instruccion.keyword){
@@ -164,7 +158,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	}
 	if(strlen(clave) > 40){
 		log_info(logger, "Fallo por clave muy larga, ID ESI: %d", esi_ejecutando->id);
-		int rta_esi = 86;
+		rta_esi = 86;
 		void* buffer_int = malloc(sizeof(int));
 		serializar_id(buffer_int, rta_esi);
 		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
@@ -172,17 +166,54 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		hilo_a_cerrar = &esi_ejecutando->hilo;
 		sem_post(&s_cerrar_hilo);
 		pthread_mutex_unlock(&m_esi_ejecutando);
+		free(buffer_int);
 		return -1;
 	} else {
 		pthread_mutex_unlock(&m_log_operaciones);
 		pthread_mutex_lock(&m_instancia_seleccionada);
 		instancia_seleccionada = buscar_instancia(clave);
-
+		/*if(instruccion.keyword == GET){
+			nodo_clave* nodito = malloc(sizeof(nodo_clave));
+			nodito->clave = malloc(strlen(clave));
+			memcpy(nodito->clave, clave, strlen(clave));
+			nodito->nodo_instancia = *instancia_seleccionada;
+			list_add(lista_claves, nodito);
+			log_info(logger, "lo agregue %d", list_size(lista_claves));
+		}*/
 		pthread_mutex_lock(&m_operacion_ejecutando);
 		operacion_ejecutando = instruccion;
-
 		enviar_operacion(socket_planificador, instruccion);
-		return 1;
+	}
+	if(!clave_accesible(clave)) {
+		log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
+		rta_esi = 88;
+		void* buffer_int = malloc(sizeof(int));
+		serializar_id(buffer_int, rta_esi);
+		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+		free(buffer_int);
+		pthread_mutex_lock(&m_hilo_a_cerrar);
+		hilo_a_cerrar = &esi_ejecutando->hilo;
+		sem_post(&s_cerrar_hilo);
+		pthread_mutex_unlock(&m_instancia_seleccionada);
+		pthread_mutex_unlock(&m_esi_ejecutando);
+		return -1;
+	}
+	return 1;
+	free(clave);
+}
+
+void liberar_instruccion(){
+	switch(operacion_ejecutando.keyword){
+	case GET:
+		free(operacion_ejecutando.argumentos.GET.clave);
+		break;
+	case SET:
+		free(operacion_ejecutando.argumentos.SET.clave);
+		free(operacion_ejecutando.argumentos.SET.valor);
+		break;
+	case STORE:
+		free(operacion_ejecutando.argumentos.STORE.clave);
+		break;
 	}
 }
 
@@ -217,18 +248,19 @@ int handshake(int socket_cliente){
 		break;
 
 	case INSTANCIA:
-		log_info(logger, "Se establecio la conexion con una Instancia ");
+		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
 	case ESI:
-		log_info(logger, "Se establecio la conexion con un ESI ");
+		log_info(logger, "Se establecio la conexion con el ESI %d", proceso_recibido.id);
 		agregar_nuevo_esi(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
-		default:
+	default:
+		log_info(logger, "Conexion de proceso desconocido");
 		return -1;
 		break;
 	}
@@ -236,36 +268,45 @@ int handshake(int socket_cliente){
 
 void procesar_conexion(){
 	int id_mensaje;
-	while(1){
+	int resultado = 1;
+	while(resultado > 0){
 		int socket_cliente = aceptar_conexion(socket_escucha);
 		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
 		if(id_mensaje == 80){
-			handshake(socket_cliente);
+			resultado = handshake(socket_cliente);
+		} else {
+			log_info(logger, "Se recibio un protocolo desconocido: %d", id_mensaje);
+			resultado = -1;
 		}
 	}
 }
 
 void atender_planificador(){
-	log_info(logger, "Entre en el hilo del planificador");
+	log_info(logger, "Hilo del planificador creado");
 	int resultado = 1;
 	while(resultado > 0){
 		resultado = procesar_mensaje(socket_planificador);
 	}
 	log_error(logger, "Fallo en la conexion con el Planificador");
+	terminar_programa = true;
+	close(socket_planificador);
+	sem_post(&s_cerrar_hilo);
 }
 
 void atender_esi(void* datos_esi){
 	int resultado = 1;
-	log_info(logger, "Estoy en el hilo del esi!");
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_esi);
+	free(datos_esi);
+	log_info(logger, "Hilo del ESI %d creado", mis_datos.id);
 	while(resultado > 0){
 		resultado = procesar_mensaje(mis_datos.socket);
 	}
 }
 
 void atender_instancia(void* datos_instancia){
-	log_info(logger, "Estoy en el hilo de la instancia!");
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_instancia);
+	free(datos_instancia);
+	log_info(logger, "Hilo de la Instancia %d creado", mis_datos.id);
 	enviar_configuracion_instancia(mis_datos.socket);
 	int resultado = 1;
 	while(resultado > 0){
@@ -282,11 +323,23 @@ void desconectar_instancia(int socket){
 	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
 	pthread_mutex_unlock(&m_lista_instancias);
 	pthread_mutex_unlock(&m_socket_instancia_buscado);
+	close(socket);
 	hilo_a_cerrar = &el_nodo->hilo;
 	sem_post(&s_cerrar_hilo);
 }
 
 /////////////////////////////////////////////// FUNCIONES DE LISTAS ///////////////////////////////////////////////
+
+void eliminar_nodo(void* datos){
+	nodo* un_nodo = datos;
+	free(un_nodo);
+}
+
+void eliminar_nodo_clave(void* datos){
+	nodo_clave* un_nodo = datos;
+	free(un_nodo->clave);
+	free(un_nodo);
+}
 
 bool condicion_socket_esi(void* datos){
 	nodo un_nodo = *((nodo*) datos);
@@ -300,8 +353,7 @@ bool condicion_socket_instancia(void* datos){
 
 bool condicion_clave(void* datos){
 	nodo_clave un_nodo = *((nodo_clave*) datos);
-	return strcmp(un_nodo.clave, clave_buscada);
-
+	return (strcmp(un_nodo.clave, clave_buscada) == 0);
 }
 
 bool condicion_socket_clave(void* datos){
@@ -315,8 +367,22 @@ bool condicion_id_instancia(void* datos){
 }
 
 void reemplazar_instancia(nodo un_nodo){
-	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
+	list_remove_and_destroy_by_condition(lista_instancias, condicion_socket_instancia, eliminar_nodo);
 	list_add(lista_instancias, &un_nodo);
+}
+
+bool clave_accesible(char* clave){
+	pthread_mutex_lock(&m_clave_buscada);
+	clave_buscada = malloc(strlen(clave)+1);
+	memcpy(clave_buscada, clave, strlen(clave)+1);
+	nodo_clave* n_clave = list_find(lista_claves, condicion_clave);
+	pthread_mutex_unlock(&m_clave_buscada);
+	pthread_mutex_lock(&m_id_instancia_buscado);
+	id_instancia_buscado = n_clave->nodo_instancia.id;
+	log_info(logger, "Voy a buscar");
+	bool resultado = list_any_satisfy(lista_instancias, condicion_id_instancia);
+	pthread_mutex_unlock(&m_id_instancia_buscado);
+	return resultado;
 }
 
 nodo* buscar_instancia(char* clave){
@@ -355,8 +421,9 @@ nodo* seleccionar_instancia(char* clave){
 	case EL:
 		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
 		pthread_mutex_lock(&m_ultima_instancia_EL);
-		//instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
-		instancia_seleccionada = list_get(lista_instancias, 0);
+		log_info(logger, "+++++++ EL es: %d +++++++", ultima_instancia_EL);
+		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
+		//instancia_seleccionada = list_get(lista_instancias, 0);
 		if(ultima_instancia_EL++ == list_size(lista_instancias)){ultima_instancia_EL = 0;}
 		pthread_mutex_unlock(&m_ultima_instancia_EL);
 		break;
@@ -425,10 +492,10 @@ hilo_proceso deserializar_hilo_proceso(void *buffer_recepcion){
 
 void agregar_nuevo_esi(int socket_esi, int id_esi){
 	hilo_proceso datos_esi = {socket_esi, id_esi};
-	void* buffer = malloc(sizeof(int)*2);
+	void* buffer = malloc(sizeof(int)*2); //liberado en atender_esi
 	serializar_hilo_proceso(buffer, datos_esi);
 	pthread_t hilo_esi;
-	pthread_create(&hilo_esi, 0, atender_esi, buffer); //(void*) &
+	pthread_create(&hilo_esi, 0, atender_esi, buffer);
 	nodo* el_nodo = malloc(sizeof(nodo));
 	el_nodo->socket = socket_esi;
 	el_nodo->id = id_esi;
@@ -440,7 +507,7 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
-	void* buffer = malloc(sizeof(int)*2);
+	void* buffer = malloc(sizeof(int)*2); //liberado en atender_instancia
 	serializar_hilo_proceso(buffer, datos_instancia);
 	pthread_t hilo_instancia;
 	pthread_create(&hilo_instancia, 0, atender_instancia, buffer);
@@ -475,6 +542,7 @@ void inicializar_coordinador(){
 	lista_instancias = list_create();
 	lista_claves = list_create();
 	ultima_instancia_EL = 0;
+	terminar_programa = 0;
 	inicializar_semaforos();
 }
 
@@ -520,6 +588,7 @@ int enviar_configuracion_instancia(int socket){
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_configuracion_inicial_instancia(buffer, mensaje);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*3, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -528,6 +597,7 @@ int enviar_status_clave(int socket, status_clave status){
 	void* buffer = malloc(tamanio);
 	serializar_status_clave(buffer, status);
 	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -536,6 +606,7 @@ int enviar_pedido_valor(int socket, char* clave, int id){
 	void* buffer = malloc(tamanio);
 	serializar_string(buffer, clave, id);
 	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -543,6 +614,7 @@ int enviar_confirmacion(int socket, int confirmacion, int id){
 	void* buffer = malloc(sizeof(int)*2);
 	serializar_int(buffer, confirmacion, id);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*2, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -551,6 +623,7 @@ int recibir_confirmacion(int socket){
 	void* buffer = malloc(sizeof(int));
 	recibir(socket, buffer, sizeof(int), logger);
 	confirmacion = deserializar_id(buffer);
+	free(buffer);
 	return confirmacion;
 }
 
@@ -561,6 +634,7 @@ char* recibir_pedido_clave(int socket){
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	deserializar_string(buffer,clave);
+	free(buffer);
 	return clave;
 }
 
@@ -571,6 +645,7 @@ status_clave recibir_status(int socket){
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	status = deserializar_status_clave(buffer);
+	free(buffer);
 	return status;
 }
 
@@ -583,6 +658,8 @@ t_esi_operacion recibir_instruccion(int socket){
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	instruccion = deserializar_instruccion(buffer);
+	free(buffer);
+	free(buffercito);
 	return instruccion;
 }
 
@@ -591,6 +668,7 @@ int enviar_operacion(int socket, t_esi_operacion instruccion){
 	void* buffer = malloc(tamanio);
 	serializar_instruccion(buffer, instruccion);
 	int resultado = enviar(socket, buffer, tamanio, logger);
+	free(buffer);
 	return resultado;
 }
 
