@@ -73,9 +73,11 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		buffer = malloc(sizeof(int));
 		recibir(socket_coordinador, buffer, sizeof(int), logger);
 		tamanio_clave = deserializar_id(buffer);
+		free(buffer);
 		clave =	malloc(tamanio_clave);
 		clave = recibe_pedido_status();
 		enviar_status_clave(clave); //declarar
+		free(clave);
 		break;
 	case 85: //INDICA QUE DEBE SALIR DEL WHILE
 		activa = false;
@@ -165,6 +167,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			list_add_in_index(tabla_entradas, indice, entrada_nueva);
 			log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
 			indice ++;
+			free(entrada_nueva);
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
@@ -305,6 +308,7 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 			munmap(puntero_memoria, tamanio_valor);
 			close(fd);
 			free(clave_buscada);
+			free(path);
 }
 
 	/*void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
@@ -348,7 +352,7 @@ int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
 		}
 
 		log_info(logger, "Conectado al COORDINADOR ", proceso_recibido.id);
-
+		free(buffer_recepcion);
 		return 1;
 }
 

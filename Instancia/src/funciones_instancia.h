@@ -60,7 +60,7 @@ int socket_coordinador;
 int handshake_instancia(int socket_coordinador, t_log* logger, int id_proceso);
 datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger);
 void deserializar_configuracion(void* buffer);
-void leer_configuracion_propia(configuracion_propia* configuracion,t_log* logger);
+void leer_configuracion_propia(char* path, configuracion_propia* configuracion,t_log* logger);
 void inicializar_instancia();
 
 //---Procesamiento---///
