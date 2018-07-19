@@ -47,6 +47,7 @@ int procesar_mensaje(int socket){
 			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			pthread_mutex_unlock(&m_lista_esis);
 			pthread_mutex_unlock(&m_socket_esi_buscado);
+			close(socket);
 			sem_post(&s_cerrar_hilo);
 			return -1;
 			break;
@@ -252,6 +253,7 @@ void atender_planificador(){
 	}
 	log_error(logger, "Fallo en la conexion con el Planificador");
 	terminar_programa = true;
+	close(socket_planificador);
 	sem_post(&s_cerrar_hilo);
 }
 
@@ -285,6 +287,7 @@ void desconectar_instancia(int socket){
 	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
 	pthread_mutex_unlock(&m_lista_instancias);
 	pthread_mutex_unlock(&m_socket_instancia_buscado);
+	close(socket);
 	hilo_a_cerrar = &el_nodo->hilo;
 	sem_post(&s_cerrar_hilo);
 }
