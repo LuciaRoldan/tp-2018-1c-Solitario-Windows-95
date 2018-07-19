@@ -250,8 +250,8 @@ void manejar_esi(void* la_pcb){
 void manejar_coordinador(void* socket){
 	int socket_coordinador = *((int*) socket);
 	log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
-
-	while(1){
+	bool conexion_valida = true;
+	while(conexion_valida){
 
 		//sem_wait(&s_procesa_un_pedido);
 
@@ -288,8 +288,10 @@ void manejar_coordinador(void* socket){
 		break;
 		default:
 		log_info(logger, "Pedido invalido del Coordinador");
+		conexion_valida = false;
 		}
 	}
+	log_error(logger, "Se rompio todo");
 }
 
 void procesar_pedido(t_esi_operacion instruccion){
