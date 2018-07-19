@@ -456,7 +456,7 @@ void informar_exito_coordinador(){
 	enviar(sockets_planificador.socket_coordinador, &exito, sizeof(int), logger);
 }
 void informar_bloqueo_coordinador(){
-	int fallo = 85;
+	int fallo = 90;
 	enviar(sockets_planificador.socket_coordinador, &fallo, sizeof(int), logger);
 }
 
@@ -704,7 +704,9 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	clave_buscada = clave;
 	clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 	pthread_mutex_unlock(&m_clave_buscada);
+	int* id = //aRREGLAAAAAR
 	list_add(nodo_clave_buscada->esis_en_espera, &esi_id);
+	log_info(logger, "El id que acabo de poner en la cola desde la cola es: %d", list_get(nodo_clave_buscada->esis_en_espera, 0));
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = esi_id;
 	list_remove_by_condition(esis_ready, ids_iguales_cola_de_esis);
@@ -919,8 +921,8 @@ void imprimir_id_esi(void* esi){
 
 // CONSOLA
 void ejecutar_consola(){
-	char * linea;
-	char * clave;
+	char* linea;
+	char* clave;
 	char* recurso;
 	int el_id;
 
