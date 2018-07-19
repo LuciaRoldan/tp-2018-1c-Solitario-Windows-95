@@ -269,7 +269,7 @@ int handshake(int socket_cliente){
 void procesar_conexion(){
 	int id_mensaje;
 	int resultado = 1;
-	while(resultado > 0){
+	while(resultado > 0 && !terminar_programa){
 		int socket_cliente = aceptar_conexion(socket_escucha);
 		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
 		if(id_mensaje == 80){
@@ -279,6 +279,7 @@ void procesar_conexion(){
 			resultado = -1;
 		}
 	}
+	//pthread_exit(NULL);
 }
 
 void atender_planificador(){
@@ -298,9 +299,10 @@ void atender_esi(void* datos_esi){
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_esi);
 	free(datos_esi);
 	log_info(logger, "Hilo del ESI %d creado", mis_datos.id);
-	while(resultado > 0){
+	while(resultado > 0 && !terminar_programa){
 		resultado = procesar_mensaje(mis_datos.socket);
 	}
+	//pthread_exit(NULL);
 }
 
 void atender_instancia(void* datos_instancia){
@@ -309,11 +311,12 @@ void atender_instancia(void* datos_instancia){
 	log_info(logger, "Hilo de la Instancia %d creado", mis_datos.id);
 	enviar_configuracion_instancia(mis_datos.socket);
 	int resultado = 1;
-	while(resultado > 0){
+	while(resultado > 0 && !terminar_programa){
 		resultado = procesar_mensaje(mis_datos.socket);
 	}
 	log_info(logger, "RIP instancia");
 	desconectar_instancia(mis_datos.socket);
+	//pthread_exit(NULL);
 }
 
 void desconectar_instancia(int socket){
