@@ -116,6 +116,8 @@ bool condicion_socket_instancia(void* datos);
 bool condicion_clave(void* datos);
 bool condicion_id_instancia(void* datos);
 bool condicion_socket_clave(void* datos);
+void eliminar_nodo(void* datos);
+void eliminar_nodo_clave(void* datos);
 
 //DE HILOS
 void agregar_nuevo_esi(int socket_esi, int id_esi);

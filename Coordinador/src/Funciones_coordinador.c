@@ -44,7 +44,7 @@ int procesar_mensaje(int socket){
 			socket_esi_buscado = el_nodo->socket;
 			log_info(logger, "Voy a eliminar");
 			pthread_mutex_lock(&m_lista_esis);
-			list_remove_by_condition(lista_esis, condicion_socket_esi);
+			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			pthread_mutex_unlock(&m_lista_esis);
 			pthread_mutex_unlock(&m_socket_esi_buscado);
 			sem_post(&s_cerrar_hilo);
@@ -245,7 +245,7 @@ void procesar_conexion(){
 }
 
 void atender_planificador(){
-	log_info(logger, "Entre en el hilo del planificador");
+	log_info(logger, "Hilo del planificador creado");
 	int resultado = 1;
 	while(resultado > 0){
 		resultado = procesar_mensaje(socket_planificador);
@@ -291,6 +291,17 @@ void desconectar_instancia(int socket){
 
 /////////////////////////////////////////////// FUNCIONES DE LISTAS ///////////////////////////////////////////////
 
+void eliminar_nodo(void* datos){
+	nodo* un_nodo = datos;
+	free(un_nodo);
+}
+
+void eliminar_nodo_clave(void* datos){
+	nodo_clave* un_nodo = datos;
+	free(un_nodo->clave);
+	free(un_nodo);
+}
+
 bool condicion_socket_esi(void* datos){
 	nodo un_nodo = *((nodo*) datos);
 	return un_nodo.socket == socket_esi_buscado;
@@ -317,7 +328,7 @@ bool condicion_id_instancia(void* datos){
 }
 
 void reemplazar_instancia(nodo un_nodo){
-	list_remove_by_condition(lista_instancias, condicion_socket_instancia);
+	list_remove_and_destroy_by_condition(lista_instancias, condicion_socket_instancia, eliminar_nodo);
 	list_add(lista_instancias, &un_nodo);
 }
 
