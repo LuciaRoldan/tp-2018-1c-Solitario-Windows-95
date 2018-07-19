@@ -4,19 +4,24 @@
 #include "funciones_instancia.h"
 
 
-int main() {
+int main(int argc, char* argv[]){
+
+	id_instancia = atoi(argv[2]);
+
 	indice = 0;
+	char log[10] = "INSTANCIA";
+	memcpy(&log[9], argv[2], 1);
 
-	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
+	logger = log_create("instancia.log", log, true, LOG_LEVEL_INFO);
+	log_info(logger, "++++++++++ %s", log);
 
-
-	leer_configuracion_propia(&mi_configuracion,logger);
+	leer_configuracion_propia(argv[1], &mi_configuracion,logger);
 
 	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
 
 	log_info(logger,"Hay socket con el Coordinador");
 
-	handshake_instancia(socket_coordinador,logger, mi_configuracion.nombreInstancia);
+	handshake_instancia(socket_coordinador,logger, id_instancia);
 	log_info(logger,"Recibi el handshake del cordi");
 	printf("Mi nombre es: %d ", mi_configuracion.nombreInstancia);
 

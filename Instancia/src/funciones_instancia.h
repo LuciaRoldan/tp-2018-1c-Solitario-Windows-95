@@ -14,6 +14,7 @@ int indice;
 char* inicio_memoria;
 int memoria_total;
 int memoria_usada;
+int id_instancia;
 
 
 typedef enum {
@@ -66,7 +67,7 @@ void enviar_exito(int socket_coordinador, t_log* logger);/* {
 	log_info(logger, "Le respondi al coordinador");
 	free(buffer);
 }*/
-void leer_configuracion_propia(configuracion_propia* configuracion,t_log* logger);
+void leer_configuracion_propia(char* path, configuracion_propia* configuracion, t_log* logger);
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger);
 t_esi_operacion deserializar_instruccion(void* buffer);
 char* recibe_pedido_status(int socket_coordinador, t_log* logger);

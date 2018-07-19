@@ -4,9 +4,9 @@
 #include <sys/mman.h>
 /////////////////////// INICIALIZACION ///////////////////////
 
-void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logger) {
+void leer_configuracion_propia(char* path, configuracion_propia* configuracion, t_log* logger) {
 
-	FILE* archivo = fopen("../Configuracion_instancia.txt", "r");
+	FILE* archivo = fopen(path, "r");
 
 	if (archivo < 1) {
 		log_info(logger,"No se puede abrir el archivo Configuracion_instancia.txt");
@@ -101,8 +101,7 @@ char* recibe_pedido_status(int socket_coordinador, t_log* logger){
 int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
 	char* valor;
 //	valor = dictionary_get(diccionario_memoria,clave);
-//	int idInstancia = mi_configuracion.nombreInstancia;
-	status_clave status = {clave,0,valor};
+	status_clave status = {clave,id_instancia,valor};
 	int tamanio_buffer = tamanio_buffer_status(status);
 	void* buffer = malloc(tamanio_buffer);
 	serializar_status_clave(buffer,status);
@@ -153,7 +152,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 		if (!list_any_satisfy(tabla_entradas,condicion_clave_entrada)){
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
-			estructura_clave* entrada_nueva = (estructura_clave*)malloc(sizeof (estructura_clave));
+			estructura_clave* entrada_nueva = malloc(sizeof (estructura_clave));
 			entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
 			entrada_nueva->clave = clave_buscada;
 			entrada_nueva->numero_entrada = indice;
@@ -161,6 +160,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
 			entrada_nueva->numero_entrada = indice;
 			list_add_in_index(tabla_entradas, indice, entrada_nueva);
+			log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
 			indice ++;
 		}
 		enviar_exito(socket_coordinador,logger);
@@ -261,7 +261,7 @@ void almacenar_valor(char* valor, int tamanio_valor){
 
 
 
-void guardar_archivo(char* clave,int tamanio_clave, t_log* logger){
+void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 
 			log_info(logger, "Entre a guardar");
 			char* path;
@@ -275,7 +275,9 @@ void guardar_archivo(char* clave,int tamanio_clave, t_log* logger){
 			int fd;
 			char* puntero_memoria;
 
+			clave_buscada = malloc(tamanio_clave);
 			memcpy(clave_buscada, clave, tamanio_clave);
+
 			estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 			int tamanio_valor = entrada_encontrada->tamanio_valor;
 			valor = malloc(tamanio_valor);
