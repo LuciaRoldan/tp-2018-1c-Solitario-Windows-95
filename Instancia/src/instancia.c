@@ -6,6 +6,7 @@
 
 int main() {
 	indice = 0;
+	activa = true;
 
 	logger = log_create("instancia.log", "INSTANCIA", true, LOG_LEVEL_INFO);
 
@@ -47,7 +48,7 @@ int main() {
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
-	while(1){
+	while(activa){
 		log_info(logger, "Entré al while");
 		procesarID(socket_coordinador,logger);
 		log_info(logger, "Procesé. Vuelvo a entrar al while");
