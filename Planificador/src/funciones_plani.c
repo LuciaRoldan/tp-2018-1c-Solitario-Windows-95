@@ -668,6 +668,7 @@ bool algoritmo_SJF_SD(void* pcb_1, void* pcb_2){
 
 		log_info(logger, "La proxima_rafaga del ESI1 es %f y la del ESI2 es %f", proxima_rafaga1, proxima_rafaga2);
 
+
 		if ( proxima_rafaga1 <= proxima_rafaga2){
 			return true;
 		} else {
@@ -675,6 +676,7 @@ bool algoritmo_SJF_SD(void* pcb_1, void* pcb_2){
 		}
 	}
 }
+
 
 
 bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
@@ -704,7 +706,6 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	clave_buscada = clave;
 	clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 	pthread_mutex_unlock(&m_clave_buscada);
-	int* id = //aRREGLAAAAAR
 	list_add(nodo_clave_buscada->esis_en_espera, &esi_id);
 	log_info(logger, "El id que acabo de poner en la cola desde la cola es: %d", list_get(nodo_clave_buscada->esis_en_espera, 0));
 	pthread_mutex_lock(&m_id_buscado);
@@ -764,6 +765,7 @@ void mover_esi_a_finalizados(int id_esi){
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 
+	
 	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);
 
 	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
