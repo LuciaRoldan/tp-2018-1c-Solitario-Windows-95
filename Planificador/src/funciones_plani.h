@@ -94,7 +94,8 @@ sem_t s_cerrar_un_hilo;
 sem_t s_hilo_cerrado;
 sem_t s_eliminar_pcb;
 
-sem_t s_podes_procesar_un_mensaje;
+sem_t s_podes_procesar_un_pedido;
+sem_t s_podes_procesar_una_respuesta;
 sem_t s_planificar;
 //sem_t s_fijate_si_hay_esis;
 //sem_t s_procesa_un_pedido;
@@ -112,7 +113,7 @@ sem_t un_semaforo;
 //////////-----INICIALIZACION-----//////////
 int handshake_esi(int socket_esi);
 void handshake_coordinador(int socket_coordinador);
-pcb crear_pcb_esi(int socket_cliente, int id_esi, pthread_t hilo_esi);
+pcb* crear_pcb_esi(int socket_cliente, int id_esi, pthread_t hilo_esi);
 sockets inicializar_planificador();
 void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);

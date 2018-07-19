@@ -15,6 +15,7 @@ char* inicio_memoria;
 int memoria_total;
 int memoria_usada;
 bool activa;
+int id_instancia;
 
 
 typedef enum {
