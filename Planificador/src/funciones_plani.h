@@ -171,7 +171,7 @@ void mover_esi_a_finalizados(int id_esi);
 //Operaciones sobre claves_bloqueadas
 void liberar_clave(char* clave);
 
-
+void cerrar_planificador();
 
 ///---FUNCIONES AUXILIARES---///
 //ids_iguales

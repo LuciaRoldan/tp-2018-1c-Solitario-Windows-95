@@ -290,7 +290,7 @@ void manejar_coordinador(void* socket){
 				//sem_post(&s_coordi_manejado);
 				//log_info(logger, "Podes procesar un mensaje desde manejar_coordinador");
 		break;
-		case (0):
+		case (83):
 			recibir_status_clave();
 		break;
 		default:
@@ -925,6 +925,7 @@ void ejecutar_consola(){
 		if(!strncmp(linea, "exit", 4)) {
 			printf("Cerrando Consola. Hasta luego. \n");
 			free(linea);
+			cerrar_planificador();
 			exit(1);
 			break;
 		}
@@ -1099,12 +1100,33 @@ void kill(int id){
 
 }
 void pedir_status(char* clave){
-	//serializar clave con protocolo
-	//eviar al coordi y se recibe por otro hilo
-	//sleep para dar tiempo de respuesta?
+	int tamanio_buffer = tamanio_buffer_string(clave);
+	void* buffer_pedido_clave = malloc(tamanio_buffer);
+	serializar_string(buffer_pedido_clave, clave, 21);
+	enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
+	sleep(2);
+	//se recibe la respuesta por otro hilo
 }
 void deadlock(){
 
+}
+
+
+// Rutinas de cierre
+void cerrar_sockets(){
+	close(sockets_planificador.socket_coordinador);
+	//cerrar los sockets de la lista de pcbs
+}
+void cerrar_hilos(){
+	//joinear los hilos (?
+}
+void cerrar_planificador(){
+	void* envio = malloc(sizeof(int));
+	serializar_id(envio, 20);
+	enviar(sockets_planificador.socket_coordinador, envio, sizeof(int), logger);
+	cerrar_sockets();
+	cerrar_hilos();
+	//liberar variables globales
 }
 
 
