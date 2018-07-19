@@ -21,9 +21,6 @@ void leer_configuracion_propia(configuracion_propia* configuracion, t_log* logge
 			&(configuracion->nombreInstancia),
 			&(configuracion->intervaloDump));
 	fclose(archivo);
-
-	log_info(logger, "%s %s %s %s %d %d", configuracion->ipCoordinador, configuracion->puertoCoordinador, configuracion->algoritmoDeReemplazo,
-			configuracion->puntoDeMontaje, configuracion->nombreInstancia, configuracion->intervaloDump);
 }
 
 void enviar_exito(int socket_coordinador, t_log* logger) {
@@ -202,7 +199,8 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		log_info(logger, "Se pidio operacion con STORE");
 		tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
 		guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave, logger);
-		enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger);
+		log_info(logger, "Guarde en el archivo");
+		//enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger); //Ya lo hace el planificador
 		enviar_exito(socket_coordinador,logger);
 		break;
 	}
@@ -266,7 +264,6 @@ void almacenar_valor(char* valor, int tamanio_valor){
 void guardar_archivo(char* clave,int tamanio_clave, t_log* logger){
 
 			log_info(logger, "Entre a guardar");
-			log_info(logger, "Tengo el path: %s", mi_configuracion.puntoDeMontaje);
 			char* path;
 			char* valor;
 			int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
@@ -278,11 +275,13 @@ void guardar_archivo(char* clave,int tamanio_clave, t_log* logger){
 			int fd;
 			char* puntero_memoria;
 
-			memcpy(clave_buscada, clave,tamanio_clave);
+			memcpy(clave_buscada, clave, tamanio_clave);
 			estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 			int tamanio_valor = entrada_encontrada->tamanio_valor;
 			valor = malloc(tamanio_valor);
 			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
+
+			log_info(logger, "Clave encontrada: %s, valor: %s", entrada_encontrada->clave, valor);
 
 			fd =  open(path, O_RDWR | O_CREAT, S_IRWXU);
 
@@ -292,16 +291,18 @@ void guardar_archivo(char* clave,int tamanio_clave, t_log* logger){
 
 			lseek(fd,tamanio_valor,SEEK_SET);
 
+			//swrite(fd, valor, tamanio_valor);
+
 			puntero_memoria = mmap(NULL,tamanio_valor,PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
-			memcpy(puntero_memoria, valor, tamanio_valor);
-
+			log_info(logger, "Voy a guardar algo de tamanio %d", tamanio_valor);
+			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
 			msync(puntero_memoria, tamanio_valor, MS_SYNC);
-
 			munmap(puntero_memoria, tamanio_valor);
+			//close(fd);
 }
 
 	void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
-		void* buffer = malloc(sizeof(int)+ sizeof(clave));
+		void* buffer = malloc(sizeof(int)+ strlen(clave));
 		serializar_pedido_desbloqueo(buffer,clave);
 		enviar(socket_coordinador, buffer, sizeof(int), logger);
 		free(buffer);
