@@ -1,4 +1,11 @@
 #include "funciones_plani.h"
+#include <commons/string.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
 //////////----------COSAS POR HACER ANTES DE SEGUIR----------//////////
 //1. TERMINAR DE LEER EL ARCHIVO DE CONFIGURACION Y VER QUE LEA BIEN = LISTA DE CLAVES INICIALMENTE BLOQUEADAS
@@ -900,6 +907,204 @@ void imprimir_id_esi(void* esi){
 }
 
 
+// CONSOLA
+void ejecutar_consola(){
+	char * linea;
+	char * clave;
+	char* recurso;
+	int el_id;
+
+	while(1) {
+		linea = readline("> Ingrese un comando: ");
+		if(linea){
+			add_history(linea);
+			printf("---> La linea ingresada fue: %s\n", linea);
+		}
+		string_to_lower(linea);
+
+		if(!strncmp(linea, "exit", 4)) {
+			printf("Cerrando Consola. Hasta luego. \n");
+			free(linea);
+			exit(1);
+			break;
+		}
+
+		op_consola operacion = analizar_linea(linea);
+
+		if(operacion != INVALIDO){
+
+			char **palabras = string_to_array(linea);
+
+			switch(operacion){
+			case BLOQUEAR:
+				printf("Usted quiere bloquear un ESI.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				printf("Clave: %s ---- ", palabras[1]);
+				printf("ID: %s ---- ", palabras[2]);
+				if(palabras[3]==NULL)  {printf("Bloque vacio\n");}
+					else {
+						palabras[3] = NULL;
+						printf("Bloque vacio\n");
+					}
+				clave = palabras[1];
+				el_id = atoi(palabras[2]);
+				bloquear(clave, el_id);
+				break;
+			case DESBLOQUEAR:
+				printf("Usted quiere desbloquear un ESI de para una clave.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				printf("Clave: %s ---- ", palabras[1]);
+				if(palabras[2]==NULL) {printf("Bloque vacio\n");}
+					else {
+						palabras[2] = NULL;
+						printf("Bloque vacio\n");
+					}
+				clave = palabras[1];
+				desbloquear(clave);
+				break;
+			case KILL:
+				printf("Usted quiere finalizar un proceso.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				printf("ID: %s ---- ", palabras[1]);
+				if(palabras[2]==NULL)  {printf("Bloque vacio\n");}
+				else {
+					palabras[2] = NULL;
+					printf("Bloque vacio\n");
+				}
+				el_id = atoi(palabras[1]);
+				kill(el_id);
+				break;
+			case PAUSAR:
+				printf("Usted quiere pausar la planificacion.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				if(palabras[1]==NULL)  {printf("Bloque vacio\n");}
+				else {
+					palabras[1] = NULL;
+					printf("Bloque vacio\n");
+				}
+				pausar_planificacion();
+				break;
+			case CONTINUAR:
+				printf("Usted quiere continuar la planificacion.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				if(palabras[1]==NULL)  {printf("Bloque vacio\n");}
+				else {
+					palabras[1] = NULL;
+					printf("Bloque vacio\n");
+				}
+				continuar_planificacion();
+				break;
+			case LISTAR:
+				printf("Usted quiere listar los procesos en cola de espera para un recurso.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				printf("Recurso: %s ---- ", palabras[1]);
+				if(palabras[2]==NULL)  {printf("Bloque vacio\n");}
+				else {
+					palabras[2] = NULL;
+					printf("Bloque vacio\n");
+				}
+				recurso = palabras[1];
+				listar_procesos_encolados(recurso);
+				break;
+			case STATUS:
+				printf("Usted quiere ver el estado de una clave.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				printf("Clave: %s ---- ", palabras[1]);
+				if(palabras[2]==NULL)  {printf("Bloque vacio\n");}
+				else {
+					palabras[2] = NULL;
+					printf("Bloque vacio\n");
+				}
+				clave = palabras[1];
+				status(clave);
+				break;
+			case DEADLOCK:
+				printf("Usted quiere analizar deadlocks.\n");
+				printf("Operacion: %s ---- ", palabras[0]);
+				if(palabras[1]==NULL)  {printf("Bloque vacio\n");}
+				else {
+					palabras[1] = NULL;
+					printf("Bloque vacio\n");
+				}
+				deadlock();
+				break;
+		   default:
+			   break;
+			}
+		} else{
+			printf("Comando no reconocido. Ingrese nuevamente. \n");
+		}
+  }
+  free(linea);
+  exit(1);
+}
+
+op_consola analizar_linea(char* linea){
+
+	if(string_contains(linea, "bloquear")) {
+		return BLOQUEAR;
+	}
+	if(string_starts_with(linea, "desbloquear")) {
+		return DESBLOQUEAR;
+	}
+	if(string_starts_with(linea, "kill")){
+		return KILL;
+	}
+	if(string_starts_with(linea, "pausar")){
+		return PAUSAR;
+	}
+	if(string_starts_with(linea, "continuar")){
+		return CONTINUAR;
+	}
+	if(string_starts_with(linea, "listar")){
+		return LISTAR;
+	}
+	if(string_starts_with(linea, "status")){
+		return STATUS;
+	}
+	if(string_starts_with(linea, "deadlock")){
+		return DEADLOCK;
+	}
+	return INVALIDO;
+}
+
+char**  string_to_array(char* text) {
+    char **array_values = string_split(text, " ");
+    int i = 0;
+    while (array_values[i] != NULL) {
+	    string_trim(&(array_values[i]));
+	    i++;
+    }
+    return array_values;
+}
+
+
+// COMPLETAR SUBRUTINAS QUE VIENEN DE CONSOLA:
+void pausar_planificacion(){
+
+}
+void continuar_planificacion(){
+
+}
+void bloquear(char * clave, int id){
+
+}
+void desbloquear(char * clave){
+
+}
+void listar_procesos_encolados(char* recurso){
+
+}
+void kill(int id){
+
+}
+void status(char* clave){
+
+}
+void deadlock(){
+
+}
+
 
 //MUTEX
 
@@ -909,56 +1114,5 @@ void imprimir_id_esi(void* esi){
 //SEM
 //sem_wait(&un_semaforo); //WAIT
 //sem_post(&un_semaforo); //SIGNAL
-
-/*
-
-
-
-*/
-/*
-
-
-
-
-
-
-
-//consola
-
-void pausar_planificador(){
-	//syscall bloqueante ?????
-}
-
-void desbloquear_esi(char* clave){
-	mover_esi_a_ready(clave);
-}
-
-
-//ColaDeEsi listar(Clave clave){ //recurso == clave?
-//	return "claveBloqueada.esisEnEspera"; //busca en su lista de Claves bloqueadas, la clave que se le pide,
-//	//y devuelve la cola de esis bloqueados.
-//}
-
-
-void kill(int id_esi){
-	mover_esi_a_finalizado(id_esi);
-	//liberar los recursos. Fijarse que clave estaba ocupando y desocuparla.
-}
-
-
-int* deadlock(){return 0;} //va a devolver los esis con deadlocks //no se jaja
-
-void killEsis(ColaDeEsi esis){
-//	for(){ //mata los esis uno por uno
-//	kill(esi); }
-}
-
-
-
-
-
-
-*/
-
 
 
