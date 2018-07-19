@@ -124,7 +124,7 @@ void bloquear(char * clave, int id);
 void desbloquear(char * clave);
 void listar_procesos_encolados(char* recurso);
 void kill(int id);
-void status(char* clave);
+void pedir_status(char* clave);
 void deadlock();
 
  /* ESTAS NO IRIAN...

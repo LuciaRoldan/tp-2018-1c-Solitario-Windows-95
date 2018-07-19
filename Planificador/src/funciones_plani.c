@@ -1016,7 +1016,7 @@ void ejecutar_consola(){
 					printf("Bloque vacio\n");
 				}
 				clave = palabras[1];
-				status(clave);
+				pedir_status(clave);
 				break;
 			case DEADLOCK:
 				printf("Usted quiere analizar deadlocks.\n");
@@ -1098,8 +1098,10 @@ void listar_procesos_encolados(char* recurso){
 void kill(int id){
 
 }
-void status(char* clave){
-
+void pedir_status(char* clave){
+	//serializar clave con protocolo
+	//eviar al coordi y se recibe por otro hilo
+	//sleep para dar tiempo de respuesta?
 }
 void deadlock(){
 
