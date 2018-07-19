@@ -16,7 +16,7 @@ int main() {
 	pthread_t hilo_escucha_esis;
 	pthread_t hilo_coordinador;
 	pthread_t hilo_manejar_esis;
-	//pthread_t hilo_consola;
+	pthread_t hilo_consola;
 
 
 	//Crear listas globales
@@ -35,7 +35,7 @@ int main() {
 	pthread_create(&hilo_escucha_esis, 0, recibir_esis, puntero_socket_esis);
 	pthread_create(&hilo_manejar_esis, 0, manejar_esis, NULL);
 	pthread_create(&hilo_coordinador, 0, manejar_coordinador, puntero_socket_coordinador);
-	//pthread_create(&hilo_consola, 0, manejar_consola, (void*) 0);
+	pthread_create(&hilo_consola, 0, ejecutar_consola, (void*) 0);
 
 	//CIERRO HILOS
 			if(hay_hilos_por_cerrar){
