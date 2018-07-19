@@ -17,20 +17,11 @@ int procesar_mensaje(int socket){
 	int rta_esi;
 
 	switch(id){
-		case 20:
-			return 1;
-
-		case 21:
+		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
 			protocolo_extra = 1;
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
-			return resultado;
-			break;
-
-		case 24:
-			serializar_id(buffer_int, 64);
-			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			return resultado;
 			break;
 
@@ -137,6 +128,7 @@ int procesar_mensaje(int socket){
 			return -1;
 			break;
 	}
+	free(buffer_int);
 }
 
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
@@ -172,6 +164,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		hilo_a_cerrar = &esi_ejecutando->hilo;
 		sem_post(&s_cerrar_hilo);
 		pthread_mutex_unlock(&m_esi_ejecutando);
+		free(buffer_int);
 		return -1;
 	} else {
 		pthread_mutex_unlock(&m_log_operaciones);
@@ -184,6 +177,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		enviar_operacion(socket_planificador, instruccion);
 		return 1;
 	}
+	free(clave);
 }
 
 //////////////////////////////////////////////////// CONEXION /////////////////////////////////////////////////////
@@ -217,18 +211,19 @@ int handshake(int socket_cliente){
 		break;
 
 	case INSTANCIA:
-		log_info(logger, "Se establecio la conexion con una Instancia ");
+		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
 	case ESI:
-		log_info(logger, "Se establecio la conexion con un ESI ");
+		log_info(logger, "Se establecio la conexion con el ESI %d", proceso_recibido.id);
 		agregar_nuevo_esi(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
 
-		default:
+	default:
+		log_info(logger, "Conexion de proceso desconocido");
 		return -1;
 		break;
 	}
@@ -236,11 +231,15 @@ int handshake(int socket_cliente){
 
 void procesar_conexion(){
 	int id_mensaje;
-	while(1){
+	int resultado = 1;
+	while(resultado > 0){
 		int socket_cliente = aceptar_conexion(socket_escucha);
 		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
 		if(id_mensaje == 80){
-			handshake(socket_cliente);
+			resultado = handshake(socket_cliente);
+		} else {
+			log_info(logger, "Se recibio un protocolo desconocido: %d", id_mensaje);
+			resultado = -1;
 		}
 	}
 }
@@ -252,20 +251,24 @@ void atender_planificador(){
 		resultado = procesar_mensaje(socket_planificador);
 	}
 	log_error(logger, "Fallo en la conexion con el Planificador");
+	terminar_programa = true;
+	sem_post(&s_cerrar_hilo);
 }
 
 void atender_esi(void* datos_esi){
 	int resultado = 1;
-	log_info(logger, "Estoy en el hilo del esi!");
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_esi);
+	free(datos_esi);
+	log_info(logger, "Hilo del ESI %d creado", mis_datos.id);
 	while(resultado > 0){
 		resultado = procesar_mensaje(mis_datos.socket);
 	}
 }
 
 void atender_instancia(void* datos_instancia){
-	log_info(logger, "Estoy en el hilo de la instancia!");
 	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_instancia);
+	free(datos_instancia);
+	log_info(logger, "Hilo de la Instancia %d creado", mis_datos.id);
 	enviar_configuracion_instancia(mis_datos.socket);
 	int resultado = 1;
 	while(resultado > 0){
@@ -300,8 +303,7 @@ bool condicion_socket_instancia(void* datos){
 
 bool condicion_clave(void* datos){
 	nodo_clave un_nodo = *((nodo_clave*) datos);
-	return strcmp(un_nodo.clave, clave_buscada);
-
+	return (strcmp(un_nodo.clave, clave_buscada) == 0);
 }
 
 bool condicion_socket_clave(void* datos){
@@ -425,10 +427,10 @@ hilo_proceso deserializar_hilo_proceso(void *buffer_recepcion){
 
 void agregar_nuevo_esi(int socket_esi, int id_esi){
 	hilo_proceso datos_esi = {socket_esi, id_esi};
-	void* buffer = malloc(sizeof(int)*2);
+	void* buffer = malloc(sizeof(int)*2); //liberado en atender_esi
 	serializar_hilo_proceso(buffer, datos_esi);
 	pthread_t hilo_esi;
-	pthread_create(&hilo_esi, 0, atender_esi, buffer); //(void*) &
+	pthread_create(&hilo_esi, 0, atender_esi, buffer);
 	nodo* el_nodo = malloc(sizeof(nodo));
 	el_nodo->socket = socket_esi;
 	el_nodo->id = id_esi;
@@ -440,7 +442,7 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	hilo_proceso datos_instancia = {socket_instancia, id_instancia};
-	void* buffer = malloc(sizeof(int)*2);
+	void* buffer = malloc(sizeof(int)*2); //liberado en atender_instancia
 	serializar_hilo_proceso(buffer, datos_instancia);
 	pthread_t hilo_instancia;
 	pthread_create(&hilo_instancia, 0, atender_instancia, buffer);
@@ -475,6 +477,7 @@ void inicializar_coordinador(){
 	lista_instancias = list_create();
 	lista_claves = list_create();
 	ultima_instancia_EL = 0;
+	terminar_programa = 0;
 	inicializar_semaforos();
 }
 
@@ -520,6 +523,7 @@ int enviar_configuracion_instancia(int socket){
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_configuracion_inicial_instancia(buffer, mensaje);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*3, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -528,6 +532,7 @@ int enviar_status_clave(int socket, status_clave status){
 	void* buffer = malloc(tamanio);
 	serializar_status_clave(buffer, status);
 	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -536,6 +541,7 @@ int enviar_pedido_valor(int socket, char* clave, int id){
 	void* buffer = malloc(tamanio);
 	serializar_string(buffer, clave, id);
 	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -543,6 +549,7 @@ int enviar_confirmacion(int socket, int confirmacion, int id){
 	void* buffer = malloc(sizeof(int)*2);
 	serializar_int(buffer, confirmacion, id);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*2, logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -551,6 +558,7 @@ int recibir_confirmacion(int socket){
 	void* buffer = malloc(sizeof(int));
 	recibir(socket, buffer, sizeof(int), logger);
 	confirmacion = deserializar_id(buffer);
+	free(buffer);
 	return confirmacion;
 }
 
@@ -561,6 +569,7 @@ char* recibir_pedido_clave(int socket){
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	deserializar_string(buffer,clave);
+	free(buffer);
 	return clave;
 }
 
@@ -571,6 +580,7 @@ status_clave recibir_status(int socket){
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	status = deserializar_status_clave(buffer);
+	free(buffer);
 	return status;
 }
 
@@ -583,6 +593,8 @@ t_esi_operacion recibir_instruccion(int socket){
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	instruccion = deserializar_instruccion(buffer);
+	free(buffer);
+	free(buffercito);
 	return instruccion;
 }
 
@@ -591,6 +603,7 @@ int enviar_operacion(int socket, t_esi_operacion instruccion){
 	void* buffer = malloc(tamanio);
 	serializar_instruccion(buffer, instruccion);
 	int resultado = enviar(socket, buffer, tamanio, logger);
+	free(buffer);
 	return resultado;
 }
 

@@ -56,6 +56,7 @@ int socket_planificador; //Deberia poner un semaforo para esta variable?
 int socket_escucha;
 char* clave_buscada;
 int id_instancia_buscado;
+bool terminar_programa;
 
 
 pthread_mutex_t m_operacion_ejecutando;
