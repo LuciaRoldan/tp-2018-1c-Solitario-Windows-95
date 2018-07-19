@@ -48,7 +48,18 @@ t_list* esis_bloqueados;
 t_list* esis_finalizados;
 t_list* claves_bloqueadas;
 
-
+// Tipo operaciones de consola
+typedef enum {
+	BLOQUEAR,
+	DESBLOQUEAR,
+	PAUSAR,
+	CONTINUAR,
+	LISTAR,
+	KILL,
+	STATUS,
+	DEADLOCK,
+	INVALIDO
+} op_consola;
 
 ///---Variables Globales Auxiliares---///
 int id_buscado;
@@ -101,8 +112,23 @@ void conectarse_al_coordinador(int socket_coordinador);
 void inicializar_semaforos();
 
 
-/*
+
 /////-----CONSOLA-----/////
+void ejecutar_consola();
+// Operaciones internas de consola
+op_consola analizar_linea(char* linea);
+char**  string_to_array(char* text);
+// Comandos de consola
+void pausar_planificacion();
+void continuar_planificacion();
+void bloquear(char * clave, int id);
+void desbloquear(char * clave);
+void listar_procesos_encolados(char* recurso);
+void kill(int id);
+void pedir_status(char* clave);
+void deadlock();
+
+ /* ESTAS NO IRIAN...
 void manejar_consola();
 void pausar_planificador();
 void bloquear_esi(char* clave, int esi_id);
@@ -146,7 +172,7 @@ void mover_esi_a_finalizados(int id_esi);
 //Operaciones sobre claves_bloqueadas
 void liberar_clave(char* clave);
 
-
+void cerrar_planificador();
 
 ///---FUNCIONES AUXILIARES---///
 //ids_iguales

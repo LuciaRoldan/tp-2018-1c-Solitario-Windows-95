@@ -32,9 +32,12 @@ int main(){
 			}
 	}
 
-	pthread_join(hilo_escucha, NULL);
-	pthread_join(hilo_planificador, NULL);
 	close(socket_escucha);
+	pthread_cancel(hilo_escucha);
+	pthread_join(hilo_planificador, NULL);
+	list_destroy_and_destroy_elements(lista_esis, eliminar_nodo);
+	list_destroy_and_destroy_elements(lista_instancias, eliminar_nodo);
+	list_destroy_and_destroy_elements(lista_claves, eliminar_nodo_clave);
 	log_info(logger, "El coordinador termino su ejecucuion");
 
 	return 0;

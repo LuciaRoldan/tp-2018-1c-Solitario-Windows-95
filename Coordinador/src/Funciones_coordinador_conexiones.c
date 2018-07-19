@@ -1,0 +1,120 @@
+#include "Funciones_coordinador.h"
+
+//////////////////////////////////////////////////// CONEXION /////////////////////////////////////////////////////
+
+int handshake(int socket_cliente){
+	int conexion_hecha = 0;
+
+	t_handshake proceso_recibido;
+	t_handshake yo = {0, COORDINADOR};
+	void* buffer_recepcion = malloc(sizeof(int)*2);
+	void* buffer_envio = malloc(sizeof(int)*3);
+
+	recibir(socket_cliente, buffer_recepcion, sizeof(int)*2, logger);
+	proceso_recibido = deserializar_handshake(buffer_recepcion);
+
+	free(buffer_recepcion);
+
+	serializar_handshake(buffer_envio, yo);
+	enviar(socket_cliente, buffer_envio, sizeof(int)*3, logger);
+
+	free(buffer_envio);
+
+	switch(proceso_recibido.proceso){
+	case PLANIFICADOR:
+		if(!conexion_hecha){
+			conexion_hecha = 1;
+			return 1;
+		}else{
+			return -1;
+		}
+		break;
+
+	case INSTANCIA:
+		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
+		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
+		return 1;
+		break;
+
+	case ESI:
+		log_info(logger, "Se establecio la conexion con el ESI %d", proceso_recibido.id);
+		agregar_nuevo_esi(socket_cliente, proceso_recibido.id);
+		return 1;
+		break;
+
+	default:
+		log_info(logger, "Conexion de proceso desconocido");
+		return -1;
+		break;
+	}
+}
+
+void procesar_conexion(){
+	int id_mensaje;
+	int resultado = 1;
+	while(resultado > 0 && !terminar_programa){
+		int socket_cliente = aceptar_conexion(socket_escucha);
+		recibir(socket_cliente, &id_mensaje, sizeof(int), logger);
+		if(id_mensaje == 80){
+			resultado = handshake(socket_cliente);
+		} else {
+			log_info(logger, "Se recibio un protocolo desconocido: %d", id_mensaje);
+			resultado = -1;
+		}
+	}
+	//pthread_exit(NULL);
+}
+
+void atender_planificador(){
+	log_info(logger, "Hilo del planificador creado");
+	int resultado = 1;
+	while(resultado > 0){
+		resultado = procesar_mensaje(socket_planificador);
+	}
+	if(resultado == -99){
+		log_info(logger, "Recibi la finalizacion del Planificador");
+	} else{
+		log_error(logger, "Fallo en la conexion con el Planificador");
+	}
+	terminar_programa = true;
+	close(socket_planificador);
+	sem_post(&s_cerrar_hilo);
+}
+
+void atender_esi(void* datos_esi){
+	int resultado = 1;
+	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_esi);
+	free(datos_esi);
+	log_info(logger, "Hilo del ESI %d creado", mis_datos.id);
+	while(resultado > 0 && !terminar_programa){
+		resultado = procesar_mensaje(mis_datos.socket);
+	}
+	//pthread_exit(NULL);
+}
+
+void atender_instancia(void* datos_instancia){
+	hilo_proceso mis_datos = deserializar_hilo_proceso(datos_instancia);
+	free(datos_instancia);
+	log_info(logger, "Hilo de la Instancia %d creado", mis_datos.id);
+	enviar_configuracion_instancia(mis_datos.socket);
+	int resultado = 1;
+	while(resultado > 0 && !terminar_programa){
+		resultado = procesar_mensaje(mis_datos.socket);
+	}
+	log_info(logger, "RIP instancia");
+	desconectar_instancia(mis_datos.socket);
+	//pthread_exit(NULL);
+}
+
+void desconectar_instancia(int socket){
+	pthread_mutex_lock(&m_socket_instancia_buscado);
+	socket_instancia_buscado = socket;
+	pthread_mutex_lock(&m_lista_instancias);
+	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
+	pthread_mutex_unlock(&m_lista_instancias);
+	pthread_mutex_unlock(&m_socket_instancia_buscado);
+	close(socket);
+	hilo_a_cerrar = &el_nodo->hilo;
+	sem_post(&s_cerrar_hilo);
+}
+

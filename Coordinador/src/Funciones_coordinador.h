@@ -101,6 +101,7 @@ void atender_planificador();
 void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
 void desconectar_instancia(int socket);
+void liberar_instruccion();
 
 //PRROCESAMIENTO
 int procesar_mensaje(int socket);
@@ -116,6 +117,9 @@ bool condicion_socket_instancia(void* datos);
 bool condicion_clave(void* datos);
 bool condicion_id_instancia(void* datos);
 bool condicion_socket_clave(void* datos);
+void eliminar_nodo(void* datos);
+void eliminar_nodo_clave(void* datos);
+bool clave_accesible(char* clave);
 
 //DE HILOS
 void agregar_nuevo_esi(int socket_esi, int id_esi);
