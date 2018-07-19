@@ -3,6 +3,14 @@
 
 #include "commons_propias/commons_propias.h"
 #include <semaphore.h>
+#include "funciones_plani.h"
+#include <commons/string.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
 
 //STRUCTS
@@ -114,9 +122,11 @@ void inicializar_semaforos();
 
 /////-----CONSOLA-----/////
 void ejecutar_consola();
+
 // Operaciones internas de consola
 op_consola analizar_linea(char* linea);
 char**  string_to_array(char* text);
+
 // Comandos de consola
 void pausar_planificacion();
 void continuar_planificacion();
@@ -127,19 +137,6 @@ void kill(int id);
 void pedir_status(char* clave);
 void deadlock();
 
- /* ESTAS NO IRIAN...
-void manejar_consola();
-void pausar_planificador();
-void bloquear_esi(char* clave, int esi_id);
-void desbloquearEsi(char* clave);
-//ColaDeEsi listar(Clave clave);
-void kill(int id_esi);
-int status(char* clave);
-int* deadlock();
-void kill_esis(ColaDeEsi esis);
-
-
-*/
 //MANEJAR ESIS
 void recibir_esis(void* socket_esis);
 void manejar_esis();
@@ -171,7 +168,10 @@ void mover_esi_a_finalizados(int id_esi);
 //Operaciones sobre claves_bloqueadas
 void liberar_clave(char* clave);
 
+///---RUTINAS DE CIERRE DE PLANI---///
 void cerrar_planificador();
+void cerrar_sockets();
+void cerrar_hilos();
 
 ///---FUNCIONES AUXILIARES---///
 //ids_iguales
