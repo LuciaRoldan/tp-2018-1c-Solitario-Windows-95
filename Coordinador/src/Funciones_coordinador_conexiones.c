@@ -71,7 +71,11 @@ void atender_planificador(){
 	while(resultado > 0){
 		resultado = procesar_mensaje(socket_planificador);
 	}
-	log_error(logger, "Fallo en la conexion con el Planificador");
+	if(resultado == -99){
+		log_info(logger, "Recibi la finalizacion del Planificador");
+	} else{
+		log_error(logger, "Fallo en la conexion con el Planificador");
+	}
 	terminar_programa = true;
 	close(socket_planificador);
 	sem_post(&s_cerrar_hilo);

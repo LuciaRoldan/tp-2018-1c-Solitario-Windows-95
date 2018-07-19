@@ -18,6 +18,8 @@ int procesar_mensaje(int socket){
 	int rta_esi;
 
 	switch(id){
+		case 20:
+			return -99;
 		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);
 			nodo_instancia = buscar_instancia(clave);
@@ -64,7 +66,7 @@ int procesar_mensaje(int socket){
 		case 83: //Status clave
 			status = recibir_status(socket);
 			//buscar_instancia_ficticia
-			status.id_instancia_nueva;
+			//status.id_instancia_nueva;
 			resultado = enviar_status_clave(socket_planificador, status);
 			return resultado;
 			break;
@@ -78,8 +80,17 @@ int procesar_mensaje(int socket){
 			return 1;
 
 		case 85: //Fallo
-			//Falta implementar, minimizar uso
-			return -1;
+			log_info(logger, "Fallo por clave no identificada, ID ESI: %d", esi_ejecutando->id);
+			rta_esi = 25;
+			buffer_int = malloc(sizeof(int));
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			free(buffer_int);
+			liberar_instruccion();
+			pthread_mutex_unlock(&m_operacion_ejecutando);
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			pthread_mutex_unlock(&m_esi_ejecutando);
+			return 1;
 			break;
 
 		case 87: //Fallo clave no identificada
