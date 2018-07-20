@@ -22,12 +22,13 @@ int procesar_mensaje(int socket){
 			return -99;
 		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);
+			log_info(logger, "Me llego el pedido de la clave: %d", clave);
 			nodo_instancia = buscar_instancia(clave);
-			protocolo_extra = 1;
+			log_info(logger, "Le voy a pedir a la instancia: %d", nodo_instancia->id);
+			protocolo_extra = 83;
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
 			return resultado;
 			break;
-
 		case 25: //Exito instancia
 			log_info(logger, "Recibi confirmacion de la Instancia %d", instancia_seleccionada->id);
 			pthread_mutex_unlock(&m_instancia_seleccionada);

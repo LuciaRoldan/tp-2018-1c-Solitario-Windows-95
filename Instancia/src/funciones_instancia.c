@@ -82,11 +82,6 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		procesar_instruccion(socket_coordinador, instruccion, logger);
 		break;
 	case (83):
-		buffer = malloc(sizeof(int));
-		recibir(socket_coordinador, buffer, sizeof(int), logger);
-		tamanio_clave = deserializar_id(buffer);
-		free(buffer);
-		clave =	malloc(tamanio_clave);
 		clave = recibe_pedido_status();
 		enviar_status_clave(clave); //declarar
 		free(clave);
@@ -99,32 +94,40 @@ void procesarID(int socket_coordinador, t_log* logger) {
 }
 
 char* recibe_pedido_status() {
-	char* la_clave;
 	int tamanio;
-	void* buffer_tamanio = malloc(sizeof(int));
-	int num = recibir(socket_coordinador,buffer_tamanio,sizeof(int),logger);
-	printf("me llegaron %d bytes \n", num);
-	tamanio = deserializar_id(buffer_tamanio);
+	recibir(socket_coordinador, &tamanio, sizeof(int), logger);
 	void* buffer = malloc(tamanio);
-	int bytes_recibidos = recibir(socket_coordinador,buffer, tamanio,logger);
-	printf("me llegaron %d bytes \n", bytes_recibidos);
-	log_info(logger,"recibi %d bytes", bytes_recibidos);
-	deserializar_string(buffer, la_clave);
-	log_info(logger,"recibi la clave %s: ", la_clave);
-	free(buffer_tamanio);
-	free(buffer);
-//	hay que agregar un free de la clave
-	return la_clave;
+	char* clave = malloc(tamanio);
+	recibir(socket_coordinador, buffer, tamanio, logger);
+	deserializar_string(buffer, clave);
+	log_info(logger, "todo piola la clave es: %s", clave);
+	return clave;
 }
 
 int enviar_status_clave(char* clave){
 	clave_buscada = clave;
+	status_clave statuss;
+	log_info(logger, "llegue hasta enviar status");
+	if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){
+		log_info(logger, "aguno satisdae busqueda status_clave");
 	estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-	status_clave status = {clave,idInstancia, 0, entrada_encontrada->valor};
-	int tamanio_buffer = tamanio_buffer_status(status);
+	statuss.clave = clave;
+	statuss.id_instancia_actual = idInstancia;
+	statuss.id_instancia_nueva = 0;
+	statuss.contenido = entrada_encontrada->valor;
+	}
+	else {
+	statuss.clave = clave;
+	statuss.id_instancia_actual = 0;
+	statuss.id_instancia_nueva = 0;
+	statuss.contenido = "lol";
+	}
+	log_info(logger, "pase el list_any_satisty");
+	int tamanio_buffer = tamanio_buffer_status(statuss);
+	log_info(logger, "tamanio de %d", tamanio_buffer);
 	void* buffer = malloc(tamanio_buffer);
-	serializar_status_clave(buffer,status);
-	int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
+	serializar_status_clave(buffer, statuss);
+	int bytes_enviados = enviar(socket_coordinador, buffer, tamanio_buffer,logger);
 	free(buffer);
 	return bytes_enviados;
 }
