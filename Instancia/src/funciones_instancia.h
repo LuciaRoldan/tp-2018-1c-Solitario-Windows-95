@@ -20,6 +20,7 @@ int puntero_circular;
 int lugar_de_memoria;
 
 
+
 typedef enum {
 	LRU, CIRC, BSU
 } tipo_algoritmo_reemplazo;
@@ -55,7 +56,7 @@ char* memoria;
 FILE* archivo_configuracion;
 FILE*archivo;
 t_log * logger;
-
+pthread_mutex_t m_tabla;
 int socket_coordinador;
 
 ///////////////////////// FUNCIONES /////////////////////////
@@ -98,5 +99,7 @@ void implementar_algoritmo();
 void procesarID(int socket_coordinador, t_log* logger);
 void borrar_entrada(void* entrada);
 void sumar_operacion(void* entradas);
+void dump();
+void dumpear(void* datos);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
