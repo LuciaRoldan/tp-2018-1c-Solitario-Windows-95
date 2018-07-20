@@ -80,7 +80,7 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		enviar_status_clave(clave); //declarar
 		free(clave);
 		break;
-	case 85: //INDICA QUE DEBE SALIR DEL WHILE
+	case (85): //INDICA QUE DEBE SALIR DEL WHILE
 		activa = false;
 		break;
 	}
@@ -158,15 +158,19 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 		if (!list_any_satisfy(tabla_entradas,condicion_clave_entrada)){
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
-			estructura_clave* entrada_nueva = malloc(sizeof (estructura_clave));
+
+			estructura_clave* entrada_nueva = malloc(sizeof(estructura_clave));
+			log_info(logger,"Se hizo el primer malloc");
 			entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
-			entrada_nueva->numero_entrada = indice;
 			memcpy(entrada_nueva->clave,clave_buscada,tamanio_clave);
-			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
+			log_info(logger,"Se hizo el primer memcpy");
 			entrada_nueva->numero_entrada = indice;
+			log_info(logger,"Se hizo el segundo memcpy");
+			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
 			list_add_in_index(tabla_entradas, indice, entrada_nueva);
 			log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
 			indice ++;
+			free(clave_buscada);
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
@@ -184,25 +188,22 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		printf("La clave es: %s\n", clave_buscada);
 		printf("El valor de la clave es: %s\n", valor);
 
-		estructura_clave* entrada_encontrada = list_get(tabla_entradas, 0);
-		log_info(logger, "Clave %s", entrada_encontrada->clave);
-		log_info(logger, "Tamanio lista: %d", list_size(tabla_entradas));
-		log_info(logger, "Cantidad que cumple: %d", list_count_satisfying(tabla_entradas, condicion_clave_entrada));
-		//estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		entrada_encontrada->cantidad_entradas = cantidad_entradas;
 		entrada_encontrada->tamanio_valor = tamanio_valor;
+		entrada_encontrada->cantidad_operaciones = 0;
 
 		log_info(logger,"ocupa %d entradas ", cantidad_entradas);
 		log_info(logger,"el tamanio del valor es: %d ", tamanio_valor);
 		log_info(logger,"el valor es: %s", valor);
-//		entrada_encontrada->valor = malloc(tamanio_valor); CREO QUE ESTO SE PUEDE BORRAR
-//		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
+		entrada_encontrada->valor = malloc(tamanio_valor); //CREO QUE ESTO SE PUEDE BORRAR
+		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
 		log_info(logger, "asigno el valor");
 		asignar_memoria(*entrada_encontrada, cantidad_entradas, valor, logger);
 		enviar_exito(socket_coordinador,logger);
-		free(valor);
+//		free(valor);
 		free(clave_buscada);
 		break;
 	case (STORE):
@@ -252,7 +253,7 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 
 void sumar_operacion(void* entradas){
 	estructura_clave* entrada = entradas;
-	entrada->operaciones += 1;
+	entrada->cantidad_operaciones += 1;
 }
 
 
@@ -284,6 +285,7 @@ void aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 }
 
 void aplicar_LRU(estructura_clave* entrada_nueva){
+
 
 
 }
@@ -327,7 +329,7 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 				log_info(logger, "No se pudo abrir el archivo");
 			}
 
-			lseek(fd,tamanio_valor-1,SEEK_END);
+			lseek(fd,tamanio_valor-1,SEEK_SET);
 
 			write(fd, valor, tamanio_valor);
 

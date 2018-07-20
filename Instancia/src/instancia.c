@@ -10,6 +10,7 @@ int main(int argc, char* argv[]){
 
 	indice = 0;
 	activa = true;
+	puntero_circular = 0;
 	char log[10] = "INSTANCIA";
 	memcpy(&log[9], argv[2], 1);
 
