@@ -41,7 +41,8 @@ int main(int argc, char* argv[]){
 	log_info(logger,"Mi cantidad de entradas es: %d ", configuracion.cantidad_entradas);
 	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion.tamano_entrada);
 
-	const int cantidad_entradas = configuracion.cantidad_entradas;
+	const int cantidad_entradas = 3; //ACORDATE DE VOLVER A configuracion.cantidad_entradas;
+	configuracion.cantidad_entradas = 3; // Y ESTOO
 	acceso_tabla = (int*) malloc(cantidad_entradas*sizeof(int));
 	for(int i = 0; i< cantidad_entradas; i++){
 		acceso_tabla[i]=0;
@@ -56,9 +57,9 @@ int main(int argc, char* argv[]){
 	log_info(logger,"Guardo la memoria para los valores");
 //
 	while(activa){
-		log_info(logger, "Entré al while");
+		//log_info(logger, "Entré al while");
 		procesarID(socket_coordinador,logger);
-		log_info(logger, "Procesé. Vuelvo a entrar al while");
+		//log_info(logger, "Procesé. Vuelvo a entrar al while");
 	}
 
 	//free(espacio_para_memoria);
