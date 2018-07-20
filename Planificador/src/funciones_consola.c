@@ -24,7 +24,7 @@ void ejecutar_consola(){
 		}
 
 		op_consola operacion = analizar_linea(linea);
-		char **palabras = string_to_array(linea);
+		char **palabras = string_to_array(linea, " ");
 
 			switch(operacion){
 			case BLOQUEAR:
@@ -189,8 +189,8 @@ op_consola analizar_linea(char* linea){
 	return INVALIDO;
 }
 
-char**  string_to_array(char* text) {
-    char **array_values = string_split(text, " ");
+char**  string_to_array(char* text, char* separator) {
+    char **array_values = string_split(text, separator);
     int i = 0;
     while (array_values[i] != NULL) {
 	    string_trim(&(array_values[i]));

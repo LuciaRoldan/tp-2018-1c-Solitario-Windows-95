@@ -1,11 +1,4 @@
 #include "funciones_plani.h"
-#include <commons/string.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
 
 //////////----------COSAS POR HACER ANTES DE SEGUIR----------//////////
 //1. TERMINAR DE LEER EL ARCHIVO DE CONFIGURACION Y VER QUE LEA BIEN = LISTA DE CLAVES INICIALMENTE BLOQUEADAS
@@ -25,7 +18,7 @@ sockets inicializar_planificador(){
 }
 
 void leer_archivo_configuracion(){
-	t_config* configuracion = config_create("config_planificador");
+	t_config* configuracion = config_create("configu_planificador.cfg");
 
 		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
 		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
@@ -36,7 +29,17 @@ void leer_archivo_configuracion(){
 		log_info(logger, "Estimacion inicial es: %d", estimacion_inicial);
 		alpha = strtof(strdup(config_get_string_value(configuracion, "ALPHA")),NULL);
 		log_info(logger, "Alpha es: %f", alpha);
-		//falta leer las claves inicialmente bloqueadas
+		char** las_claves_bloqueadas = config_get_array_value(configuracion, "CLAVES_BLOQUEADAS");
+		log_info(logger, "Obtuve las claves bloqueadas");
+		claves_bloqueadas = list_create();
+		log_info(logger, "Creo lista de bloqueadas");
+		int indice_bloq = 0;
+		int tam_lista;
+		while(las_claves_bloqueadas[indice_bloq]){
+			list_add(claves_bloqueadas, las_claves_bloqueadas[indice_bloq]);
+			indice_bloq += 1;
+		}
+		free(las_claves_bloqueadas);
 
 	log_info(logger, "Se leyo el archivo de configuracion correctamente");
 }
