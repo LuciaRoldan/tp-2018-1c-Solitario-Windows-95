@@ -27,7 +27,7 @@ typedef enum {
 typedef struct{
 	char ipCoordinador[20];
 	char puertoCoordinador[5];
-	char algoritmoDeReemplazo[6];
+	tipo_algoritmo_reemplazo algoritmoDeReemplazo;
 	char puntoDeMontaje[100];
 	int nombreInstancia;
 	int intervaloDump;
@@ -80,7 +80,12 @@ int enviar_status_clave(char* clave);
 //---Enviar---//
 void enviar_fallo(int socket_coordinador, t_log* logger);
 void enviar_exito(int socket_coordinador, t_log* logger);
-//void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger);
+
+//---Algoritmos de reemplazo---//
+void implementar_algoritmo(estructura_clave* entrada_nueva, t_log* logger);
+void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger);
+void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva, t_log* logger);
+void aplicar_algoritmo_BSU(estructura_clave* entrada_nueva, t_log* logger);
 
 // AGREGO LAS QUE FALTABAN
 void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor, t_log* logger);
@@ -91,5 +96,7 @@ void almacenar_valor(char* valor, int tamanio_valor);
 void compactar();
 void implementar_algoritmo();
 void procesarID(int socket_coordinador, t_log* logger);
+void borrar_entrada(void* entrada);
+void sumar_operacion(void* entradas);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

@@ -78,6 +78,7 @@ pcb* esi_abortado;
 pthread_t* hilo_a_cerrar;
 int hay_hilos_por_cerrar;
 int pausar_planificador;
+int terminar_todo;
 
 
 ///---SEMAFOROS---///

@@ -201,10 +201,10 @@ char**  string_to_array(char* text, char* separator) {
 
 // COMPLETAR SUBRUTINAS QUE VIENEN DE CONSOLA:
 void pausar_planificacion(){
-
+	pausar_planificador = -1;
 }
 void continuar_planificacion(){
-
+	pausar_planificador = 1;
 }
 void bloquear(char * clave, int id){
 	mover_esi_a_bloqueados(clave, id);

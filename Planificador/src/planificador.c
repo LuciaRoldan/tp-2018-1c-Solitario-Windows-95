@@ -26,6 +26,7 @@ int main() {
 	clave_buscada = malloc(40);
 	hay_hilos_por_cerrar = 0;
 	pausar_planificador = 0;
+	terminar_todo = 1;
 
 
 	void* puntero_socket_esis = &sockets_planificador.socket_esis;
