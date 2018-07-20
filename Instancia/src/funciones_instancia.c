@@ -23,38 +23,6 @@ void leer_configuracion_propia(char* path, configuracion_propia* configuracion, 
 	fclose(archivo);
 }
 
-void enviar_exito(int socket_coordinador, t_log* logger) {
-	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer, 25);
-	enviar(socket_coordinador, buffer, sizeof(int), logger);
-	log_info(logger, "Le respondi al coordinador");
-	free(buffer);
-}
-
-void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
-	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer, 20);
-	enviar(socket_coordinador, buffer, sizeof(int), logger);
-	log_info(logger, "Me estoy cerrando");
-	free(buffer);
-}
-
-bool condicion_clave_entrada(void* datos){
-	estructura_clave* entrada = (estructura_clave*) datos;
-	log_info(logger, "Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
-	return !strcmp(entrada->clave, clave_buscada);
-}
-
-int cantidad_entradas_ocupa(int tamanio_valor){
-	if(tamanio_valor % configuracion.tamano_entrada == 0){
-		return tamanio_valor/configuracion.tamano_entrada;
-	} else {
-		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
-				return resultado.quot +1;
-	}
-
-}
-
 datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(datos_configuracion));
 	recibir(socket_coordinador, buffer, sizeof(datos_configuracion), logger);
@@ -89,6 +57,48 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		activa = false;
 		break;
 	}
+}
+
+t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
+	int tamanio_operacion = recibir_int(socket_coordinador, logger);
+	void* buffer = malloc(tamanio_operacion);
+	recibir(socket_coordinador, buffer, tamanio_operacion, logger);
+	t_esi_operacion instruccion = deserializar_instruccion(buffer);
+	free(buffer);
+	log_info(logger, "Recibi instrucccion del COORDINADOR");
+	return instruccion;
+}
+
+void enviar_exito(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 25);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Le respondi al coordinador");
+	free(buffer);
+}
+
+void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 20);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Me estoy cerrando");
+	free(buffer);
+}
+
+bool condicion_clave_entrada(void* datos){
+	estructura_clave* entrada = (estructura_clave*) datos;
+	log_info(logger, "Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
+	return !strcmp(entrada->clave, clave_buscada);
+}
+
+int cantidad_entradas_ocupa(int tamanio_valor){
+	if(tamanio_valor % configuracion.tamano_entrada == 0){
+		return tamanio_valor/configuracion.tamano_entrada;
+	} else {
+		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
+				return resultado.quot +1;
+	}
+
 }
 
 char* recibe_pedido_status() {
@@ -131,16 +141,6 @@ int enviar_status_clave(char* clave){
 }
 
 
-t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
-	int tamanio_operacion = recibir_int(socket_coordinador, logger);
-	void* buffer = malloc(tamanio_operacion);
-	recibir(socket_coordinador, buffer, tamanio_operacion, logger);
-	t_esi_operacion instruccion = deserializar_instruccion(buffer);
-	free(buffer);
-	log_info(logger, "Recibi instrucccion del COORDINADOR");
-	return instruccion;
-}
-
 void enviar_fallo(int socket_coordinador, t_log* logger){
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 24);
@@ -174,33 +174,27 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		entrada_nueva->cantidad_operaciones = 0;
 		entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
 		memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
-		entrada_nueva->valor = malloc(1);
-		memcpy(entrada_nueva->valor, "", sizeof(char));
+		entrada_nueva->valor = malloc(1);//hardcode por el plani
+		memcpy(entrada_nueva->valor,"", sizeof(char));//esta guardando una entrada del gran malloc
 
 		if (!list_any_satisfy(tabla_entradas, condicion_clave_entrada)) {
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
-			if (indice >= configuracion.cantidad_entradas) {
-				log_info(logger,"Entre al if del algoritmo");
-				implementar_algoritmo(entrada_nueva, logger);
-			} else {
-				log_info(logger,"Deberia entrar aca");
-				entrada_nueva->numero_entrada = indice;
+			int entrada_libre = entrada_bitmap_libre();
+			if (entrada_libre != -1) {
+				log_info(logger,"Hay lugar para guardar la clave");
+				entrada_nueva->numero_entrada = entrada_libre;
 				entrada_nueva->tamanio_valor = 0;
-				log_info(logger, "Se hizo el segundo memcpy");
-				acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
-				list_add_in_index(tabla_entradas, indice, entrada_nueva);
-				log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
-				indice++;
-			}
-				log_info(logger,"Aca te muestro que el indice esta en: %d ", indice);
+				acceso_tabla[entrada_libre] = 1; // ahora esa entrada esta ocupada
+				list_add_in_index(tabla_entradas, entrada_libre, entrada_nueva);
+//				indice++; parece que no lo voy a necesitar
 		}
 		free(clave_buscada);
 		enviar_exito(socket_coordinador,logger);
 		break;
 
 	case (SET):
-		estructura_clave* entrada_encontrada;
 		log_info(logger, "Se pidio operacion con SET");
+		estructura_clave* entrada_encontrada;
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor)+1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave)+1;
 
@@ -241,6 +235,17 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		list_iterate(tabla_entradas, sumar_operacion);
 		break;
 	}
+}
+//me deja saber si aluna entrada de la tabla de entradas esta libre
+int entrada_bitmap_libre(){
+	int i = 0;
+	while(i < configuracion.cantidad_entradas){
+		if(acceso_tabla[i] == 0){
+			return i;
+		}
+	}
+	return -1;
+
 }
 
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
