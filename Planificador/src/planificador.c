@@ -9,25 +9,23 @@
 
 int main() {
 
-	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
+	//Crear listas globales
+		pcbs = list_create();
+		esis_ready = list_create();
+		esis_finalizados = list_create();
+		claves_bloqueadas = list_create();
+		clave_buscada = malloc(40);
+		hay_hilos_por_cerrar = 0;
+		pausar_planificador = 0;
+		terminar_todo = 1;
+
+	logger = log_create("planificador.log", "PLANIFICADOR", 0, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
 
 	pthread_t hilo_escucha_esis;
 	pthread_t hilo_coordinador;
 	pthread_t hilo_manejar_esis;
 	pthread_t hilo_consola;
-
-
-	//Crear listas globales
-	pcbs = list_create();
-	esis_ready = list_create();
-	esis_finalizados = list_create();
-	claves_bloqueadas = list_create();
-	clave_buscada = malloc(40);
-	hay_hilos_por_cerrar = 0;
-	pausar_planificador = 0;
-	terminar_todo = 1;
-
 
 	void* puntero_socket_esis = &sockets_planificador.socket_esis;
 	void* puntero_socket_coordinador = &sockets_planificador.socket_coordinador;
