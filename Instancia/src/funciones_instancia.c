@@ -393,12 +393,15 @@ void compactar(){
 	serializar_id(buffercito, mensaje);
 	enviar(socket_coordinador, buffercito, sizeof(int), logger);//Envia al coordinador el pedido de cantidad instancias
 	free(buffercito);
-	void* buffer = sizeof(int);
+	void* buffer = malloc(sizeof(int));
 	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe el protocolo que deberia ser 03
 	mensaje = deserializar_id(buffer);
 	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe la cantidad
 	cantidad_instancias = deserializar_id(buffer);
-	sem_post(&s_compactacion, cantidad_instancias);//Habilita a todas las instancias a compactar
+	log_info(logger, "Voy a hacer %d posts", cantidad_instancias);
+	for(int i = 0; i < cantidad_instancias; i++){
+		sem_post(&s_compactacion);//Habilita a todas las instancias a compactar
+	}
 }
 
 void hilo_compactar(){

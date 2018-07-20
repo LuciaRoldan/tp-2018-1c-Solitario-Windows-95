@@ -97,6 +97,7 @@ int cantidad_entradas_ocupa(int tamanio_valor);
 bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
 void compactar();
+void hilo_compactar();
 void implementar_algoritmo();
 void procesarID(int socket_coordinador, t_log* logger);
 void borrar_entrada(void* entrada);
