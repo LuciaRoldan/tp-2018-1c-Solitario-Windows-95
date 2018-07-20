@@ -7,11 +7,11 @@
 #include <readline/keymaps.h>
 #include <readline/tilde.h>
 #include <string.h>
-#include <stdlib.h> // Para malloc
-#include <sys/socket.h> // Para crear sockets, enviar, recibir, etc
-#include <netdb.h> // Para getaddrinfo
-#include <unistd.h> // Para close
-#include <readline/readline.h> // Para usar readline
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <readline/readline.h>
 #include <readline/history.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -64,8 +64,8 @@ typedef struct {
 	int id;
 	estado estado;
 	pthread_t hilo;
-	int retardo; //tiempo en ser atendido el esi la ultima vez que ejecuto
-	int ultimaRafaga; //con el retardo y la ultimaRafaga se calcula la estimacion ?
+	int retardo;
+	int ultimaRafaga;
 	float ultimaEstimacion;
 	int socket;
 } pcb;
@@ -107,7 +107,6 @@ typedef struct  {
   int id_mensaje;
   char instruccion [10];
 } __attribute__((packed)) Mensaje;
-//no se deberian usar punteros en las structs cuando van a ser llamadas por sockets
 
 
 typedef struct {
