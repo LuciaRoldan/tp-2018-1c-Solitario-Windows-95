@@ -3,8 +3,6 @@
 //////////////////////////////////////////////////// CONEXION /////////////////////////////////////////////////////
 
 int handshake(int socket_cliente){
-	int conexion_hecha = 0;
-
 	t_handshake proceso_recibido;
 	t_handshake yo = {0, COORDINADOR};
 	void* buffer_recepcion = malloc(sizeof(int)*2);
@@ -19,15 +17,18 @@ int handshake(int socket_cliente){
 	enviar(socket_cliente, buffer_envio, sizeof(int)*3, logger);
 
 	free(buffer_envio);
+	if(conexion_hecha){
+		if(proceso_recibido.proceso == PLANIFICADOR){
+			conexion_hecha = 0;
+			return 1;
+		} else {
+			return -1;
+		}
+	}
 
 	switch(proceso_recibido.proceso){
 	case PLANIFICADOR:
-		if(!conexion_hecha){
-			conexion_hecha = 1;
-			return 1;
-		}else{
-			return -1;
-		}
+		return -1;
 		break;
 
 	case INSTANCIA:

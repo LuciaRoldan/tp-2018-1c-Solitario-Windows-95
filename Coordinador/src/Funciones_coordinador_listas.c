@@ -65,6 +65,7 @@ bool clave_accesible(char* clave){
 			return resultado;
 		}
 		return true;
+		free(clave_buscada);
 	}
 	pthread_mutex_unlock(&m_clave_buscada);
 	return true;
@@ -149,6 +150,7 @@ nodo* seleccionar_instancia(char* clave){
 	}
 	pthread_mutex_unlock(&m_lista_instancias);
 	return instancia_seleccionada;
+	free(char_KE);
 }
 
 int buscar_instancia_ficticia(char* clave){
@@ -176,6 +178,7 @@ void fin_instancia(void* datos){
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, fin);
 	enviar(nodo_instancia->socket, buffer, sizeof(int), logger);
+	free(buffer);
 }
 
 void cerrar_instancias(){
