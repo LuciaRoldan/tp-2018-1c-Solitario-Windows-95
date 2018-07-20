@@ -12,14 +12,13 @@ int* acceso_tabla;
 t_list* tabla_entradas;
 char* clave_buscada;
 int indice;
-char* inicio_memoria;
+void* inicio_memoria;
 int memoria_total;
-int memoria_usada;
+int puntero_pagina;
 bool activa;
 int id_instancia;
 int puntero_circular;
 int lugar_de_memoria;
-
 
 
 typedef enum {
