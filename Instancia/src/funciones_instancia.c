@@ -164,27 +164,26 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		log_info(logger, "Se pidio operacion con GET");
 		tamanio_clave = strlen(instruccion.argumentos.GET.clave)+1;
 		clave_buscada = malloc(tamanio_clave);
-		strcpy(clave_buscada,instruccion.argumentos.GET.clave);
+		memcpy(clave_buscada,instruccion.argumentos.GET.clave, tamanio_clave);
+		estructura_clave* entrada_nueva = malloc(sizeof(estructura_clave));
+		entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
+		memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
 
 		if (!list_any_satisfy(tabla_entradas, condicion_clave_entrada)) {
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
 			if (indice >= configuracion.cantidad_entradas) {
-				implementar_algoritmo(clave_buscada);
+				log_info(logger,"Entre al if del algoritmo");
+				implementar_algoritmo(entrada_nueva, logger);
 			} else {
-				estructura_clave* entrada_nueva = malloc(
-						sizeof(estructura_clave));
-				log_info(logger, "Se hizo el primer malloc");
-				entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
-				memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
-				log_info(logger, "Se hizo el primer memcpy");
+				log_info(logger,"Deberia entrar aca");
 				entrada_nueva->numero_entrada = indice;
 				log_info(logger, "Se hizo el segundo memcpy");
 				acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
 				list_add_in_index(tabla_entradas, indice, entrada_nueva);
 				log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
 				indice++;
-				log_info(logger,"Aca te muestro que el indice esta en: %d ", indice);
 			}
+				log_info(logger,"Aca te muestro que el indice esta en: %d ", indice);
 		}
 		free(clave_buscada);
 		enviar_exito(socket_coordinador,logger);
@@ -203,7 +202,10 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		printf("La clave es: %s\n", clave_buscada);
 		printf("El valor de la clave es: %s\n", valor);
 
+		log_info(logger,"la clave que busco es: %s ", clave_buscada);
+		log_info(logger,"cantidad de entradas de la tabla: %d ", list_size(tabla_entradas));
 		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+		log_info(logger,"Paso el find");
 
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		entrada_encontrada->cantidad_entradas = cantidad_entradas;
@@ -218,6 +220,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		log_info(logger, "asigno el valor");
 		asignar_memoria(*entrada_encontrada, cantidad_entradas, valor, logger);
 		enviar_exito(socket_coordinador,logger);
+		list_iterate(tabla_entradas, sumar_operacion);
 //		free(valor);
 		free(clave_buscada);
 		break;
@@ -227,6 +230,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave, logger);
 		log_info(logger, "Guarde en el archivo");
 		enviar_exito(socket_coordinador,logger);
+		list_iterate(tabla_entradas, sumar_operacion);
 		break;
 	}
 }
@@ -243,13 +247,13 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 			contador += 1;
 //			en caso de que no haya mas entradas aplica algoritmo de reemplazo
 			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-				implementar_algoritmo(&clave);
+				implementar_algoritmo(&clave, logger);
 			}
 		else{
 			posicion_siguiente += 1;
 			contador == 0;
 			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-							implementar_algoritmo(&clave);
+							implementar_algoritmo(&clave, logger);
 				}
 			}
 		}
@@ -260,7 +264,7 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 		int numero_entrada = clave.numero_entrada;
 		log_info(logger, " el numero_entrada es %d ", numero_entrada);
 		acceso_tabla[numero_entrada - i] = 1;
-		indice += entradas_contiguas_necesarias;
+		indice += (entradas_contiguas_necesarias - 1);
 		log_info(logger,"va a almacenar el valor");
 		almacenar_valor(valor, clave.tamanio_valor);
 
@@ -284,30 +288,57 @@ void almacenar_valor(char* valor, int tamanio_valor){
 	}
 }
 
-void aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
-	bool atomica = false;
+void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) {
+	log_info(logger, "Entre al algoritmo circular");
+	int atomica = 1;
+	log_info(logger, "variable atomica");
 	estructura_clave* entrada_original;
+	log_info(logger, "armo la estructura original");
 	while (atomica) {
+		log_info(logger,"Entre en el while");
 		entrada_original = list_get(tabla_entradas, puntero_circular);
+		log_info(logger, "Obtengo la entrada original");
 		if (entrada_original->cantidad_entradas == 1) {
-			atomica = true;
+			log_info(logger, "Es atomica");
+			atomica = 0;
 		}
+		log_info(logger, "Aumento el puntero circular");
 		puntero_circular += 1;
 		if(puntero_circular == configuracion.cantidad_entradas){
 			puntero_circular = 0;
 		}
 	}
-	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,entrada_original);
+	log_info(logger, "Sale del while");
+	entrada_nueva->numero_entrada = entrada_original->numero_entrada;
+	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,borrar_entrada);
+	log_info(logger, "Deberia reemplazar el elemento");
 }
 
-void aplicar_LRU(estructura_clave* entrada_nueva){
-
-
+void borrar_entrada(void* entrada){
+	estructura_clave* clave = entrada;
+	free(clave->clave);
+	free(clave->valor);
+	free(clave);
 
 }
 
-void implementar_algoritmo(estructura_clave* entrada_nueva){
-	aplicar_algoritmo_circular(entrada_nueva);
+void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
+	estructura_clave* entrada_LRU;
+	int maximo_LRU = 0;
+
+	for(int i = 0; i < configuracion.cantidad_entradas; i++){
+		entrada_LRU = list_get(tabla_entradas,i);
+		if(entrada_LRU->cantidad_operaciones > maximo_LRU){
+			maximo_LRU = entrada_LRU->cantidad_operaciones;
+		}
+	}
+	entrada_nueva->numero_entrada = entrada_LRU->numero_entrada;
+	list_replace_and_destroy_element(tabla_entradas,entrada_LRU->numero_entrada,entrada_nueva,borrar_entrada);
+}
+
+
+void implementar_algoritmo(estructura_clave* entrada_nueva, t_log* logger){
+	aplicar_algoritmo_circular(entrada_nueva, logger);
 }
 
 void compactar(){

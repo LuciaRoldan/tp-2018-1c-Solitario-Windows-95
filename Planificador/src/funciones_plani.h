@@ -2,11 +2,12 @@
 #define PLANIFICADOR_FUNCIONES_H_
 
 #include "commons_propias/commons_propias.h"
-#include <semaphore.h>
 #include "funciones_plani.h"
 #include <commons/string.h>
+#include <commons/config.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -125,7 +126,7 @@ void ejecutar_consola();
 
 // Operaciones internas de consola
 op_consola analizar_linea(char* linea);
-char**  string_to_array(char* text);
+char**  string_to_array(char* text, char* separator);
 
 // Comandos de consola
 void pausar_planificacion();
