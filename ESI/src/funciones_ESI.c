@@ -84,21 +84,19 @@ t_esi_operacion parsear_linea(FILE* archivo){
 }
 
 int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
-	puts("--> Entré a enviar");
 	int tamanio_buffer = tamanio_buffer_instruccion(instruccion);
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
-	puts("--> Fin de serializacion de instruccion");
+	log_info(logger_esi, "Fin de serializacion de instruccion");
 	int exito = enviar(socket_Coordinador, buffer_instruccion, tamanio_buffer, logger_esi);
-	puts("--> Instruccion enviada");
+	log_info(logger_esi, "Instruccion enviada al COORDINADOR.");
 	free(buffer_instruccion);
 	return exito;
 }
 
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
-	puts("--> Estoy por parsear");
 	t_esi_operacion operacion = parsear_linea(archivo);
-	puts("--> Parseado completo");
+	log_info(logger_esi,"Parseado de instruccion completo");
 	ultima_instruccion = operacion;
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
 		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
@@ -118,7 +116,7 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 		case 84:
 			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
 			break;
-		/*case 85:
+		case 85:
 			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
 			break;
 		case 86:
@@ -132,7 +130,7 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 			break;
 		case 89:
 			log_info(logger_esi, "Error de clave no bloqueada.");
-			break;*/ // YA NO ES NECESARIO PORQUE CHEQUEA ANTES DE ENTRAR
+			break;
 		case 90:
 			log_info(logger_esi, "Bloquear ESI.");
 			break;
@@ -149,9 +147,11 @@ void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
 	int envio;
 	serializar_id(&envio, 81);
 	if(flag == 0){
-	enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
-	enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
+		log_info(logger_esi, "Fin de script.\n");
+		enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
+		enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
 	} else{
+		log_info(logger_esi, "Fallo de clave. Abortando ESI.\n");
 		int aborto;
 		serializar_id(&aborto, 85);
 		enviar(conexiones.socket_plani, &aborto, sizeof(int), logger_esi);
