@@ -1,3 +1,6 @@
 GET futbol:messi
 SET futbol:messi TraemeLaCopa
 STORE futbol:messi
+GET eddie
+SET eddie wachi
+STORE eddie
