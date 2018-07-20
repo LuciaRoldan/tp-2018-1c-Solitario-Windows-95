@@ -17,6 +17,7 @@ int memoria_usada;
 bool activa;
 int id_instancia;
 int puntero_circular;
+int lugar_de_memoria;
 
 
 typedef enum {
