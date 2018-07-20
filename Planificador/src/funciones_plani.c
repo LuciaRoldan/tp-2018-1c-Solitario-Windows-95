@@ -202,6 +202,10 @@ void recibir_esis(void* socket_esis){
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
+	if(list_size(esis_ready) > 0){
+		sem_post(&s_planificar);
+	}
+
 	log_info(logger, "Entre a manejar ESI");
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
@@ -922,40 +926,6 @@ void imprimir_id_esi(void* esi){
 	int id_esi;
 	memcpy(&id_esi, esi, sizeof(int));
 	printf("%d  ", id_esi);
-}
-
-
-
-
-// COMPLETAR SUBRUTINAS QUE VIENEN DE CONSOLA:
-void pausar_planificacion(){
-
-}
-void continuar_planificacion(){
-
-}
-void bloquear(char * clave, int id){
-
-}
-void desbloquear(char * clave){
-
-}
-void listar_procesos_encolados(char* recurso){
-
-}
-void kill(int id){
-
-}
-void pedir_status(char* clave){
-	int tamanio_buffer = tamanio_buffer_string(clave);
-	void* buffer_pedido_clave = malloc(tamanio_buffer);
-	serializar_string(buffer_pedido_clave, clave, 21);
-	enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
-	sleep(2);
-	//se recibe la respuesta por otro hilo
-}
-void deadlock(){
-
 }
 
 
