@@ -46,13 +46,13 @@ void conectarse_al_coordinador(int socket_coordinador){
 }
 
 void inicializar_semaforos(){
-	if (pthread_mutex_init(&m_recibir_resultado_esi, NULL) != 0){printf("Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_hilo_a_cerrar, NULL) != 0){printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_recibir_resultado_esi, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_hilo_a_cerrar, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_lista_pcbs, NULL) != 0){printf("Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_lista_esis_ready, NULL) != 0){printf("Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_lista_claves_bloqueadas, NULL) != 0){printf("Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0){printf("Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_id_esi_ejecutando, NULL) != 0){printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_lista_esis_ready, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_lista_claves_bloqueadas, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&m_id_esi_ejecutando, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
 
 	sem_init(&s_cerrar_un_hilo, 0, 0); //el segundo numerito es el valor inicial. el primero es 0.
 	sem_init(&s_hilo_cerrado, 0, 0);
@@ -721,17 +721,14 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 
 //--Abortar ESI--//
 void abortar_esi(int id_esi){
-	pcb* esi_abortado;
+	pcb* esi_abortado = list_find(pcbs, ids_iguales_pcb);;
 
 	pcb* primer_elem = list_get(pcbs, 0);
 	log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
-	void* buscado = list_find(pcbs, ids_iguales_pcb);
-	memcpy(esi_abortado, buscado, sizeof(buscado));
 	int id_esi_abortado = esi_abortado->id;
-
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
@@ -918,7 +915,7 @@ void recibir_status_clave(){
 	void* buffer = malloc(tamanio);
 	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
 	status = deserializar_status_clave(buffer);
-	printf("Recibido el status_clave de la clave: %s", status.clave);
+	log_info(logger, "Recibido el status_clave de la clave: %s", status.clave);
 	mostrar_status_clave(status);
 	free(buffer);
 }
