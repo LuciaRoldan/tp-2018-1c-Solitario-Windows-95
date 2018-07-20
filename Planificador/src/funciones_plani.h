@@ -77,6 +77,7 @@ char* clave_buscada;
 pcb* esi_abortado;
 pthread_t* hilo_a_cerrar;
 int hay_hilos_por_cerrar;
+int pausar_planificador;
 
 
 ///---SEMAFOROS---///
@@ -98,9 +99,6 @@ sem_t s_eliminar_pcb;
 sem_t s_podes_procesar_un_pedido;
 sem_t s_podes_procesar_una_respuesta;
 sem_t s_planificar;
-//sem_t s_fijate_si_hay_esis;
-//sem_t s_procesa_un_pedido;
-//sem_t s_coordi_manejado;
 
 
 
@@ -189,8 +187,14 @@ void sumar_ultima_rafaga(int id_esi);
 void sumar_retardo(void* pcbb);
 void sumar_retardo_otros_ready();
 void procesar_motivo_aborto(int protocolo);
-void cerrar_cosas_de_un_esi(pcb* pcb_esi);
+void cerrar_cosas_de_un_esi(void* pcb_esi);
 void destruir_pcb(void* pcb);
+void eliminar_esi_en_espera(void* pcbb);
+void borrar_nodo_clave(void* clave);
+void eliminar_esi_en_espera(void* esi);
+void free_esi_finalizado(void* id);
+void cerrar_planificador();
+void despedir_esi(void* pcb);
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 

@@ -145,15 +145,12 @@ int handshake_esi(int socket_esi){
 //--MANEJAR ESIS--//
 void manejar_esis(){
 
-	while(1){
-		sem_wait(&s_planificar);
+	while(pausar_planificador>=0){
 		if(list_size(esis_ready) > 0){
-		log_info(logger, "En manejar ESI");
+			sem_wait(&s_planificar);
+			log_info(logger, "En manejar ESI");
 
 			planificar();
-			//sem_post(&s_podes_procesar_un_pedido);
-			log_info(logger, "Podes procesar un mensaje desde manejar_esis");
-
 			sleep(1);
 		}
 	}
@@ -166,8 +163,6 @@ void recibir_esis(void* socket_esis){
 
 	int socket_esi_nuevo;
 	while(1){
-		//log_info(logger, "holaaaaaaaaa");
-		//sem_wait(&s_fijate_si_hay_esis);
 		log_info(logger, "Esperando un ESI. Adentro de recibir_esis");
 
 		//sleep(1);
@@ -197,15 +192,12 @@ void recibir_esis(void* socket_esis){
 		} else { //socket_esi_nuevo < 0
 	        perror("Fallo en el accept");
 		}
-		//sem_post(&s_podes_procesar_un_mensaje);
-		//log_info(logger, "Podes procesar un mensaje");
-		//sem_post(&s_planificar);
 	}
 }
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
-	if(list_size(esis_ready) > 0){
+	if(list_size(esis_ready) < 1){
 		sem_post(&s_planificar);
 	}
 
@@ -215,17 +207,7 @@ void manejar_esi(void* la_pcb){
 
 	while(chau){
 		log_info(logger, "En manejar ESI: %d", pcb_esi.id);
-		//sem_wait(&s_podes_procesar_una_respuesta);
 
-		//int cant_ready;
-		//cant_ready = list_size(esis_ready);
-
-		//if(cant_ready>1){
-
-		//planificar();
-		//sem_post(&s_procesa_un_pedido);
-		//log_info(logger, "Procesa un pedido del Cordi");
-		//sem_wait(&s_coordi_manejado);
 		sleep(1);
 
 		void* buffer_resultado = malloc(sizeof(int));
@@ -257,7 +239,6 @@ void manejar_esi(void* la_pcb){
 			}
 		}
 		sem_post(&s_planificar);
-		//log_info(logger, "Fijate si hay esis desde manejar_esis");
 	}
 }
 
@@ -267,8 +248,6 @@ void manejar_coordinador(void* socket){
 	log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
 	bool conexion_valida = true;
 	while(conexion_valida){
-
-		//sem_wait(&s_procesa_un_pedido);
 
 		int id;
 		void* buffer_int = malloc(sizeof(int));
@@ -283,7 +262,7 @@ void manejar_coordinador(void* socket){
 		void* buffer;
 		switch(id){
 		case (82): //nuevo pedido
-				//sem_wait(&s_podes_procesar_un_pedido);
+
 				un_buffer_int = malloc(sizeof(int));
 				recibir(socket_coordinador, un_buffer_int, sizeof(int), logger);
 				tamanio = deserializar_id(un_buffer_int);
@@ -296,10 +275,6 @@ void manejar_coordinador(void* socket){
 				log_info(logger, "Recibido: %s, %d \n", instruccion.argumentos.GET.clave, instruccion.keyword);
 
 				procesar_pedido(instruccion);
-				//sem_post(&s_podes_procesar_una_respuesta);
-				//sem_post(&s_coordi_manejado);
-				//log_info(logger, "Podes procesar un mensaje desde manejar_coordinador");
-				log_info(logger, "Procese pedido");
 		break;
 		case (83):
 			recibir_status_clave();
@@ -441,8 +416,6 @@ void procesar_pedido(t_esi_operacion instruccion){
 			}
 	break;
 	}
-		//pthread_mutex_unlock(&m_recibir_resultado_esi);
-		//log_info(logger, "Lock al m_recibir_resultado_esi");
 	} else {
 		log_info(logger, "Pedido invalido. No conozco al ESI %d", id_esi_ejecutando);
 	}
@@ -718,8 +691,11 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	clave_buscada = clave;
 	clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 	pthread_mutex_unlock(&m_clave_buscada);
-	list_add(nodo_clave_buscada->esis_en_espera, &esi_id);
-	log_info(logger, "El id que acabo de poner en la cola desde la cola es: %d", list_get(nodo_clave_buscada->esis_en_espera, 0));
+	int* id = malloc(sizeof(int));
+	memcpy(id, &esi_id, sizeof(int));
+	list_add(nodo_clave_buscada->esis_en_espera, id);
+	int tam_lista = list_size(nodo_clave_buscada->esis_en_espera);
+	log_info(logger, "El tam de la lista de los esis_en_espera es %d", tam_lista);
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = esi_id;
 	list_remove_by_condition(esis_ready, ids_iguales_cola_de_esis);
@@ -732,12 +708,18 @@ void abortar_esi(int id_esi){
 	pcb* esi_abortado;
 
 	pcb* primer_elem = list_get(pcbs, 0);
-	log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
+	//log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
 	esi_abortado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_abortado = esi_abortado->id;
+	//pthread_mutex_lock(&m_id_buscado);
+	//id_buscado = id_esi;
+	//void* buscado = list_find(pcbs, ids_iguales_pcb);
+	//memcpy(esi_abortado, buscado, sizeof(buscado));
+	//int id_esi_abortado = esi_abortado->id;
+
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
@@ -779,9 +761,6 @@ void mover_esi_a_finalizados(int id_esi){
 	
 	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);
 
-	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
-	//log_info(logger, "El ID del ESI de remove_and_destroy_by_condition es: %d", id_esi_finalizado);
-
 	pthread_mutex_lock(&m_lista_esis_ready);
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 	pthread_mutex_unlock(&m_lista_esis_ready);
@@ -801,24 +780,6 @@ void mover_esi_a_finalizados(int id_esi){
 	sem_wait(&s_eliminar_pcb);
 }
 
-//--Destruir PCB y liberar memoria--// NO SIRVE
-void destruir_pcb(void* pcbb){
-	pcb* pcb_esi = (pcb*) pcbb;
-	free(pcb_esi);
-}
-
-//--Cerrar hilo y socket ESI abortado--//
-void cerrar_cosas_de_un_esi(pcb* esi_a_cerrar){
-	close(esi_a_cerrar->socket);
-	log_info(logger, "Entre en cerrar_cosas");
-	//sem_post(&s_podes_procesar_un_mensaje);
-	pthread_mutex_lock(&m_hilo_a_cerrar);
-	hilo_a_cerrar = &esi_a_cerrar->hilo;
-	hay_hilos_por_cerrar = 1;
-	sem_post(&s_cerrar_un_hilo);
-	sem_wait(&s_hilo_cerrado);
-}
-
 //--Sacar ESI de la cola de bloqueados de una clave--//
 void quitar_esi_de_cola_bloqueados(void* clave_bloq){
 	clave_bloqueada* clave = clave_bloq;
@@ -829,7 +790,6 @@ void quitar_esi_de_cola_bloqueados(void* clave_bloq){
 		}
 	}
 }
-
 
 //--Informar motivo aborto ESI--//
 void procesar_motivo_aborto(int protocolo){
@@ -865,9 +825,16 @@ void liberar_clave(char* clave){
 	log_info(logger, "Ahora es ocupada por (deberia ser 0): %d", nodo_clave->esi_que_la_usa);
 
 	if(!list_is_empty(nodo_clave->esis_en_espera)){
-		int* esi_que_ahora_va_a_tener_la_clave = list_remove(nodo_clave->esis_en_espera, 0);
-		nodo_clave->esi_que_la_usa = *esi_que_ahora_va_a_tener_la_clave;
-		log_info(logger, "y es ahora ocupada por el ESI %d", esi_que_ahora_va_a_tener_la_clave);
+		void* el_esi = list_remove(nodo_clave->esis_en_espera, 0);
+		int* id_esi_ahora_ready = el_esi;
+		int lol = *id_esi_ahora_ready;
+		log_info(logger, "lpmm %d", lol);
+		nodo_clave->esi_que_la_usa = *id_esi_ahora_ready;
+		id_buscado = *id_esi_ahora_ready;
+		log_info(logger, "y es ahora ocupada por el ESI %d que es lo mismo que %d", nodo_clave->esi_que_la_usa, *id_esi_ahora_ready);
+		void* un_esi = list_find(pcbs, ids_iguales_pcb);
+		pcb* el_nuevo_esi_ready = un_esi;
+		list_add(esis_ready, el_nuevo_esi_ready);
 	}
 }
 
@@ -943,13 +910,75 @@ void cerrar_sockets(){
 void cerrar_hilos(){
 	//joinear los hilos (?
 }
+
+
 void cerrar_planificador(){
+
 	void* envio = malloc(sizeof(int));
 	serializar_id(envio, 20);
 	enviar(sockets_planificador.socket_coordinador, envio, sizeof(int), logger);
-	cerrar_sockets();
-	cerrar_hilos();
-	//liberar variables globales
+
+	list_iterate(pcbs, despedir_esi);
+
+	list_iterate(claves_bloqueadas, borrar_nodo_clave);
+
+	free(conexion_planificador.ip);
+	free(conexion_planificador.puerto);
+	free(conexion_coordinador.ip);
+	free(conexion_coordinador.puerto);
+	free(algoritmo);
+
+	list_iterate(esis_finalizados, free_esi_finalizado);
+	list_clean_and_destroy_elements(pcbs, destruir_pcb);
+	list_iterate(pcbs, cerrar_cosas_de_un_esi);
+}
+
+void free_esi_finalizado(void* id){
+	int* id_finalizado = id;
+	free(id_finalizado);
+}
+
+void despedir_esi(void* esi){
+	pcb* pcb_esi = esi;
+	void* envio = malloc(sizeof(int));
+	serializar_id(envio, 85);
+	enviar(pcb_esi->socket, envio, sizeof(int), logger);
+}
+
+//void cerrar_sockets(void* pcbb){
+//	pcb* pcb_esi = pcbb;
+//	close(pcb_esi->socket);
+//}
+
+
+void borrar_nodo_clave(void* clave){
+	clave_bloqueada* clave_bloq = clave;
+	free(clave_bloq->clave);
+	list_iterate(clave_bloq->esis_en_espera, eliminar_esi_en_espera);
+}
+
+void eliminar_esi_en_espera(void* esi){
+	int* esi_en_espera = esi;
+	free(esi_en_espera);
+}
+
+//--Destruir PCB y liberar memoria--//
+void destruir_pcb(void* pcbb){
+	pcb* pcb_esi = pcbb;
+	free(pcb_esi);
+}
+
+//--Cerrar hilo y socket ESI abortado--//
+void cerrar_cosas_de_un_esi(void* esi){
+	pcb* esi_a_cerrar = esi;
+	close(esi_a_cerrar->socket);
+	log_info(logger, "Entre en cerrar_cosas");
+	pthread_mutex_lock(&m_hilo_a_cerrar);
+	hilo_a_cerrar = &esi_a_cerrar->hilo;
+	hay_hilos_por_cerrar = 1;
+	sem_post(&s_planificar);
+	sem_post(&s_cerrar_un_hilo);
+	sem_wait(&s_hilo_cerrado);
 }
 
 
