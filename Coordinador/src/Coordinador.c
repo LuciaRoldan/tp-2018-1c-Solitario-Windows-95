@@ -32,6 +32,7 @@ int main(){
 			}
 	}
 
+	cerrar_instancias();
 	close(socket_escucha);
 	pthread_cancel(hilo_escucha);
 	pthread_join(hilo_planificador, NULL);

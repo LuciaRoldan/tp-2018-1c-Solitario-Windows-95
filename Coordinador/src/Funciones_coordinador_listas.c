@@ -159,3 +159,15 @@ nodo* encontrar_esi(int socket){//verificar semaforos
 	log_info(logger, "Socket ESI encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
 	return el_nodo;
 }
+
+void fin_instancia(void* datos){
+	nodo* nodo_instancia = datos;
+	int fin = 85;
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, fin);
+	enviar(nodo_instancia->socket, buffer, sizeof(int), logger);
+}
+
+void cerrar_instancias(){
+	list_iterate(lista_instancias, fin_instancia);
+}
