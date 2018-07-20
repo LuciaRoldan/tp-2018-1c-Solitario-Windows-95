@@ -36,9 +36,6 @@ int inicializar_servidor(int puerto, t_log * logger){
 	configuracion.sin_addr.s_addr = INADDR_ANY;
 	configuracion.sin_port = htons( puerto );
 
-	/*if( bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0) {
-		_exit_with_error(servidor, "Fallo el bind", NULL, logger);
-	}*/
 	while(bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0){}
 
 	listen(servidor, 100);
@@ -52,7 +49,6 @@ int inicializar_servidor(int puerto, t_log * logger){
 int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
 	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
  	if(bytes_enviados <= 0){
- 		printf("Bytes_enviados: %d\n", bytes_enviados);
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
  	}
  	return bytes_enviados;
@@ -167,8 +163,6 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion){
 		memcpy(buffer + sizeof(int)*4 + sizeof(bool), la_instruccion.argumentos.STORE.clave, tamanio_clave);
 	}
 
-	//free(id_protocolo);
-
 }
 
 t_esi_operacion deserializar_instruccion(void* buffer) {
@@ -181,7 +175,6 @@ t_esi_operacion deserializar_instruccion(void* buffer) {
 	case (GET):
 		instruccion.argumentos.GET.clave = malloc(tamanio_clave);
 		memcpy(instruccion.argumentos.GET.clave, (buffer + sizeof(bool) + sizeof(int)*2),tamanio_clave);
-		printf("GET: %s \n", instruccion.argumentos.GET.clave);
 		break;
 	case (SET):
 		instruccion.argumentos.SET.clave = malloc(tamanio_clave);
@@ -189,12 +182,10 @@ t_esi_operacion deserializar_instruccion(void* buffer) {
 		memcpy(&tamanio_valor, (buffer + sizeof(bool) + sizeof(int)*2 + tamanio_clave), sizeof(int));
 		instruccion.argumentos.SET.valor = malloc(tamanio_valor);
 		memcpy((instruccion.argumentos.SET.valor), (buffer + sizeof(bool) + sizeof(int)*3 + tamanio_clave), tamanio_valor);
-		printf("SET: %s, %s \n", instruccion.argumentos.SET.clave, instruccion.argumentos.SET.valor);
 		break;
 	case (STORE):
 		instruccion.argumentos.STORE.clave = malloc(tamanio_clave);
 		memcpy((instruccion.argumentos.STORE.clave),(buffer + sizeof(bool) + sizeof(int)*2), tamanio_clave);
-		printf("STORE: %s \n", instruccion.argumentos.STORE.clave);
 		break;
 	}
 	return instruccion;
@@ -284,26 +275,5 @@ void deserializar_string(void* buffer, char* mensaje){
 int tamanio_buffer_string(char* cadena){
 	return strlen(cadena) * sizeof(char) + sizeof(int)*3 + sizeof(char);
 }
-
-
-//////////PARA PLANIFICADOR//////////
-
-
-// COMMONS CONEXIONES //
-
-/*
-int send_string(int socket, char* mensaje){
-int len, bytes_sent;
-
-len = strlen(mensaje);
-
-
-bytes_sent= send(socket,mensaje,len,0);
-
-
-return bytes_sent;
-
-}
-*/
 
 
