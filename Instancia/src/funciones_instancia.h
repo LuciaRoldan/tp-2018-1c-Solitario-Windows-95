@@ -103,5 +103,7 @@ void borrar_entrada(void* entrada);
 void sumar_operacion(void* entradas);
 void dump();
 void dumpear(void* datos);
+int entrada_bitmap_libre();
+int entradas_contiguas_bitmap(int necesarias);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

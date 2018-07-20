@@ -91,14 +91,6 @@ bool condicion_clave_entrada(void* datos){
 	return !strcmp(entrada->clave, clave_buscada);
 }
 
-int cantidad_entradas_ocupa(int tamanio_valor){
-	if(tamanio_valor % configuracion.tamano_entrada == 0){
-		return tamanio_valor/configuracion.tamano_entrada;
-	} else {
-		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
-				return resultado.quot +1;
-	}
-
 }
 
 char* recibe_pedido_status() {
@@ -236,15 +228,37 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		break;
 	}
 }
+
 //me deja saber si aluna entrada de la tabla de entradas esta libre
-int entrada_bitmap_libre(){
+int any_entrada_bitmap_libre() {
 	int i = 0;
-	while(i < configuracion.cantidad_entradas){
-		if(acceso_tabla[i] == 0){
+	while (i < configuracion.cantidad_entradas) {
+		if (acceso_tabla[i] == 0) {
 			return i;
 		}
 	}
 	return -1;
+}
+
+int cantidad_entradas_ocupa(int tamanio_valor){
+	if(tamanio_valor % configuracion.tamano_entrada == 0){
+		return tamanio_valor/configuracion.tamano_entrada;
+	} else {
+		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
+				return resultado.quot +1;
+	}
+
+int entradas_contiguas_bitmap(int necesarias){
+	int contador = 0;
+	int tiene = 0;
+	while(contador == necesarias || contador == configuracion.cantidad_entradas){
+		if(acceso_tabla[tiene] == 0){
+			tiene ++;
+			contador ++;
+		}
+		tiene++;
+	}
+
 
 }
 
