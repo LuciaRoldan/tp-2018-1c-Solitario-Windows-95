@@ -70,10 +70,8 @@ nodo* buscar_instancia(char* clave){
 	nodo* nodo_instancia;
 	nodo_clave* nodito;
 	pthread_mutex_lock(&m_lista_claves);
-	log_info(logger, "unoooooooooooooo");
 	pthread_mutex_unlock(&m_clave_buscada); //Hay que sacarlo
 	pthread_mutex_lock(&m_clave_buscada);
-	log_info(logger, "doooooooooooooooooooooos");
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
@@ -100,7 +98,7 @@ nodo* seleccionar_instancia(char* clave){
 	nodo* nodo_auxiliar;
 	int minimo_LSU = 1000000;
 
-	char char_KE;
+	char* char_KE = malloc(sizeof(char));
 	int cantidad_letras_KE, id_instancia;
 	div_t resultado_KE;
 
@@ -110,42 +108,41 @@ nodo* seleccionar_instancia(char* clave){
 		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
 		pthread_mutex_lock(&m_ultima_instancia_EL);
 		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
-		//instancia_seleccionada = list_get(lista_instancias, 0);
-		log_info(logger, "------------ %d ----------", list_size(lista_instancias));
 		if(ultima_instancia_EL++ == list_size(lista_instancias)-1){ultima_instancia_EL = 0;}
-		log_info(logger, "+++++++ EL es: %d +++++++", ultima_instancia_EL);
 		pthread_mutex_unlock(&m_ultima_instancia_EL);
 		break;
 	case LSU:
-		pthread_mutex_lock(&m_lista_claves);
 		for(int contador = 0; contador < list_size(lista_instancias); contador++){
 			nodo_auxiliar = list_get(lista_instancias, contador);
 			socket_instancia_buscado = nodo_auxiliar->socket;
 			if(list_count_satisfying(lista_claves, condicion_socket_clave) < minimo_LSU){
+				minimo_LSU = list_count_satisfying(lista_claves, condicion_socket_clave);
 				instancia_seleccionada = nodo_auxiliar;
 			}
 		}
-		pthread_mutex_unlock(&m_lista_claves);
 		break;
 	case KE:
-		memcpy(&char_KE, clave, sizeof(char));
+		memcpy(char_KE, clave, sizeof(char));
 		if( 25 % list_size(lista_instancias) == 0){
-			cantidad_letras_KE = 25 / list_size(lista_instancias);
+			cantidad_letras_KE = 26 / list_size(lista_instancias);
 		} else {
-			resultado_KE = div(25,list_size(lista_instancias));
-			cantidad_letras_KE = resultado_KE.quot + 1;
+			resultado_KE = div(26,list_size(lista_instancias));
+			cantidad_letras_KE = resultado_KE.quot;
 		}
+		log_info(logger, "La cantidad de letras por instancia es: %d", cantidad_letras_KE);
 
-		if( cantidad_letras_KE % (int)char_KE == 0){
-			id_instancia = cantidad_letras_KE / (int)char_KE;
+		if((*char_KE - 97) % cantidad_letras_KE == 0){
+			id_instancia = cantidad_letras_KE / *char_KE;
 		} else {
-			resultado_KE = div(cantidad_letras_KE,(int)char_KE); //(int)'a' = 97
-			id_instancia = resultado_KE.quot + 1;
+			resultado_KE = div((*char_KE - 97), cantidad_letras_KE); //(int)'a' = 97
+			id_instancia = resultado_KE.quot+1;
 		}
+		log_info(logger, "El id de la instancia es: %d", id_instancia);
 		pthread_mutex_lock(&m_id_instancia_buscado);
 		id_instancia_buscado = id_instancia;
-		list_find(lista_instancias, condicion_id_instancia);
+		instancia_seleccionada = list_find(lista_instancias, condicion_id_instancia);
 		pthread_mutex_unlock(&m_id_instancia_buscado);
+		//log_info(logger, "Socket: %d, id: %d", );
 		break;
 	}
 	pthread_mutex_unlock(&m_lista_instancias);

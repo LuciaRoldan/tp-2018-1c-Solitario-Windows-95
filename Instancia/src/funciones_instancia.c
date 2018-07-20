@@ -31,6 +31,14 @@ void enviar_exito(int socket_coordinador, t_log* logger) {
 	free(buffer);
 }
 
+void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 20);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Me estoy cerrando");
+	free(buffer);
+}
+
 bool condicion_clave_entrada(void* datos){
 	estructura_clave* entrada = (estructura_clave*) datos;
 	log_info(logger, "Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
@@ -81,6 +89,7 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		free(clave);
 		break;
 	case (85): //INDICA QUE DEBE SALIR DEL WHILE
+		enviar_confirmacion_cierre(socket_coordinador,logger);
 		activa = false;
 		break;
 	}
@@ -318,7 +327,8 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 
 			estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 			int tamanio_valor = entrada_encontrada->tamanio_valor;
-			valor = malloc(tamanio_valor);
+			valor = malloc(tamanio_valor + sizeof(char));
+			memcpy(valor," ",sizeof(char));
 			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
 
 			log_info(logger, "Clave encontrada: %s, valor: %s", entrada_encontrada->clave, valor);
@@ -329,15 +339,16 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 				log_info(logger, "No se pudo abrir el archivo");
 			}
 
-			lseek(fd,tamanio_valor-1,SEEK_SET);
+			lseek(fd,lugar_de_memoria - 1,SEEK_CUR);
+			lugar_de_memoria += tamanio_valor + 1;
 
-			write(fd, valor, tamanio_valor);
+			write(fd, valor, (tamanio_valor + sizeof(char)));
 
-			puntero_memoria = mmap(NULL,tamanio_valor,PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
+			puntero_memoria = mmap(NULL,tamanio_valor + sizeof(char),PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
 			log_info(logger, "Voy a guardar algo de tamanio %d", tamanio_valor);
-			memcpy(puntero_memoria, valor, tamanio_valor);
-			msync(puntero_memoria, tamanio_valor, MS_SYNC);
-			munmap(puntero_memoria, tamanio_valor);
+			memcpy(puntero_memoria, valor, (tamanio_valor + sizeof(char)));
+			msync(puntero_memoria, (tamanio_valor + sizeof(char)), MS_SYNC);
+			munmap(puntero_memoria, (tamanio_valor + sizeof(char)));
 			close(fd);
 			free(clave_buscada);
 			free(path);
