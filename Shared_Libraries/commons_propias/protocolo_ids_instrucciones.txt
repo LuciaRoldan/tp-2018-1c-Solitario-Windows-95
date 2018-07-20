@@ -58,3 +58,4 @@ RESULTADOS OPERACION
 88 NULL fallo clave inaccesible
 89 NULL fallo clave no bloqueada
 90 NULL bloqueate
+91 ID_ESI kill
