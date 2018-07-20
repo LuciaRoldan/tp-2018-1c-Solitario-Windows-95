@@ -202,7 +202,7 @@ void recibir_esis(void* socket_esis){
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
-	if(list_size(esis_ready) > 0){
+	if(list_size(esis_ready) < 2){
 		sem_post(&s_planificar);
 	}
 
@@ -808,6 +808,7 @@ void cerrar_cosas_de_un_esi(pcb* esi_a_cerrar){
 	pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	hay_hilos_por_cerrar = 1;
+	sem_post(&s_planificar);
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }
@@ -923,11 +924,18 @@ void recibir_status_clave(){
 }
 
 void imprimir_id_esi(void* esi){
+<<<<<<< HEAD
+	int* id_esi = esi;
+	//mostrar "%d", id_esi;
+}
+
+
+=======
 	int id_esi;
 	memcpy(&id_esi, esi, sizeof(int));
 	printf("%d  ", id_esi);
 }
-
+>>>>>>> 8acc2de5f6252250f68c416bdab210f7378764f1
 
 // Rutinas de cierre
 void cerrar_sockets(){

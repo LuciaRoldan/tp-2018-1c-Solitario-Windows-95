@@ -199,5 +199,33 @@ char**  string_to_array(char* text) {
     return array_values;
 }
 
+// COMPLETAR SUBRUTINAS QUE VIENEN DE CONSOLA:
+void pausar_planificacion(){
 
+}
+void continuar_planificacion(){
 
+}
+void bloquear(char * clave, int id){
+
+}
+void desbloquear(char * clave){
+
+}
+void listar_procesos_encolados(char* recurso){
+
+}
+void kill(int id){
+
+}
+void pedir_status(char* clave){
+	int tamanio_buffer = tamanio_buffer_string(clave);
+	void* buffer_pedido_clave = malloc(tamanio_buffer);
+	serializar_string(buffer_pedido_clave, clave, 21);
+	enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
+	sleep(2);
+	//se recibe la respuesta por otro hilo
+}
+void deadlock(){
+
+}

@@ -32,6 +32,7 @@ int handshake(int socket_cliente){
 
 	case INSTANCIA:
 		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
+		log_info(logger, "Su socket es: %d", socket_cliente);
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
@@ -101,6 +102,8 @@ void atender_instancia(void* datos_instancia){
 	while(resultado > 0 && !terminar_programa){
 		resultado = procesar_mensaje(mis_datos.socket);
 	}
+	socket_instancia_buscado = mis_datos.socket; //Agregar semaforos
+
 	log_info(logger, "RIP instancia");
 	desconectar_instancia(mis_datos.socket);
 	//pthread_exit(NULL);
@@ -115,6 +118,7 @@ void desconectar_instancia(int socket){
 	pthread_mutex_unlock(&m_socket_instancia_buscado);
 	close(socket);
 	hilo_a_cerrar = &el_nodo->hilo;
+	list_remove_and_destroy_by_condition(lista_instancias, condicion_socket_instancia, eliminar_nodo);
 	sem_post(&s_cerrar_hilo);
 }
 

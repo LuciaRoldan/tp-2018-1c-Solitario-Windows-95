@@ -148,8 +148,8 @@ void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_e
 void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
 	int envio;
 	serializar_id(&envio, 81);
-	enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
 	if(flag == 0){
+	enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
 	enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
 	} else{
 		int aborto;

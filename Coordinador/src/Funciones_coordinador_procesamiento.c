@@ -133,8 +133,6 @@ int procesar_mensaje(int socket){
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			free(buffer_int);
-			pthread_mutex_lock(&m_hilo_a_cerrar);
-			hilo_a_cerrar = &esi_ejecutando->hilo;
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
 			return resultado;
@@ -178,38 +176,43 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		pthread_mutex_lock(&m_hilo_a_cerrar);
 		hilo_a_cerrar = &esi_ejecutando->hilo;
 		sem_post(&s_cerrar_hilo);
+		pthread_mutex_unlock(&m_log_operaciones);
 		pthread_mutex_unlock(&m_esi_ejecutando);
 		free(buffer_int);
 		return -1;
 	} else {
-		pthread_mutex_unlock(&m_log_operaciones);
-		pthread_mutex_lock(&m_instancia_seleccionada);
-		instancia_seleccionada = buscar_instancia(clave);
-		/*if(instruccion.keyword == GET){
-			nodo_clave* nodito = malloc(sizeof(nodo_clave));
-			nodito->clave = malloc(strlen(clave));
-			memcpy(nodito->clave, clave, strlen(clave));
-			nodito->nodo_instancia = *instancia_seleccionada;
-			list_add(lista_claves, nodito);
-			log_info(logger, "lo agregue %d", list_size(lista_claves));
-		}*/
-		pthread_mutex_lock(&m_operacion_ejecutando);
-		operacion_ejecutando = instruccion;
-		enviar_operacion(socket_planificador, instruccion);
-	}
-	if(!clave_accesible(clave)) {
-		log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
-		rta_esi = 88;
-		void* buffer_int = malloc(sizeof(int));
-		serializar_id(buffer_int, rta_esi);
-		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-		free(buffer_int);
-		pthread_mutex_lock(&m_hilo_a_cerrar);
-		hilo_a_cerrar = &esi_ejecutando->hilo;
-		sem_post(&s_cerrar_hilo);
-		pthread_mutex_unlock(&m_instancia_seleccionada);
-		pthread_mutex_unlock(&m_esi_ejecutando);
-		return -1;
+		if(!clave_accesible(clave)) {
+				log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
+				rta_esi = 88;
+				void* buffer_int = malloc(sizeof(int));
+				serializar_id(buffer_int, rta_esi);
+				enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+				free(buffer_int);
+				pthread_mutex_lock(&m_hilo_a_cerrar);
+				log_info(logger, "Pase el lock");
+				hilo_a_cerrar = &esi_ejecutando->hilo;
+				sem_post(&s_cerrar_hilo);
+				pthread_mutex_unlock(&m_instancia_seleccionada);
+				pthread_mutex_unlock(&m_log_operaciones);
+				pthread_mutex_unlock(&m_esi_ejecutando);
+				return -1;
+		} else {
+			log_info(logger, "El pedido es valido");
+			pthread_mutex_unlock(&m_log_operaciones);
+			pthread_mutex_lock(&m_instancia_seleccionada);
+			instancia_seleccionada = buscar_instancia(clave);
+					/*if(instruccion.keyword == GET){
+						nodo_clave* nodito = malloc(sizeof(nodo_clave));
+						nodito->clave = malloc(strlen(clave));
+						memcpy(nodito->clave, clave, strlen(clave));
+						nodito->nodo_instancia = *instancia_seleccionada;
+						list_add(lista_claves, nodito);
+						log_info(logger, "lo agregue %d", list_size(lista_claves));
+					}*/
+			pthread_mutex_lock(&m_operacion_ejecutando);
+			operacion_ejecutando = instruccion;
+			enviar_operacion(socket_planificador, instruccion);
+		}
 	}
 	return 1;
 	free(clave);
