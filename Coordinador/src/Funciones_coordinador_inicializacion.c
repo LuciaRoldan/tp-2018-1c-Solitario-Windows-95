@@ -23,6 +23,7 @@ void inicializar_coordinador(){
 	lista_claves = list_create();
 	ultima_instancia_EL = 0;
 	terminar_programa = 0;
+	conexion_hecha = 1;
 	inicializar_semaforos();
 }
 
@@ -54,10 +55,10 @@ void conectar_planificador(){
 			socket_planificador = socket_cliente;
 			log_info(logger, "Se establecio la conexion con el Planificdor");
 		} else{
-			log_info(logger, "Fallo en la conexion con el Planificdor");
+			log_error(logger, "Fallo en la conexion con el Planificdor");
 		}
 	} else{
-		log_info(logger, "Fallo en la conexion con el Planificdor");
+		log_error(logger, "Fallo en la conexion con el Planificdor");
 	}
 }
 

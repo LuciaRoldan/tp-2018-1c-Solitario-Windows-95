@@ -59,6 +59,7 @@ int socket_escucha;
 char* clave_buscada;
 int id_instancia_buscado;
 bool terminar_programa;
+int conexion_hecha;
 
 
 pthread_mutex_t m_operacion_ejecutando;
@@ -123,6 +124,9 @@ bool condicion_socket_clave(void* datos);
 void eliminar_nodo(void* datos);
 void eliminar_nodo_clave(void* datos);
 bool clave_accesible(char* clave);
+void cerrar_instancias();
+void fin_instancia(void* datos);
+int buscar_instancia_ficticia(char* clave);
 
 //DE HILOS
 void agregar_nuevo_esi(int socket_esi, int id_esi);

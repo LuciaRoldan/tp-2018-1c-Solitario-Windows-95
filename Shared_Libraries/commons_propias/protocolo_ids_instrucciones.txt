@@ -20,7 +20,7 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 
 
 ///////////////// COORDINADOR /////////////////
-20 NULL Exit de planificador
+20 NULL Exit de planificador y confirmacion instnacia yesi
 21 char* (clave)
 22 
 23 NULL desconexion instancia
@@ -52,7 +52,7 @@ DE COORDINADOR A ESI
 
 RESULTADOS OPERACION
 84 NULL exito
-85 
+85 NULL finalizar instancia
 86 NULL fallo tamaño clave
 87 NULL fallo clave no identificada
 88 NULL fallo clave inaccesible
