@@ -31,13 +31,17 @@ void leer_archivo_configuracion(){
 		log_info(logger, "Alpha es: %f", alpha);
 		char** las_claves_bloqueadas = config_get_array_value(configuracion, "CLAVES_BLOQUEADAS");
 		log_info(logger, "Obtuve las claves bloqueadas");
-		claves_bloqueadas = list_create();
-		log_info(logger, "Creo lista de bloqueadas");
 		int indice_bloq = 0;
-		int tam_lista;
+		//int tam_lista;
 		while(las_claves_bloqueadas[indice_bloq]){
-			list_add(claves_bloqueadas, las_claves_bloqueadas[indice_bloq]);
+			clave_bloqueada* clave = malloc(sizeof(clave_bloqueada));
+			clave->esi_que_la_usa = -1;
+			clave->esis_en_espera = list_create();
+			clave->clave = malloc(strlen(las_claves_bloqueadas[indice_bloq])+1);
+			memcpy(clave->clave, las_claves_bloqueadas[indice_bloq], strlen(las_claves_bloqueadas[indice_bloq])+1);
+			list_add(claves_bloqueadas, clave);
 			indice_bloq += 1;
+			log_info(logger, "Agregue clave: %s", clave->clave);
 		}
 		free(las_claves_bloqueadas);
 
@@ -248,7 +252,7 @@ void manejar_esi(void* la_pcb){
 void manejar_coordinador(void* socket){
 	int socket_coordinador = *((int*) socket);
 	log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
-	bool conexion_valida = true;
+	int conexion_valida = true;
 	while(conexion_valida){
 
 		int id;
@@ -482,19 +486,21 @@ void registrar_exito_en_pcb(int id_esi){
 void planificar(){
 	//export LD_LIBRARY_PATH=$PWD/Shared_Libraries/commons_propias/Debug
 	log_info(logger, "Planificando");
+	if(list_size(esis_ready)>0){
 	ordenar_pcbs();
-	sumar_retardo_otros_ready();
-	pcb* pcb_esi;
 	void* esi_a_ejecutar = list_get(esis_ready, 0);
+	pcb* pcb_esi;
 	pcb_esi = esi_a_ejecutar;
 	pthread_mutex_lock(&m_id_esi_ejecutando);
 	id_esi_ejecutando = pcb_esi->id;
 	pthread_mutex_unlock(&m_id_esi_ejecutando);
+	sumar_retardo_otros_ready();
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 61);
 	enviar(pcb_esi->socket, buffer, sizeof(int), logger);
 	log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
 	free(buffer); //PELIGRO
+	}
 }
 
 //FUNCIONES AUXILIARES PCB//
@@ -561,18 +567,18 @@ void ordenar_pcbs(){
 }
 void planificacionSJF_CD(){
 	log_info(logger, "Estoy en SJF_CD. La cantidad de esis ready es %d", list_size(esis_ready));
+	actualizar_ultima_estimacion_SJF();
 	if(list_size(esis_ready) > 1){
 		log_info(logger, "Hay mas de un ESI ready");
 		list_sort(esis_ready, algoritmo_SJF_CD);
-		actualizar_ultima_estimacion_SJF();
 	}
 }
 
 void planificacionSJF_SD(){
 	log_info(logger, "Estoy en SJF_SD. La cantidad de esis ready es %d", list_size(esis_ready));
+	actualizar_ultima_estimacion_SJF();
 	if(list_size(esis_ready) > 1){
 		list_sort(esis_ready, algoritmo_SJF_SD);
-		actualizar_ultima_estimacion_SJF();
 	}
 }
 
@@ -999,7 +1005,9 @@ void cerrar_cosas_de_un_esi(void* esi){
 	pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	hay_hilos_por_cerrar = 1;
+	if(list_size(esis_ready)>0){
 	sem_post(&s_planificar);
+	}
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }

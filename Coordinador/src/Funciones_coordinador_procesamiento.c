@@ -22,9 +22,20 @@ int procesar_mensaje(int socket){
 			return -99;
 		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);
+			log_info(logger, "Me llego el pedido de la clave: %d", clave);
 			nodo_instancia = buscar_instancia(clave);
-			protocolo_extra = 1;
+			log_info(logger, "Le voy a pedir a la instancia: %d", nodo_instancia->id);
+			protocolo_extra = 83;
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
+			return resultado;
+			break;
+
+		case 23:
+			rta_esi = list_size(lista_instancias);
+			buffer_int = malloc(sizeof(int));
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(socket, buffer_int, sizeof(int), logger);
+			log_info(logger, "Le digo a la Instancia cuantas Instancias hay");
 			return resultado;
 			break;
 

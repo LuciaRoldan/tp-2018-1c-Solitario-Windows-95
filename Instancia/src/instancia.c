@@ -16,9 +16,11 @@ int main(int argc, char* argv[]){
 	memcpy(&log[9], argv[2], 1);
 
 	logger = log_create("instancia.log", log, true, LOG_LEVEL_INFO);
-	log_info(logger, "++++++++++ %s", log);
 
+	if (pthread_mutex_init(&m_tabla, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	sem_init(&s_compactacion, 1, 0);
 	leer_configuracion_propia(argv[1], &mi_configuracion,logger);
+	log_info(logger, "Mi algoritmo es: %d", mi_configuracion.algoritmoDeReemplazo);
 
 	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
 
@@ -57,14 +59,20 @@ int main(int argc, char* argv[]){
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
+	pthread_t hilo_dump;
+	pthread_t hilo_compactacion;
+	pthread_create(&hilo_dump, 0, dump, NULL);
+	pthread_create(&hilo_compactacion, 0, hilo_compactar, NULL);
+
 	while(activa){
-		//log_info(logger, "Entré al while");
+		pthread_mutex_lock(&m_tabla);
 		procesarID(socket_coordinador,logger);
-		//log_info(logger, "Procesé. Vuelvo a entrar al while");
+		pthread_mutex_unlock(&m_tabla);
 	}
 
 	//free(espacio_para_memoria);
 	sleep(5);
+	pthread_join(&hilo_dump, NULL);
 	free(acceso_tabla);
 	close(socket_coordinador);
 	return 0;

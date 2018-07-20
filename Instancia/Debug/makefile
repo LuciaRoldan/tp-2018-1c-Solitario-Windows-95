@@ -26,14 +26,14 @@ endif
 all: instancia
 
 dependents:
-	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug && $(MAKE) clean all
-	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug && $(MAKE) clean all
+	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug && $(MAKE) all
+	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug && $(MAKE) all
 
 # Tool invocations
 instancia: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug/libcommons.so /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug/libcommons_propias.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug" -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug" -o "instancia" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug" -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug" -pthread -o "instancia" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
