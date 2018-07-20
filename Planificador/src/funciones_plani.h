@@ -197,6 +197,7 @@ void manejar_coordinador();
 void procesar_pedido(t_esi_operacion instruccion);
 void mostrar_status_clave(status_clave status);
 void recibir_status_clave();
+void informar_coordi_kill(int id_Esi);
 
 //////////MENSAJES CON COORDINADOR//////////
 

@@ -14,11 +14,6 @@ int main(int argc, char* argv[]){
 	logger_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
 	log_info(logger_esi,"Inicio de ESI %d ---> Logger creado.", idEsi);
 
-	/*printf("El argv[0] es: %s\n", argv[0]);
-	printf("El argv[1] es: %s\n", argv[1]);
-	printf("El argv[2] es: %s\n", argv[2]);*/
-
-	//char * path = string_from_format("%s", argv[0]);
 	FILE* script_prueba = fopen(argv[1], "r");
 	if (script_prueba == NULL){
 		perror("Error al abrir el archivo: ");
@@ -37,10 +32,11 @@ int main(int argc, char* argv[]){
 	int codigo_plani;
 	int codigo_coordi;
 	int abortoESI = 0;
+	int flag_exit = 0;
 	void* mensaje_coordi = malloc(sizeof(int));
 	resultado_esi confirmacion;
 
-	while((!feof(script_prueba)) && abortoESI == 0) {
+	while((!feof(script_prueba)) && abortoESI == 0 && flag_exit == 0) {
 		codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 		log_info(logger_esi, "Plani me dijo: %d", codigo_plani);
 		sleep(2);
@@ -64,17 +60,26 @@ int main(int argc, char* argv[]){
 				abortoESI = 1;
 				log_info(logger_esi, "Abortando ESI %d", idEsi);
 				break;
+			case 85: //exit por consola
+				log_info(logger_esi, "Cerrando ESI %d por 'exit' de consola", idEsi);
+				void* buffer_exit = malloc(sizeof(int));
+				serializar_id(buffer_exit, 20);
+				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
+				break;
 			default:
 				_exit_with_error(conexiones.socket_plani, "Mensaje fuera de protocolo", NULL, logger_esi);
 				break;
 		}
 	}
 	fclose(script_prueba);
-	//codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
-	informar_fin_de_programa(conexiones, abortoESI);
+	if(flag_exit == 0){
+		informar_fin_de_programa(conexiones, abortoESI);
+	}
 	free(mensaje_coordi);
+	free(configuracion_esi);
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
+	free(logger_esi);
 	exit(1);
 }

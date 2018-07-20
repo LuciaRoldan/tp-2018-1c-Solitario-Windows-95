@@ -55,8 +55,7 @@ int main(int argc, char* argv[]){
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
-	//while(activa){
-	for(int i=0; i<10; i+=1){
+	while(activa){
 		log_info(logger, "Entré al while");
 		procesarID(socket_coordinador,logger);
 		log_info(logger, "Procesé. Vuelvo a entrar al while");

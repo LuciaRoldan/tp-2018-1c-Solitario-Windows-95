@@ -29,6 +29,11 @@ bool condicion_clave(void* datos){
 	return (strcmp(un_nodo.clave, clave_buscada) == 0);
 }
 
+bool condicion_id_esi(void* datos){
+	nodo un_nodo = *((nodo*) datos);
+	return un_nodo.id == id_esi_buscado;
+}
+
 bool condicion_socket_clave(void* datos){
 	nodo_clave un_nodo = *((nodo_clave*) datos);
 	return un_nodo.nodo_instancia.socket == socket_instancia_buscado;
@@ -129,7 +134,6 @@ nodo* seleccionar_instancia(char* clave){
 			resultado_KE = div(26,list_size(lista_instancias));
 			cantidad_letras_KE = resultado_KE.quot;
 		}
-		log_info(logger, "La cantidad de letras por instancia es: %d", cantidad_letras_KE);
 
 		if((*char_KE - 97) % cantidad_letras_KE == 0){
 			id_instancia = cantidad_letras_KE / *char_KE;
@@ -137,16 +141,22 @@ nodo* seleccionar_instancia(char* clave){
 			resultado_KE = div((*char_KE - 97), cantidad_letras_KE); //(int)'a' = 97
 			id_instancia = resultado_KE.quot+1;
 		}
-		log_info(logger, "El id de la instancia es: %d", id_instancia);
 		pthread_mutex_lock(&m_id_instancia_buscado);
 		id_instancia_buscado = id_instancia;
 		instancia_seleccionada = list_find(lista_instancias, condicion_id_instancia);
 		pthread_mutex_unlock(&m_id_instancia_buscado);
-		//log_info(logger, "Socket: %d, id: %d", );
 		break;
 	}
 	pthread_mutex_unlock(&m_lista_instancias);
 	return instancia_seleccionada;
+}
+
+int buscar_instancia_ficticia(char* clave){
+	nodo* nodito = seleccionar_instancia(clave);
+	if(info_coordinador.algoritmo_distribucion == EL){
+		ultima_instancia_EL = ultima_instancia_EL - 1;
+	}
+	return nodito->id;
 }
 
 nodo* encontrar_esi(int socket){//verificar semaforos
@@ -158,4 +168,16 @@ nodo* encontrar_esi(int socket){//verificar semaforos
 	pthread_mutex_unlock(&m_socket_esi_buscado);
 	log_info(logger, "Socket ESI encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
 	return el_nodo;
+}
+
+void fin_instancia(void* datos){
+	nodo* nodo_instancia = datos;
+	int fin = 85;
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, fin);
+	enviar(nodo_instancia->socket, buffer, sizeof(int), logger);
+}
+
+void cerrar_instancias(){
+	list_iterate(lista_instancias, fin_instancia);
 }

@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////// PROCESAMIENTO ///////////////////////////////////////////////////
 
 int procesar_mensaje(int socket){
-	int resultado, id;
+	int resultado, id, id_esi;
 	char* clave;
 	nodo* nodo_instancia;
 	nodo* el_nodo;
@@ -65,8 +65,7 @@ int procesar_mensaje(int socket){
 
 		case 83: //Status clave
 			status = recibir_status(socket);
-			//buscar_instancia_ficticia
-			//status.id_instancia_nueva;
+			status.id_instancia_nueva = buscar_instancia_ficticia(status.clave);
 			resultado = enviar_status_clave(socket_planificador, status);
 			return resultado;
 			break;
@@ -125,7 +124,7 @@ int procesar_mensaje(int socket){
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
 			return resultado;
-
+			break;
 		case 90://Hay que bloquear al ESI
 			log_info(logger, "Le digo al ESI %d que esta bloqueado", esi_ejecutando->id);
 			rta_esi = 90;
@@ -136,7 +135,22 @@ int procesar_mensaje(int socket){
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
 			return resultado;
-
+			break;
+		case 91:
+			id_esi = recibir_int(socket_planificador, logger);
+			id_esi_buscado = id_esi;
+			buffer_int = malloc(sizeof(int));
+			serializar_id(buffer_int, id);
+			nodo* el_esi_buscado = list_find(lista_esis, condicion_id_esi);
+			log_info(logger, "Abortando ESI %d por operacion 'kill' de consola", el_esi_buscado->id);
+			resultado = enviar(el_esi_buscado->socket, buffer_int, sizeof(int), logger);
+			free(buffer_int);
+			pthread_mutex_lock(&m_hilo_a_cerrar);
+			hilo_a_cerrar = &esi_ejecutando->hilo;
+			sem_post(&s_cerrar_hilo);
+			pthread_mutex_unlock(&m_esi_ejecutando); // Esto lo tengo que borrar?
+			return resultado;
+			break;
 		default:
 			return -1;
 			break;
@@ -209,6 +223,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 						list_add(lista_claves, nodito);
 						log_info(logger, "lo agregue %d", list_size(lista_claves));
 					}*/
+			pthread_mutex_unlock(&m_operacion_ejecutando); //verificar
 			pthread_mutex_lock(&m_operacion_ejecutando);
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);

@@ -207,18 +207,22 @@ void continuar_planificacion(){
 
 }
 void bloquear(char * clave, int id){
-
+	mover_esi_a_bloqueados(clave, id);
 }
 void desbloquear(char * clave){
-
+	quitar_esi_de_cola_bloqueados(clave);
 }
 void listar_procesos_encolados(char* recurso){
-
+	printf("---> Los ESIs a la espera del recurso %s son: ", recurso);
+	clave_buscada = recurso;
+	clave_bloqueada* clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+	list_iterate(clave->esis_en_espera, imprimir_id_esi);
 }
 void kill(int id){
 	id_buscado = id;
-	pcb* pcb_esi = (pcb*) list_find(pcbs, ids_iguales_pcb);
-	log_info(logger, "ESI %d abortado por funcion 'kill' de consola.", pcb_esi->id);
+	pcb* pcb_esi = list_find(pcbs, ids_iguales_pcb);
+	log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", pcb_esi->id);
+	informar_coordi_kill(pcb_esi->id);
 	abortar_esi(pcb_esi->id);
 }
 void pedir_status(char* clave){
