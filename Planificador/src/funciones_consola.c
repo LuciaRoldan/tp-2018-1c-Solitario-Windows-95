@@ -216,7 +216,10 @@ void listar_procesos_encolados(char* recurso){
 
 }
 void kill(int id){
-
+	id_buscado = id;
+	pcb* pcb_esi = (pcb*) list_find(pcbs, ids_iguales_pcb);
+	log_info(logger, "ESI %d abortado por funcion 'kill' de consola.", pcb_esi->id);
+	abortar_esi(pcb_esi->id);
 }
 void pedir_status(char* clave){
 	int tamanio_buffer = tamanio_buffer_string(clave);

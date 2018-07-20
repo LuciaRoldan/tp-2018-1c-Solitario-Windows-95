@@ -724,7 +724,8 @@ void abortar_esi(int id_esi){
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
-	esi_abortado = list_find(pcbs, ids_iguales_pcb);
+	void* buscado = list_find(pcbs, ids_iguales_pcb);
+	memcpy(esi_abortado, buscado, sizeof(buscado));
 	int id_esi_abortado = esi_abortado->id;
 
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
@@ -746,7 +747,7 @@ void abortar_esi(int id_esi){
 
 	cerrar_cosas_de_un_esi(esi_abortado);
 	sem_wait(&s_eliminar_pcb);
-	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+	list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
 }
 
 //--Mover ESI a finalizados--//
@@ -792,7 +793,7 @@ void mover_esi_a_finalizados(int id_esi){
 
 //--Destruir PCB y liberar memoria--// NO SIRVE
 void destruir_pcb(void* pcbb){
-	pcb* pcb_esi = pcbb;
+	pcb* pcb_esi = (pcb*) pcbb;
 	free(pcb_esi);
 }
 
@@ -878,7 +879,7 @@ bool claves_iguales_nodo_clave(void* nodo_clave){
 
 //--Buscar ESI en una cola de esis bloqueados--//
 bool ids_iguales_cola_de_esis(void* id){
-	int* id_esi = id;
+	int* id_esi = (int*) id;
 	return *id_esi == id_buscado;
 }
 
