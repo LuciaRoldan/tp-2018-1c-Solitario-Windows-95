@@ -1,1 +1,0 @@
-127.0.0.1 8001 BSU "/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/instancia1/" 1 10[INFO] 14:33:58:288 INSTANCIA/(19695:19695): No se puede abrir el archivo Configuracion_instancia.txt
