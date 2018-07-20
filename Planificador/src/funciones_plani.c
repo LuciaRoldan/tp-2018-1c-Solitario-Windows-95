@@ -463,6 +463,11 @@ void informar_bloqueo_coordinador(){
 	int fallo = 90;
 	enviar(sockets_planificador.socket_coordinador, &fallo, sizeof(int), logger);
 }
+void informar_coordi_kill(int id_Esi){
+	void* buffer_envio = malloc(sizeof(int)*2);
+	serializar_int(buffer_envio, id_Esi, 91);
+	enviar(sockets_planificador.socket_coordinador, buffer_envio, sizeof(int)*2, logger);
+}
 
 
 /////-----OPERACIONES SOBRE PCBS-----/////
@@ -721,13 +726,14 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 
 //--Abortar ESI--//
 void abortar_esi(int id_esi){
-	pcb* esi_abortado = list_find(pcbs, ids_iguales_pcb);;
+	pcb* esi_abortado;
 
 	pcb* primer_elem = list_get(pcbs, 0);
 	log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
+	esi_abortado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_abortado = esi_abortado->id;
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
@@ -888,7 +894,6 @@ bool ids_iguales_cola_de_esis(void* id){
 
 void mostrar_status_clave(status_clave status){
 	if (status.contenido != NULL){
-		//mostrar valor
 		printf("\t *** El valor de la clave es: %s\n", status.contenido);
 	} else {
 		printf("\t *** La clave existe pero esta vacia.\n");
