@@ -20,6 +20,7 @@ bool condicion_socket_esi(void* datos){
 
 bool condicion_socket_instancia(void* datos){
 	nodo un_nodo = *((nodo*) datos);
+	log_info(logger, "Instancia tho Buscado: %d y encontrado: %d", socket_instancia_buscado, un_nodo.socket);
 	return un_nodo.socket == socket_instancia_buscado;
 }
 
@@ -44,27 +45,42 @@ void reemplazar_instancia(nodo un_nodo){
 }
 
 bool clave_accesible(char* clave){
+	log_info(logger, "Estoy en clave accesible");
 	pthread_mutex_lock(&m_clave_buscada);
-	clave_buscada = malloc(strlen(clave)+1);
-	memcpy(clave_buscada, clave, strlen(clave)+1);
-	nodo_clave* n_clave = list_find(lista_claves, condicion_clave);
+	if(list_size(lista_claves) > 0){
+		clave_buscada = malloc(strlen(clave)+1);
+		memcpy(clave_buscada, clave, strlen(clave)+1);
+		if(list_any_satisfy(lista_claves, condicion_clave)){
+			nodo_clave* n_clave = list_find(lista_claves, condicion_clave);
+			pthread_mutex_lock(&m_id_instancia_buscado);
+			id_instancia_buscado = n_clave->nodo_instancia.id;
+			log_info(logger, "Voy a buscar");
+			bool resultado = list_any_satisfy(lista_instancias, condicion_id_instancia);
+			pthread_mutex_unlock(&m_id_instancia_buscado);
+			return resultado;
+		}
+		return true;
+	}
 	pthread_mutex_unlock(&m_clave_buscada);
-	pthread_mutex_lock(&m_id_instancia_buscado);
-	id_instancia_buscado = n_clave->nodo_instancia.id;
-	log_info(logger, "Voy a buscar");
-	bool resultado = list_any_satisfy(lista_instancias, condicion_id_instancia);
-	pthread_mutex_unlock(&m_id_instancia_buscado);
-	return resultado;
+	return true;
 }
 
 nodo* buscar_instancia(char* clave){
+	log_info(logger, "Entre a buscar instancia");
 	nodo* nodo_instancia;
+	nodo_clave* nodito;
 	pthread_mutex_lock(&m_lista_claves);
+	log_info(logger, "unoooooooooooooo");
+	pthread_mutex_unlock(&m_clave_buscada); //Hay que sacarlo
 	pthread_mutex_lock(&m_clave_buscada);
+	log_info(logger, "doooooooooooooooooooooos");
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
-		nodo_instancia = list_find(lista_claves, condicion_clave); //Esto no deberia funcionar?????
+		log_info(logger, "Hay una instancia que cumole la condicion");
+		nodito = list_find(lista_claves, condicion_clave); //Esto no deberia funcionar?????
+		id_instancia_buscado = nodito->nodo_instancia.id; //Agregar semaforos
+		nodo_instancia = list_find(lista_instancias, condicion_id_instancia);
 	} else {
 		nodo_instancia = seleccionar_instancia(clave);
 		nodo_clave* nodo_ = malloc(sizeof(nodo_clave));
@@ -93,10 +109,11 @@ nodo* seleccionar_instancia(char* clave){
 	case EL:
 		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
 		pthread_mutex_lock(&m_ultima_instancia_EL);
-		log_info(logger, "+++++++ EL es: %d +++++++", ultima_instancia_EL);
 		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
 		//instancia_seleccionada = list_get(lista_instancias, 0);
-		if(ultima_instancia_EL++ == list_size(lista_instancias)){ultima_instancia_EL = 0;}
+		log_info(logger, "------------ %d ----------", list_size(lista_instancias));
+		if(ultima_instancia_EL++ == list_size(lista_instancias)-1){ultima_instancia_EL = 0;}
+		log_info(logger, "+++++++ EL es: %d +++++++", ultima_instancia_EL);
 		pthread_mutex_unlock(&m_ultima_instancia_EL);
 		break;
 	case LSU:
@@ -142,6 +159,6 @@ nodo* encontrar_esi(int socket){//verificar semaforos
 	nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
 	pthread_mutex_unlock(&m_lista_esis);
 	pthread_mutex_unlock(&m_socket_esi_buscado);
-	log_info(logger, "Socket encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
+	log_info(logger, "Socket ESI encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
 	return el_nodo;
 }
