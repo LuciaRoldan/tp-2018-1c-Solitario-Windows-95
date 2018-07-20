@@ -32,8 +32,9 @@ void enviar_exito(int socket_coordinador, t_log* logger) {
 }
 
 bool condicion_clave_entrada(void* datos){
-	estructura_clave entrada = *((estructura_clave*) datos);
-	return !strcmp(entrada.clave, clave_buscada);
+	estructura_clave* entrada = (estructura_clave*) datos;
+	log_info(logger, "Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
+	return !strcmp(entrada->clave, clave_buscada);
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
@@ -159,7 +160,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
 			estructura_clave* entrada_nueva = malloc(sizeof (estructura_clave));
 			entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
-			entrada_nueva->clave = clave_buscada;
 			entrada_nueva->numero_entrada = indice;
 			memcpy(entrada_nueva->clave,clave_buscada,tamanio_clave);
 			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
@@ -167,7 +167,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			list_add_in_index(tabla_entradas, indice, entrada_nueva);
 			log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
 			indice ++;
-			free(entrada_nueva);
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
@@ -185,8 +184,11 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		printf("La clave es: %s\n", clave_buscada);
 		printf("El valor de la clave es: %s\n", valor);
 
+		estructura_clave* entrada_encontrada = list_get(tabla_entradas, 0);
+		log_info(logger, "Clave %s", entrada_encontrada->clave);
+		log_info(logger, "Tamanio lista: %d", list_size(tabla_entradas));
 		log_info(logger, "Cantidad que cumple: %d", list_count_satisfying(tabla_entradas, condicion_clave_entrada));
-		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+		//estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		log_info(logger,"ocupa %d entradas ", cantidad_entradas);

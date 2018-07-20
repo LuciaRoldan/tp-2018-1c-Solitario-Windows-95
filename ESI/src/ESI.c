@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	fclose(script_prueba);
-	codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
+	//codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 	informar_fin_de_programa(conexiones, abortoESI);
 	free(mensaje_coordi);
 	close(conexiones.socket_plani);
