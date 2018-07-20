@@ -384,6 +384,23 @@ void implementar_algoritmo(estructura_clave* entrada_nueva, t_log* logger){
 
 void compactar(){
 	printf("Quiso compactar");
+	int cantidad_instancias;
+	int mensaje = 22;
+	void* buffercito = malloc(sizeof(int));
+	serializar_id(buffercito, mensaje);
+	enviar(socket_coordinador, buffercito, sizeof(int), logger);//Envia al coordinador el pedido de cantidad instancias
+	free(buffercito);
+	void* buffer = sizeof(int);
+	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe el protocolo que deberia ser 03
+	mensaje = deserializar_id(buffer);
+	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe la cantidad
+	cantidad_instancias = deserializar_id(buffer);
+	sem_post(&s_compactacion, cantidad_instancias);//Habilita a todas las instancias a compactar
+}
+
+void hilo_compactar(){
+	sem_wait(&s_compactacion);
+	//aca se hace la compactacion lol
 }
 
 

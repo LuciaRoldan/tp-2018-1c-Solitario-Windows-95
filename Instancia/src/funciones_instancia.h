@@ -2,6 +2,7 @@
 #define FUNCIONES_INSTANCIA_H_
 
 #include "commons_propias/commons_propias.h"
+#include <semaphore.h>
 
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
@@ -58,6 +59,7 @@ FILE*archivo;
 t_log * logger;
 pthread_mutex_t m_tabla;
 int socket_coordinador;
+sem_t s_compactacion;
 
 ///////////////////////// FUNCIONES /////////////////////////
 ///---Inicializacion---///

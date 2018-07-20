@@ -18,6 +18,7 @@ int main(int argc, char* argv[]){
 	logger = log_create("instancia.log", log, true, LOG_LEVEL_INFO);
 
 	if (pthread_mutex_init(&m_tabla, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	sem_init(&s_compactacion, 1, 0);
 	leer_configuracion_propia(argv[1], &mi_configuracion,logger);
 	log_info(logger, "Mi algoritmo es: %d", mi_configuracion.algoritmoDeReemplazo);
 
