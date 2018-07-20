@@ -65,8 +65,7 @@ int procesar_mensaje(int socket){
 
 		case 83: //Status clave
 			status = recibir_status(socket);
-			//buscar_instancia_ficticia
-			//status.id_instancia_nueva;
+			status.id_instancia_nueva = buscar_instancia_ficticia(status.clave);
 			resultado = enviar_status_clave(socket_planificador, status);
 			return resultado;
 			break;
@@ -224,6 +223,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 						list_add(lista_claves, nodito);
 						log_info(logger, "lo agregue %d", list_size(lista_claves));
 					}*/
+			pthread_mutex_unlock(&m_operacion_ejecutando); //verificar
 			pthread_mutex_lock(&m_operacion_ejecutando);
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);
