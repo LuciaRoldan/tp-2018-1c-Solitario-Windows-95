@@ -18,7 +18,7 @@ sockets inicializar_planificador(){
 }
 
 void leer_archivo_configuracion(){
-	t_config* configuracion = config_create("configu_planificador.cfg");
+	t_config* configuracion = config_create("config_planificador");
 
 		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
 		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
