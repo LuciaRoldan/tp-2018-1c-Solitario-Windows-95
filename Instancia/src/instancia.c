@@ -26,6 +26,7 @@ int main(int argc, char* argv[]){
 
 	handshake_instancia(socket_coordinador,logger, id_instancia);
 	log_info(logger,"Recibi el handshake del cordi");
+	log_info(logger, "Mi algoritmo de reemplazo es: %d ", mi_configuracion.algoritmoDeReemplazo);
 	printf("Mi nombre es: %d ", mi_configuracion.nombreInstancia);
 
 	int id = recibir_int(socket_coordinador,logger);

@@ -13,7 +13,7 @@ void leer_configuracion_propia(char* path, configuracion_propia* configuracion, 
 		exit(1);
 	}
 
-	fscanf(archivo, "%s %s %s %s %d %d",
+	fscanf(archivo, "%s %s %d %s %d %d",
 			configuracion->ipCoordinador,
 			configuracion->puertoCoordinador,
 			configuracion->algoritmoDeReemplazo,
@@ -322,7 +322,7 @@ void borrar_entrada(void* entrada){
 
 }
 
-void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
+void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva, t_log* logger){
 	estructura_clave* entrada_LRU;
 	int maximo_LRU = 0;
 
@@ -336,9 +336,34 @@ void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
 	list_replace_and_destroy_element(tabla_entradas,entrada_LRU->numero_entrada,entrada_nueva,borrar_entrada);
 }
 
+void aplicar_algoritmo_BSU(estructura_clave* entrada_nueva, t_log* logger){
+	log_info(logger,"Entro al algoritmo del BSU");
+	estructura_clave* entrada_BSU;
+	int maximo_BSU = 0;
+
+	for(int i = 0; i < configuracion.cantidad_entradas; i++){
+		entrada_BSU = list_get(tabla_entradas,i);
+		if(entrada_BSU->tamanio_valor > maximo_BSU){
+			maximo_BSU = entrada_BSU->tamanio_valor;
+		}
+	}
+	entrada_nueva->numero_entrada = entrada_BSU->numero_entrada;
+	list_replace_and_destroy_element(tabla_entradas,entrada_BSU->numero_entrada,entrada_nueva,borrar_entrada);
+}
+
 
 void implementar_algoritmo(estructura_clave* entrada_nueva, t_log* logger){
-	aplicar_algoritmo_circular(entrada_nueva, logger);
+	switch(mi_configuracion.algoritmoDeReemplazo){
+	case(CIRC):
+		aplicar_algoritmo_circular(entrada_nueva, logger);
+		break;
+	case(LRU):
+		aplicar_algoritmo_LRU(entrada_nueva, logger);
+		break;
+	case(BSU):
+		aplicar_algoritmo_BSU(entrada_nueva, logger);
+		break;
+	}
 }
 
 void compactar(){
