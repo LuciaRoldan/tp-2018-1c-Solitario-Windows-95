@@ -46,7 +46,7 @@ bool condicion_clave_entrada(void* datos){
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
-	if(tamanio_valor%configuracion.tamano_entrada == 0){
+	if(tamanio_valor % configuracion.tamano_entrada == 0){
 		return tamanio_valor/configuracion.tamano_entrada;
 	} else {
 		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
@@ -59,8 +59,6 @@ datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger)
 	void* buffer = malloc(sizeof(datos_configuracion));
 	recibir(socket_coordinador, buffer, sizeof(datos_configuracion), logger);
 	datos_configuracion configuracion = deserializar_configuracion_inicial_instancia(buffer);
-
-	configuracion.cantidad_entradas = 3; //BORRAR ES PARA TESTEAR
 
 	free(buffer);
 	return configuracion;
@@ -166,6 +164,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	int tamanio_valor = 0;
 	int tamanio_clave = 0;
 	switch (instruccion.keyword) {
+
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
 		tamanio_clave = strlen(instruccion.argumentos.GET.clave)+1;
@@ -198,42 +197,41 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		free(clave_buscada);
 		enviar_exito(socket_coordinador,logger);
 		break;
+
 	case (SET):
+		estructura_clave* entrada_encontrada;
 		log_info(logger, "Se pidio operacion con SET");
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor)+1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave)+1;
-		valor = malloc(tamanio_valor);
+
 		clave_buscada = malloc(tamanio_clave);
-		log_info(logger,"el tamanio del valor es %d y el de la clave %d ", tamanio_valor, tamanio_clave);
-
-		memcpy(valor, instruccion.argumentos.SET.valor, tamanio_valor);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
-
-		printf("La clave es: %s\n", clave_buscada);
-		printf("El valor de la clave es: %s\n", valor);
-
-		log_info(logger,"la clave que busco es: %s ", clave_buscada);
-		log_info(logger,"cantidad de entradas de la tabla: %d ", list_size(tabla_entradas));
-		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-		log_info(logger,"Paso el find");
+		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		entrada_encontrada->cantidad_entradas = cantidad_entradas;
 		entrada_encontrada->tamanio_valor = tamanio_valor;
 		entrada_encontrada->cantidad_operaciones = 0;
 
-		log_info(logger,"ocupa %d entradas ", cantidad_entradas);
-		log_info(logger,"el tamanio del valor es: %d ", tamanio_valor);
-		log_info(logger,"el valor es: %s", valor);
-		entrada_encontrada->valor = malloc(tamanio_valor); //CREO QUE ESTO SE PUEDE BORRAR
-		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
-		log_info(logger, "asigno el valor");
-		asignar_memoria(*entrada_encontrada, cantidad_entradas, valor, logger);
+		//valor = encontrar_espacio(cantidad_entradas); //devuelve void*
+		//valor = malloc(tamanio_valor);
+		int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+
+		if(resultado < 0){
+			asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+		}
+
+		free(entrada_encontrada->valor); //No lo cambien de lugar
+		entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)*configuracion.cantidad_entradas + inicio_memoria;
+		memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
+
+
 		enviar_exito(socket_coordinador,logger);
 		list_iterate(tabla_entradas, sumar_operacion);
 //		free(valor);
 		free(clave_buscada);
 		break;
+
 	case (STORE):
 		log_info(logger, "Se pidio operacion con STORE");
 		tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
@@ -245,12 +243,44 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 	}
 }
 
-void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor, t_log* logger){
-	int contador = 1; //porque la primera ya la tengo reservada del GET
+int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
+	int contador = 0;
 	int posicion_siguiente = 1; //la primera que quiero reservar
+	int espacios_libres = 0;
 	log_info(logger,"entro a asignar memoria");
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
-	//busca entradas vacias contiguas hasta que no haya mas
+
+	while(contador != entradas_contiguas_necesarias && puntero_pagina <= configuracion.cantidad_entradas){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
+		if(acceso_tabla[puntero_pagina]){
+			espacios_libres += 1;
+			puntero_pagina += 1;
+			contador += 1;
+		} else {
+			puntero_pagina += 1;
+			contador = 0;
+		}
+	}
+
+	if(contador == entradas_contiguas_necesarias){ //Si tengo las necesarias
+		//salio todo bien, hay que poner los bitmap en 1
+		return 1;
+
+	} else {
+		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
+			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
+			puntero_pagina = 0;
+			return -1;
+		} else { //Si tengo que reemplazar
+			implementar_algoritmo(&clave, logger); //Los algoritmos tienen que dejar el puntero_pagina al final del espacio que va a usar
+			puntero_pagina = 0;
+			return 1;
+		}
+	}
+
+
+
+
+/*	//busca entradas vacias contiguas hasta que no haya mas
 	while(contador != entradas_contiguas_necesarias){
 		if (acceso_tabla[clave.numero_entrada + posicion_siguiente] == 0){
 			posicion_siguiente += 1;
@@ -278,7 +308,7 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 		log_info(logger,"va a almacenar el valor");
 		almacenar_valor(valor, clave.tamanio_valor);
 
-	}
+	}*/
 }
 
 void sumar_operacion(void* entradas){
@@ -289,9 +319,9 @@ void sumar_operacion(void* entradas){
 
 void almacenar_valor(char* valor, int tamanio_valor){
 //	si alcanza la memoria lo guarda
-	if((memoria_usada + tamanio_valor) <= memoria_total){
-		memcpy((inicio_memoria + memoria_usada), valor,tamanio_valor);
-		memoria_usada += tamanio_valor;
+	if((puntero_pagina + tamanio_valor) <= memoria_total){
+		memcpy((inicio_memoria + puntero_pagina), valor,tamanio_valor);
+		puntero_pagina += tamanio_valor;
 	} else{
 //	 si no compacta
 		compactar();
@@ -387,6 +417,26 @@ void implementar_algoritmo(estructura_clave* entrada_nueva, t_log* logger){
 
 void compactar(){
 	printf("Quiso compactar");
+	int cantidad_instancias;
+	int mensaje = 22;
+	void* buffercito = malloc(sizeof(int));
+	serializar_id(buffercito, mensaje);
+	enviar(socket_coordinador, buffercito, sizeof(int), logger);//Envia al coordinador el pedido de cantidad instancias
+	free(buffercito);
+	void* buffer = malloc(sizeof(int));
+	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe el protocolo que deberia ser 03
+	mensaje = deserializar_id(buffer);
+	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe la cantidad
+	cantidad_instancias = deserializar_id(buffer);
+	log_info(logger, "Voy a hacer %d posts", cantidad_instancias);
+	for(int i = 0; i < cantidad_instancias; i++){
+		sem_post(&s_compactacion);//Habilita a todas las instancias a compactar
+	}
+}
+
+void hilo_compactar(){
+	sem_wait(&s_compactacion);
+	//aca se hace la compactacion lol
 }
 
 

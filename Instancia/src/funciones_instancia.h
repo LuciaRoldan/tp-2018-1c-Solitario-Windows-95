@@ -2,6 +2,7 @@
 #define FUNCIONES_INSTANCIA_H_
 
 #include "commons_propias/commons_propias.h"
+#include <semaphore.h>
 
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
@@ -11,14 +12,13 @@ int* acceso_tabla;
 t_list* tabla_entradas;
 char* clave_buscada;
 int indice;
-char* inicio_memoria;
+void* inicio_memoria;
 int memoria_total;
-int memoria_usada;
+int puntero_pagina;
 bool activa;
 int id_instancia;
 int puntero_circular;
 int lugar_de_memoria;
-
 
 
 typedef enum {
@@ -58,6 +58,7 @@ FILE*archivo;
 t_log * logger;
 pthread_mutex_t m_tabla;
 int socket_coordinador;
+sem_t s_compactacion;
 
 ///////////////////////// FUNCIONES /////////////////////////
 ///---Inicializacion---///
@@ -95,6 +96,7 @@ int cantidad_entradas_ocupa(int tamanio_valor);
 bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
 void compactar();
+void hilo_compactar();
 void implementar_algoritmo();
 void procesarID(int socket_coordinador, t_log* logger);
 void borrar_entrada(void* entrada);

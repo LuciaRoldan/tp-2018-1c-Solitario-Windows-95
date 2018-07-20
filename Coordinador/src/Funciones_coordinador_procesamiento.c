@@ -29,6 +29,16 @@ int procesar_mensaje(int socket){
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
 			return resultado;
 			break;
+
+		case 23:
+			rta_esi = list_size(lista_instancias);
+			buffer_int = malloc(sizeof(int));
+			serializar_id(buffer_int, rta_esi);
+			resultado = enviar(socket, buffer_int, sizeof(int), logger);
+			log_info(logger, "Le digo a la Instancia cuantas Instancias hay");
+			return resultado;
+			break;
+
 		case 25: //Exito instancia
 			log_info(logger, "Recibi confirmacion de la Instancia %d", instancia_seleccionada->id);
 			pthread_mutex_unlock(&m_instancia_seleccionada);
