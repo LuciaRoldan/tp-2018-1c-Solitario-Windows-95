@@ -16,6 +16,7 @@ int memoria_total;
 int memoria_usada;
 bool activa;
 int id_instancia;
+int puntero_circular = 0;
 
 
 typedef enum {
@@ -36,6 +37,7 @@ typedef struct{
 	int numero_entrada;
 	int cantidad_entradas;
 	int tamanio_valor;
+	int operaciones;
 	char* valor;
 }estructura_clave;
 

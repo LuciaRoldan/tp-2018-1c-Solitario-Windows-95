@@ -189,12 +189,14 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
-		log_info(logger,"ocupa %d entradas ", cantidad_entradas);
+		entrada_encontrada->cantidad_entradas = cantidad_entradas;
 		entrada_encontrada->tamanio_valor = tamanio_valor;
+
+		log_info(logger,"ocupa %d entradas ", cantidad_entradas);
 		log_info(logger,"el tamanio del valor es: %d ", tamanio_valor);
 		log_info(logger,"el valor es: %s", valor);
-		entrada_encontrada->valor = malloc(tamanio_valor);
-		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
+//		entrada_encontrada->valor = malloc(tamanio_valor); CREO QUE ESTO SE PUEDE BORRAR
+//		memcpy(entrada_encontrada->valor, valor, tamanio_valor);
 		log_info(logger, "asigno el valor");
 		asignar_memoria(*entrada_encontrada, cantidad_entradas, valor, logger);
 		enviar_exito(socket_coordinador,logger);
@@ -206,7 +208,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
 		guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave, logger);
 		log_info(logger, "Guarde en el archivo");
-		// NO SE USA: enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger); //Ya lo hace el planificador
 		enviar_exito(socket_coordinador,logger);
 		break;
 	}
@@ -222,9 +223,9 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 		if (acceso_tabla[clave.numero_entrada + posicion_siguiente] == 0){
 			posicion_siguiente += 1;
 			contador += 1;
-//			encaso de que no haya mas entradas aplica algoritmo de reemplazo
+//			en caso de que no haya mas entradas aplica algoritmo de reemplazo
 			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-				implementar_algoritmo();
+				implementar_algoritmo(clave);
 			}
 		else{
 			posicion_siguiente += 1;
@@ -243,16 +244,15 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 		acceso_tabla[numero_entrada - i] = 1;
 		log_info(logger,"va a almacenar el valor");
 		almacenar_valor(valor, clave.tamanio_valor);
+
 	}
 }
 
-void implementar_algoritmo(){
-	printf("Quiso entrar en el algoritmo");
+void sumar_operacion(void* entradas){
+	estructura_clave* entrada = entradas;
+	entrada->operaciones += 1;
 }
 
-void compactar(){
-	printf("Quiso compactar");
-}
 
 void almacenar_valor(char* valor, int tamanio_valor){
 //	si alcanza la memoria lo guarda
@@ -265,6 +265,34 @@ void almacenar_valor(char* valor, int tamanio_valor){
 	}
 }
 
+void aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
+	bool atomica = false;
+	estructura_clave* entrada_original;
+	while (atomica) {
+		entrada_original = list_get(tabla_entradas, puntero_circular);
+		if (entrada_original->cantidad_entradas == 1) {
+			atomica = true;
+		}
+		puntero_circular += 1;
+		if(puntero_circular == configuracion.cantidad_entradas){
+			puntero_circular = 0;
+		}
+	}
+	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,entrada_original);
+}
+
+void aplicar_LRU(estructura_clave* entrada_nueva){
+
+
+}
+
+void implementar_algoritmo(){
+	printf("Quiso entrar en el algoritmo");
+}
+
+void compactar(){
+	printf("Quiso compactar");
+}
 
 
 void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
@@ -311,18 +339,6 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 			free(path);
 }
 
-	/*void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
-		void* buffer = malloc(sizeof(int)+ strlen(clave));
-		serializar_pedido_desbloqueo(buffer,clave);
-		enviar(socket_coordinador, buffer, sizeof(int), logger);
-		free(buffer);
-	}
-
-	void serializar_pedido_desbloqueo(void* buffer, char* clave){
-		serializar_id(buffer,83);
-		memcpy(buffer + sizeof(int),clave, strlen(clave));
-	}*/
-
 
 int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
 		int conexion_hecha = 0;
@@ -356,9 +372,6 @@ int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
 		return 1;
 }
 
-void aplicar_algoritmo_circular(){
-
-}
 
 	 /*algoritmo_distribucion(){
 
