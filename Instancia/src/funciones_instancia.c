@@ -117,11 +117,12 @@ char* recibe_pedido_status() {
 int enviar_status_clave(char* clave){
 	clave_buscada = clave;
 	estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-	status_clave status = {clave, 0, entrada_encontrada->valor};
+	status_clave status = {clave,idInstancia, 0, entrada_encontrada->valor};
 	int tamanio_buffer = tamanio_buffer_status(status);
 	void* buffer = malloc(tamanio_buffer);
 	serializar_status_clave(buffer,status);
 	int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
+	free(buffer);
 	return bytes_enviados;
 }
 
@@ -165,22 +166,27 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		clave_buscada = malloc(tamanio_clave);
 		strcpy(clave_buscada,instruccion.argumentos.GET.clave);
 
-		if (!list_any_satisfy(tabla_entradas,condicion_clave_entrada)){
+		if (!list_any_satisfy(tabla_entradas, condicion_clave_entrada)) {
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
-
-			estructura_clave* entrada_nueva = malloc(sizeof(estructura_clave));
-			log_info(logger,"Se hizo el primer malloc");
-			entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
-			memcpy(entrada_nueva->clave,clave_buscada,tamanio_clave);
-			log_info(logger,"Se hizo el primer memcpy");
-			entrada_nueva->numero_entrada = indice;
-			log_info(logger,"Se hizo el segundo memcpy");
-			acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
-			list_add_in_index(tabla_entradas, indice, entrada_nueva);
-			log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
-			indice ++;
-			free(clave_buscada);
+			if (indice >= configuracion.cantidad_entradas) {
+				implementar_algoritmo(clave_buscada);
+			} else {
+				estructura_clave* entrada_nueva = malloc(
+						sizeof(estructura_clave));
+				log_info(logger, "Se hizo el primer malloc");
+				entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
+				memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
+				log_info(logger, "Se hizo el primer memcpy");
+				entrada_nueva->numero_entrada = indice;
+				log_info(logger, "Se hizo el segundo memcpy");
+				acceso_tabla[indice] = 1; //quiere decir que esta ocupada esa entrada
+				list_add_in_index(tabla_entradas, indice, entrada_nueva);
+				log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
+				indice++;
+				log_info(logger,"Aca te muestro que el indice esta en: %d ", indice);
+			}
 		}
+		free(clave_buscada);
 		enviar_exito(socket_coordinador,logger);
 		break;
 	case (SET):
@@ -237,13 +243,13 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 			contador += 1;
 //			en caso de que no haya mas entradas aplica algoritmo de reemplazo
 			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-				implementar_algoritmo(clave);
+				implementar_algoritmo(&clave);
 			}
 		else{
 			posicion_siguiente += 1;
 			contador == 0;
 			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-							implementar_algoritmo();
+							implementar_algoritmo(&clave);
 				}
 			}
 		}
@@ -254,6 +260,7 @@ void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, 
 		int numero_entrada = clave.numero_entrada;
 		log_info(logger, " el numero_entrada es %d ", numero_entrada);
 		acceso_tabla[numero_entrada - i] = 1;
+		indice += entradas_contiguas_necesarias;
 		log_info(logger,"va a almacenar el valor");
 		almacenar_valor(valor, clave.tamanio_valor);
 
@@ -299,8 +306,8 @@ void aplicar_LRU(estructura_clave* entrada_nueva){
 
 }
 
-void implementar_algoritmo(){
-	printf("Quiso entrar en el algoritmo");
+void implementar_algoritmo(estructura_clave* entrada_nueva){
+	aplicar_algoritmo_circular(entrada_nueva);
 }
 
 void compactar(){
