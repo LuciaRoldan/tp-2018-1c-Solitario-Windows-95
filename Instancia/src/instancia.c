@@ -9,6 +9,7 @@ int main(int argc, char* argv[]){
 	id_instancia = atoi(argv[2]);
 
 	indice = 0;
+	activa = true;
 	char log[10] = "INSTANCIA";
 	memcpy(&log[9], argv[2], 1);
 
@@ -52,7 +53,8 @@ int main(int argc, char* argv[]){
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
-	while(1){
+	//while(activa){
+	for(int i=0; i<10; i+=1){
 		log_info(logger, "Entré al while");
 		procesarID(socket_coordinador,logger);
 		log_info(logger, "Procesé. Vuelvo a entrar al while");
@@ -61,6 +63,7 @@ int main(int argc, char* argv[]){
 	//free(espacio_para_memoria);
 	sleep(5);
 	free(acceso_tabla);
+	close(socket_coordinador);
 	return 0;
 }
 

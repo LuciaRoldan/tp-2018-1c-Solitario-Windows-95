@@ -55,17 +55,14 @@ datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger)
 }
 
 void procesarID(int socket_coordinador, t_log* logger) {
+	int tamanio_clave;
+	void* buffer;
 	int id = recibir_int(socket_coordinador, logger);
 	t_esi_operacion instruccion;
-	// t_handshake handshake_coordi;
+
 	char* clave;
 
 	switch (id) {
-	/*case (80):
-		recibir(socket_coordinador, (void*) &handshake_coordi,sizeof(t_handshake), logger);
-		deserializar_handshake((void*) &handshake_coordi);
-		log_info(logger, "Hice el handshake");
-		break;*/
 	case (82):
 		log_info(logger, "Recibi una instruccion");
 		instruccion = recibir_instruccion(socket_coordinador, logger);
@@ -73,41 +70,49 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		procesar_instruccion(socket_coordinador, instruccion, logger);
 		break;
 	case (83):
-		clave =	recibe_pedido_status(socket_coordinador, logger);
-//		enviar_status_clave(); //declarar
+		buffer = malloc(sizeof(int));
+		recibir(socket_coordinador, buffer, sizeof(int), logger);
+		tamanio_clave = deserializar_id(buffer);
+		free(buffer);
+		clave =	malloc(tamanio_clave);
+		clave = recibe_pedido_status();
+		enviar_status_clave(clave); //declarar
+		free(clave);
+		break;
+	case 85: //INDICA QUE DEBE SALIR DEL WHILE
+		activa = false;
 		break;
 	}
 }
 
-char* recibe_pedido_status(int socket_coordinador, t_log* logger){
+char* recibe_pedido_status() {
+	char* la_clave;
 	int tamanio;
-	char* clave = malloc(tamanio);
 	void* buffer_tamanio = malloc(sizeof(int));
 	int num = recibir(socket_coordinador,buffer_tamanio,sizeof(int),logger);
-	printf("me llegaron %d bytes ", num);
+	printf("me llegaron %d bytes \n", num);
 	tamanio = deserializar_id(buffer_tamanio);
-	void* buffer = malloc(tamanio + sizeof(int));
-	int bytes_recibidos = recibir(socket_coordinador,buffer,(tamanio + sizeof(int)),logger);
-	printf("me llegaron %d bytes ", bytes_recibidos);
+	void* buffer = malloc(tamanio);
+	int bytes_recibidos = recibir(socket_coordinador,buffer, tamanio,logger);
+	printf("me llegaron %d bytes \n", bytes_recibidos);
 	log_info(logger,"recibi %d bytes", bytes_recibidos);
-	deserializar_string(buffer, clave);
-	log_info(logger,"recibi la clave %s: ",clave);
+	deserializar_string(buffer, la_clave);
+	log_info(logger,"recibi la clave %s: ", la_clave);
 	free(buffer_tamanio);
 	free(buffer);
 //	hay que agregar un free de la clave
-	return clave;
+	return la_clave;
 }
 
-int enviar_status_clave(int socket_coordinador, char*clave, t_log* logger){
-	char* valor;
-//	valor = dictionary_get(diccionario_memoria,clave);
-	status_clave status = {clave,id_instancia,valor};
+int enviar_status_clave(char* clave){
+	clave_buscada = clave;
+	estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+	status_clave status = {clave, 0, entrada_encontrada->valor};
 	int tamanio_buffer = tamanio_buffer_status(status);
 	void* buffer = malloc(tamanio_buffer);
 	serializar_status_clave(buffer,status);
 	int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
 	return bytes_enviados;
-
 }
 
 
@@ -162,6 +167,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			list_add_in_index(tabla_entradas, indice, entrada_nueva);
 			log_info(logger, "Hay %d entradas", list_size(tabla_entradas));
 			indice ++;
+			free(entrada_nueva);
 		}
 		enviar_exito(socket_coordinador,logger);
 		break;
@@ -177,7 +183,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 
 		printf("La clave es: %s\n", clave_buscada);
-		printf("La clave es: %s\n", valor);
+		printf("El valor de la clave es: %s\n", valor);
 
 		log_info(logger, "Cantidad que cumple: %d", list_count_satisfying(tabla_entradas, condicion_clave_entrada));
 		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
@@ -200,7 +206,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
 		guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave, logger);
 		log_info(logger, "Guarde en el archivo");
-		//enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger); //Ya lo hace el planificador
+		// NO SE USA: enviar_a_desbloquear_clave(socket_coordinador, instruccion.argumentos.STORE.clave, logger); //Ya lo hace el planificador
 		enviar_exito(socket_coordinador,logger);
 		break;
 	}
@@ -268,7 +274,7 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 			char* valor;
 			int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
 			path = malloc(tamanio_path);
-			memcpy(path,mi_configuracion.puntoDeMontaje,tamanio_path);
+			memcpy(path,&mi_configuracion.puntoDeMontaje,tamanio_path);
 
 			log_info(logger, "Tengo el path: %s", path);
 
@@ -291,19 +297,21 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 				log_info(logger, "No se pudo abrir el archivo");
 			}
 
-			lseek(fd,tamanio_valor,SEEK_SET);
+			lseek(fd,tamanio_valor-1,SEEK_END);
 
-			//swrite(fd, valor, tamanio_valor);
+			write(fd, valor, tamanio_valor);
 
 			puntero_memoria = mmap(NULL,tamanio_valor,PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
 			log_info(logger, "Voy a guardar algo de tamanio %d", tamanio_valor);
-			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
+			memcpy(puntero_memoria, valor, tamanio_valor);
 			msync(puntero_memoria, tamanio_valor, MS_SYNC);
 			munmap(puntero_memoria, tamanio_valor);
-			//close(fd);
+			close(fd);
+			free(clave_buscada);
+			free(path);
 }
 
-	void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
+	/*void enviar_a_desbloquear_clave(int socket_coordinador, char* clave, t_log* logger) {
 		void* buffer = malloc(sizeof(int)+ strlen(clave));
 		serializar_pedido_desbloqueo(buffer,clave);
 		enviar(socket_coordinador, buffer, sizeof(int), logger);
@@ -313,7 +321,7 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 	void serializar_pedido_desbloqueo(void* buffer, char* clave){
 		serializar_id(buffer,83);
 		memcpy(buffer + sizeof(int),clave, strlen(clave));
-	}
+	}*/
 
 
 int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
@@ -344,7 +352,7 @@ int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
 		}
 
 		log_info(logger, "Conectado al COORDINADOR ", proceso_recibido.id);
-
+		free(buffer_recepcion);
 		return 1;
 }
 

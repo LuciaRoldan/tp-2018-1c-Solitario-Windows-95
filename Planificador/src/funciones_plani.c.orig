@@ -202,6 +202,10 @@ void recibir_esis(void* socket_esis){
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
+	if(list_size(esis_ready) < 2){
+		sem_post(&s_planificar);
+	}
+
 	log_info(logger, "Entre a manejar ESI");
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
@@ -804,6 +808,7 @@ void cerrar_cosas_de_un_esi(pcb* esi_a_cerrar){
 	pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	hay_hilos_por_cerrar = 1;
+	sem_post(&s_planificar);
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }
@@ -919,45 +924,18 @@ void recibir_status_clave(){
 }
 
 void imprimir_id_esi(void* esi){
+<<<<<<< HEAD
+	int* id_esi = esi;
+	//mostrar "%d", id_esi;
+}
+
+
+=======
 	int id_esi;
 	memcpy(&id_esi, esi, sizeof(int));
 	printf("%d  ", id_esi);
 }
-
-
-
-
-// COMPLETAR SUBRUTINAS QUE VIENEN DE CONSOLA:
-void pausar_planificacion(){
-
-}
-void continuar_planificacion(){
-
-}
-void bloquear(char * clave, int id){
-
-}
-void desbloquear(char * clave){
-
-}
-void listar_procesos_encolados(char* recurso){
-
-}
-void kill(int id){
-
-}
-void pedir_status(char* clave){
-	int tamanio_buffer = tamanio_buffer_string(clave);
-	void* buffer_pedido_clave = malloc(tamanio_buffer);
-	serializar_string(buffer_pedido_clave, clave, 21);
-	enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
-	sleep(2);
-	//se recibe la respuesta por otro hilo
-}
-void deadlock(){
-
-}
-
+>>>>>>> 8acc2de5f6252250f68c416bdab210f7378764f1
 
 // Rutinas de cierre
 void cerrar_sockets(){
