@@ -55,3 +55,6 @@ Debug
 
 #Logs
 *.log
+
+#Archivos_creados
+Instancia/prueba.txt

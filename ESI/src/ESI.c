@@ -11,7 +11,7 @@ int main(int argc, char* argv[]){
 	idEsi = atoi(argv[2]);
 	sockets_conexiones conexiones;
 
-	logger_esi = log_create("esi.log", "ESI", true, LOG_LEVEL_INFO);
+	logger_esi = log_create("ESI/esi.log", "ESI", true, LOG_LEVEL_INFO);
 	log_info(logger_esi,"Inicio de ESI %d ---> Logger creado.", idEsi);
 
 	FILE* script_prueba = fopen(argv[1], "r");
