@@ -162,7 +162,7 @@ void ejecutar_consola(){
 
 op_consola analizar_linea(char* linea){
 
-	if(string_contains(linea, "bloquear")) {
+	if(string_starts_with(linea, "bloquear")) {
 		return BLOQUEAR;
 	}
 	if(string_starts_with(linea, "desbloquear")) {
@@ -206,12 +206,47 @@ void pausar_planificacion(){
 void continuar_planificacion(){
 	pausar_planificador = 1;
 }
-void bloquear(char * clave, int id){
+void bloquear(char* clave, int id){
 	mover_esi_a_bloqueados(clave, id);
 }
 void desbloquear(char * clave){
-	quitar_esi_de_cola_bloqueados(clave);
+	quitar_primer_esi_de_cola_bloqueados(clave);
 }
+
+void quitar_primer_esi_de_cola_bloqueados(char* clave){
+	clave_bloqueada* nodo_clave;
+
+	//si HAY claves bloqueadas
+	if(!list_is_empty(claves_bloqueadas)){
+		log_info(logger, "pase el primer if");
+		clave_buscada = clave;
+		pthread_mutex_lock(&m_lista_claves_bloqueadas);
+		if(list_any_satisfy(claves_bloqueadas, claves_iguales_nodo_clave)){
+			void* aux = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+			nodo_clave = aux;
+			if(list_size(nodo_clave->esis_en_espera)>0){
+				pthread_mutex_unlock(&m_lista_claves_bloqueadas);
+				log_info(logger, "pase el list find");
+				//SACO al primer esi de la lista de bloqueados de esa clave
+				void* primero = list_remove(nodo_clave->esis_en_espera, 0);
+				int* primer_esi_en_espera = primero;
+				log_info(logger, "el id del que removi es: %d", *primer_esi_en_espera);
+				pthread_mutex_lock(&m_id_buscado);
+				id_buscado = *primer_esi_en_espera;
+				void* un_esi = list_find(pcbs, ids_iguales_pcb);
+				pthread_mutex_unlock(&m_id_buscado);
+				pcb* el_nuevo_esi_ready = un_esi;
+				//agrego al esi a ready
+				list_add(esis_ready, el_nuevo_esi_ready);
+				if(list_is_empty(nodo_clave->esis_en_espera)){
+					liberar_clave(clave);
+				}
+		}
+		}
+		else {pthread_mutex_unlock(&m_lista_claves_bloqueadas);}
+	}
+}
+
 void listar_procesos_encolados(char* recurso){
 	printf("---> Los ESIs a la espera del recurso %s son: ", recurso);
 	clave_buscada = recurso;
