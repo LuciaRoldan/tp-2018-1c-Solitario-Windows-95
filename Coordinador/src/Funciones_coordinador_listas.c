@@ -29,6 +29,11 @@ bool condicion_clave(void* datos){
 	return (strcmp(un_nodo.clave, clave_buscada) == 0);
 }
 
+bool condicion_id_esi(void* datos){
+	nodo un_nodo = *((nodo*) datos);
+	return un_nodo.id == id_esi_buscado;
+}
+
 bool condicion_socket_clave(void* datos){
 	nodo_clave un_nodo = *((nodo_clave*) datos);
 	return un_nodo.nodo_instancia.socket == socket_instancia_buscado;

@@ -4,6 +4,7 @@
 #include <commons_propias/commons_propias.h>
 #include <commons/bitarray.h>
 #include <semaphore.h>
+#include <commons/log.h>
 
 
 ///////////////////////// STRUCTS /////////////////////////
@@ -39,6 +40,7 @@ typedef struct{
 
 t_log * logger;
 t_log* log_operaciones;
+int id_esi_buscado;
 
 //Ya tienen semaforo
 t_esi_operacion operacion_ejecutando;
@@ -115,6 +117,7 @@ void reemplazar_instancia(nodo nodo);
 bool condicion_socket_esi(void* datos);
 bool condicion_socket_instancia(void* datos);
 bool condicion_clave(void* datos);
+bool condicion_id_esi(void* datos);
 bool condicion_id_instancia(void* datos);
 bool condicion_socket_clave(void* datos);
 void eliminar_nodo(void* datos);
