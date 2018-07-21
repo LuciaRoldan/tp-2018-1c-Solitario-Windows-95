@@ -7,7 +7,7 @@
  *
  */
 
-int main() {
+int main(int argc, char* argv[]) {
 
 	//Crear listas globales
 		pcbs = list_create();
@@ -20,7 +20,8 @@ int main() {
 		terminar_todo = 1;
 
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
-	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
+	log_info(logger, "path %s", argv[1]);
+	sockets_planificador = inicializar_planificador(argv[1]); //leyendo archivo configuracion
 
 	pthread_t hilo_escucha_esis;
 	pthread_t hilo_coordinador;
