@@ -86,9 +86,10 @@ void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
 }
 
 bool condicion_clave_entrada(void* datos){
+	log_info(logger,"entro a la condicion");
 	estructura_clave* entrada = (estructura_clave*) datos;
-	log_info(logger, "Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
-	return !strcmp(entrada->clave, clave_buscada);
+	log_info(logger,"Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
+	return (strcmp(entrada->clave, clave_buscada)==0);
 }
 
 
@@ -158,28 +159,26 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
+		int entrada_libre = 0;
 		tamanio_clave = strlen(instruccion.argumentos.GET.clave)+1;
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada,instruccion.argumentos.GET.clave, tamanio_clave);
 		estructura_clave* entrada_nueva = malloc(sizeof(estructura_clave));
-		entrada_nueva->cantidad_operaciones = 0;
 		entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
 		memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
 		entrada_nueva->valor = malloc(1);//hardcode por el plani
 		memcpy(entrada_nueva->valor,"", sizeof(char));//esta guardando una entrada del gran malloc
-
-		if (!list_any_satisfy(tabla_entradas, condicion_clave_entrada)) {
+		bool validacion = list_any_satisfy(tabla_entradas,condicion_clave_entrada);
+		log_info(logger,"entrada nueva %d", entrada_nueva->cantidad_operaciones);
+		if (!validacion) {
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
-			int entrada_libre = any_entrada_bitmap_libre();
-				log_info(logger,"hace el bitmap");
-			if (entrada_libre != -1) {
-				log_info(logger,"Hay lugar para guardar la clave");
-				entrada_nueva->numero_entrada = entrada_libre;
+				entrada_nueva->cantidad_operaciones = 0;
 				entrada_nueva->tamanio_valor = 0;
-				acceso_tabla[entrada_libre] = 1; // ahora esa entrada esta ocupada
-				list_add_in_index(tabla_entradas, entrada_libre, entrada_nueva);
-//				indice++; parece que no lo voy a necesitar
-			}
+				entrada_nueva->numero_entrada = list_size(tabla_entradas);
+				list_add(tabla_entradas, entrada_nueva);
+				log_info(logger,"Lo que guarda es: %s", entrada_nueva->clave);
+				log_info(logger,"la entrada_libre ahora es: %d ", entrada_libre);
+				log_info(logger, "El contenido del bitmap es: %d", acceso_tabla[1]);
 		}
 		free(clave_buscada);
 		enviar_exito(socket_coordinador,logger);
@@ -195,19 +194,18 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
-		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
-		log_info(logger, "Paso el find");
-		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
-		log_info(logger, "a las primeras entradas llega %d ", cantidad_entradas);
-		entrada_encontrada->cantidad_entradas = cantidad_entradas; //el problema esta acaaa
-		log_info(logger, "a las entradas llega %d ", entrada_encontrada->cantidad_entradas);
+		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+		log_info(logger, "Paso el find %d", entrada_encontrada->cantidad_operaciones);
+
+		cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+		log_info(logger, "tiene %d entradas ", cantidad_entradas);
+		entrada_encontrada->cantidad_entradas = cantidad_entradas;
 		entrada_encontrada->tamanio_valor = tamanio_valor;
-		log_info(logger, "al tamanio llega %d ", entrada_encontrada->tamanio_valor);
 		entrada_encontrada->cantidad_operaciones = 0;
+
 		log_info(logger, "Antes de asignar memoria");
-		//valor = encontrar_espacio(cantidad_entradas); //devuelve void*
-		//valor = malloc(tamanio_valor);
+
 		int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
 		log_info(logger, "se asigno memoria %d: ", resultado);
 
@@ -240,14 +238,16 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 //me deja saber si aluna entrada de la tabla de entradas esta libre
 int any_entrada_bitmap_libre() {
 	int i = 0;
-	while (i < configuracion.cantidad_entradas) {
+	while (i != configuracion.cantidad_entradas) {
+		log_info(logger, "El numero del bitmap es: %d", i);
 		if (acceso_tabla[i] == 0) {
-			i++;
+			log_info(logger, "El contenido del bitmap es: %d", acceso_tabla[i]);
 			return i;
 		}
+		log_info(logger, "El contenido del bitmap es: %d", acceso_tabla[i]);
 		i++;
 	}
-	return -1;
+ 	return -1;
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
@@ -259,19 +259,6 @@ int cantidad_entradas_ocupa(int tamanio_valor){
 	}
 }
 
-//int entradas_contiguas_bitmap(int necesarias){
-//	int contador = 0;
-//	int tiene = 0;
-//	while(contador == necesarias || contador == configuracion.cantidad_entradas){
-//		if(acceso_tabla[tiene] == 0){
-//			tiene ++;
-//			contador ++;
-//		}
-//		tiene++;
-//	}
-
-
-
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
 
 	int contador = 0;
@@ -280,10 +267,13 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
 
 	while(contador != entradas_contiguas_necesarias && puntero_pagina <= configuracion.cantidad_entradas){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
-		if(acceso_tabla[puntero_pagina]){
+		log_info(logger, "Entra al while");
+		if(acceso_tabla[puntero_pagina] == 0){
+			log_info(logger, "Entra al if");
 			espacios_libres += 1;
 			puntero_pagina += 1;
 			contador += 1;
+			log_info(logger, "El contador quedo en: %d ", contador);
 		} else {
 			puntero_pagina += 1;
 			contador = 0;
@@ -294,6 +284,7 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 		//salio todo bien, hay que poner los bitmap en 1
 		for(int i = 0; i < entradas_contiguas_necesarias; i++){
 			acceso_tabla[puntero_pagina - i] = 1;
+
 		}
 		return 1;
 	} else {
@@ -309,38 +300,6 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 	}
 
 }
-
-
-/*	//busca entradas vacias contiguas hasta que no haya mas
-	while(contador != entradas_contiguas_necesarias){
-		if (acceso_tabla[clave.numero_entrada + posicion_siguiente] == 0){
-			posicion_siguiente += 1;
-			contador += 1;
-//			en caso de que no haya mas entradas aplica algoritmo de reemplazo
-			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-				implementar_algoritmo(&clave, logger);
-			}
-		else{
-			posicion_siguiente += 1;
-			contador == 0;
-			if(clave.numero_entrada + posicion_siguiente == configuracion.cantidad_entradas){
-							implementar_algoritmo(&clave, logger);
-				}
-			}
-		}
-	}
-//	cuando encontro las entradas contiguas almacena el valor}
-	log_info(logger, "termine el while");
-	for(int i = 0; i < entradas_contiguas_necesarias; i++){
-		int numero_entrada = clave.numero_entrada;
-		log_info(logger, " el numero_entrada es %d ", numero_entrada);
-		acceso_tabla[numero_entrada - i] = 1;
-		indice += (entradas_contiguas_necesarias - 1);
-		log_info(logger,"va a almacenar el valor");
-		almacenar_valor(valor, clave.tamanio_valor);
-
-	}*/
-
 
 void sumar_operacion(void* entradas){
 	estructura_clave* entrada = entradas;
@@ -359,12 +318,21 @@ void almacenar_valor(char* valor, int tamanio_valor){
 	}
 }
 
+//void entradas_atomicas_contiguas(int necesarias){
+//
+//	int contador = 0;
+//	while(contador != necesarias){
+//
+//	}
+//}
+
 void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) {
 	log_info(logger, "Entre al algoritmo circular");
 	int atomica = 1;
 	log_info(logger, "variable atomica");
 	estructura_clave* entrada_original;
 	log_info(logger, "armo la estructura original");
+	//hace falta agregar que la entrada que se agrega puede no ser atomica asique deberia hacer un for buscando varias entradas atomicas consecutias
 	while (atomica) {
 		log_info(logger,"Entre en el while");
 		entrada_original = list_get(tabla_entradas, puntero_circular);
@@ -381,6 +349,7 @@ void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) 
 	}
 	log_info(logger, "Sale del while");
 	entrada_nueva->numero_entrada = entrada_original->numero_entrada;
+	log_info(logger, "el nuevo numero de entrada es: %d", entrada_nueva->numero_entrada);
 	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,borrar_entrada);
 	log_info(logger, "Deberia reemplazar el elemento");
 }
@@ -394,7 +363,7 @@ void borrar_entrada(void* entrada){
 }
 
 void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva, t_log* logger){
-	log_info(logger, "Esoy en LRU");
+	log_info(logger, "Estoy en LRU");
 	estructura_clave* entrada_LRU;
 	estructura_clave* auxiliar;
 	int maximo_LRU = 0;
