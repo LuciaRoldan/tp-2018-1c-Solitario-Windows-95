@@ -20,7 +20,7 @@ void leer_configuracion_propia(char* path, configuracion_propia* configuracion) 
 	printf("+++ %s +++", configuracion->puntoDeMontaje);
 }
 
-void enviar_exito(int socket_coordinador, t_log* logger) {
+void enviar_exito(int socket_coordinador) {
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 25);
 	enviar(socket_coordinador, buffer, sizeof(int), logger);
@@ -132,7 +132,7 @@ t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	return instruccion;
 }
 
-void enviar_fallo(int socket_coordinador, t_log* logger){
+void enviar_fallo(int socket_coordinador){
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 24);
 	enviar(socket_coordinador,buffer,sizeof(int),logger);
@@ -149,8 +149,7 @@ bool existe_clave(char* clave) {
 	return resultado;
 }
 
-void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,
-		t_log* logger) {
+void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
 	char* clave;
 	char* valor;
 	int tamanio_valor = 0;
@@ -184,7 +183,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,
 			log_info(logger, "El contenido del bitmap es: %d", acceso_tabla[1]);
 		}
 		free(clave_buscada);
-		enviar_exito(socket_coordinador, logger);
+		enviar_exito(socket_coordinador);
 		break;
 
 	case (SET):
@@ -209,36 +208,39 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,
 		entrada_encontrada->cantidad_operaciones = 0;
 
 		log_info(logger, "Antes de asignar memoria");
+		if (strcmp(entrada_encontrada->valor, "") == 0) {
 
-		int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas,
-				valor);
-		log_info(logger, "se asigno memoria %d: ", resultado);
+			int resultado = asignar_memoria(*entrada_encontrada,
+					cantidad_entradas, valor);
+			log_info(logger, "se asigno memoria %d: ", resultado);
 
-		if (resultado < 0) {
-			asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+			if (resultado < 0) {
+				asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+			}
+
+			free(entrada_encontrada->valor); //No lo cambien de lugar
+			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)
+					* configuracion.cantidad_entradas + inicio_memoria;
+			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor,
+					tamanio_valor);
+			log_info(logger, "El valor que guarda es: %s ",
+					entrada_encontrada->valor);
+
+			enviar_exito(socket_coordinador);
+			list_iterate(tabla_entradas, sumar_operacion);
+			free(clave_buscada);
+			break;
+
+			case (STORE):
+			log_info(logger, "Se pidio operacion con STORE");
+			tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
+			guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave,
+					logger);
+			log_info(logger, "Guarde en el archivo");
+			enviar_exito(socket_coordinador);
+			list_iterate(tabla_entradas, sumar_operacion);
+			break;
 		}
-
-		free(entrada_encontrada->valor); //No lo cambien de lugar
-		entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)
-				* configuracion.tamano_entrada + inicio_memoria;
-		memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor,
-				tamanio_valor);
-
-		enviar_exito(socket_coordinador, logger);
-		list_iterate(tabla_entradas, sumar_operacion);
-//		free(valor);
-		free(clave_buscada);
-		break;
-
-	case (STORE):
-		log_info(logger, "Se pidio operacion con STORE");
-		tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
-		guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave,
-				logger);
-		log_info(logger, "Guarde en el archivo");
-		enviar_exito(socket_coordinador, logger);
-		list_iterate(tabla_entradas, sumar_operacion);
-		break;
 	}
 }
 
@@ -269,6 +271,7 @@ int cantidad_entradas_ocupa(int tamanio_valor){
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
 	int contador = 0;
 	int espacios_libres = 0;
+	int resultado = 0;
 	puntero_pagina = 0;
 	log_info(logger,"entro a asignar memoria");
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
@@ -298,11 +301,15 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
 			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
 			puntero_pagina = 0;
-			return -1;
+			return 1; //solo caso positivo
 		} else { //Si tengo que reemplazar
-			implementar_algoritmo(&clave, logger); //Los algoritmos tienen que dejar el puntero_pagina al final del espacio que va a usar
-			puntero_pagina = 0;
-			return 1;
+			resultado = implementar_algoritmo(&clave); //Los algoritmos tienen que dejar el puntero_pagina al final del espacio que va a usar
+			if(resultado == 1){
+				enviar_exito(socket_coordinador);
+			} else {
+				enviar_fallo(socket_coordinador);
+			}
+			return resultado;
 		}
 	}
 }
@@ -324,39 +331,48 @@ void almacenar_valor(char* valor, int tamanio_valor){
 	}
 }
 
-//void entradas_atomicas_contiguas(int necesarias){
-//
-//	int contador = 0;
-//	while(contador != necesarias){
-//
-//	}
-//}
+int entradas_atomicas_contiguas(int puntero, int necesarias) {
 
-void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) {
-	log_info(logger, "Entre al algoritmo circular");
-	int atomica = 1;
-	log_info(logger, "variable atomica");
-	estructura_clave* entrada_original;
-	log_info(logger, "armo la estructura original");
-	while (atomica) {
-		log_info(logger,"Entre en el while");
-		entrada_original = list_get(tabla_entradas, puntero_circular);
-		log_info(logger, "Obtengo la entrada original");
-		if (entrada_original->cantidad_entradas == 1) {
-			log_info(logger, "Es atomica");
-			atomica = 0;
-		}
-		log_info(logger, "Aumento el puntero circular");
-		puntero_circular += 1;
-		if(puntero_circular == configuracion.cantidad_entradas){
-			puntero_circular = 0;
+	int puntero_buscador = puntero;
+	int contador = 0;
+	while (contador != necesarias && puntero_buscador <= configuracion.cantidad_entradas) {
+		estructura_clave* victima = list_get(tabla_entradas, puntero_buscador);
+		if (victima->cantidad_entradas == 1) {
+			puntero_buscador += 1;
+			contador += 1;
+			log_info(logger, "El contador quedo en: %d ", contador);
+		} else {
+			puntero_buscador += 1;
+			contador = 0;
 		}
 	}
-	log_info(logger, "Sale del while");
-	puntero_pagina = puntero_circular;
-	entrada_nueva->numero_entrada = entrada_original->numero_entrada;
-	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,borrar_entrada);
-	log_info(logger, "Deberia reemplazar el elemento");
+	if(contador == necesarias){
+		return puntero_buscador; //seria en la ultima entrada atomica que encuentra el puntero
+	} else {
+		return -1;
+	}
+}
+
+int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
+	log_info(logger, "Entre al algoritmo circular");
+	int entradas_necesarias = entrada_nueva->cantidad_entradas;
+	puntero_circular = entradas_atomicas_contiguas(puntero_circular,entradas_necesarias);
+	if(puntero_circular == -1){
+		log_error(logger,"No hay lugares atomicos para almacenar");
+		return -1;
+	} else{
+		while(entradas_necesarias > 0){
+			estructura_clave* victima = list_get(tabla_entradas,puntero_circular);
+			entrada_nueva->numero_entrada = victima->numero_entrada;
+			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
+			puntero_circular ++;
+			if(puntero_circular == configuracion.cantidad_entradas){
+			puntero_circular = 0;
+			}
+		}
+		puntero_pagina = puntero_circular;
+		return 0;
+	}
 }
 
 void borrar_entrada(void* entrada){
@@ -367,25 +383,55 @@ void borrar_entrada(void* entrada){
 
 }
 
-void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva, t_log* logger){
+int lru_atomicos_contiguos(int necesarias) {
+	int contador = 0;
+	int maximo_LRU = 0;
+	estructura_clave* entrada_LRU;
+	estructura_clave* auxiliar;
+	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
+		entrada_LRU = list_get(tabla_entradas, i);
+		if (entrada_LRU->cantidad_operaciones > maximo_LRU) {
+			maximo_LRU = entrada_LRU->cantidad_operaciones;
+			auxiliar = entrada_LRU;
+			int puntero = entradas_atomicas_contiguas(auxiliar->numero_entrada,
+					necesarias);
+			if (puntero != -1) {
+				enviar_exito(socket_coordinador);
+				return puntero;
+			}
+		}
+	}
+	return -1;
+}
+
+int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
 	log_info(logger, "Estoy en LRU");
 	estructura_clave* entrada_LRU;
 	estructura_clave* auxiliar;
+	int entradas_necesarias = entrada_nueva->cantidad_entradas;
 	int maximo_LRU = 0;
+	int puntero = lru_atomicos_contiguos(entradas_necesarias);
 
-	for(int i = 0; i < configuracion.cantidad_entradas; i++){
-		entrada_LRU = list_get(tabla_entradas,i);
-		if(entrada_LRU->cantidad_operaciones > maximo_LRU){
-			maximo_LRU = entrada_LRU->cantidad_operaciones;
-			auxiliar = entrada_LRU;
+	if(puntero == -1){
+			log_error(logger,"No hay lugares atomicos para almacenar");
+			return -1;
+	} else{
+		while(entradas_necesarias > 0){
+			estructura_clave* victima = list_get(tabla_entradas,puntero);
+			entrada_nueva->numero_entrada = victima->numero_entrada;
+			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
+			log_info(logger, "La entrada elegida es la %d", auxiliar->numero_entrada);
+			puntero ++;
+			if(puntero == configuracion.cantidad_entradas){
+			puntero = 0;
+			}
 		}
+		puntero_pagina = puntero;
+		return 1; //solo caso de que haya salido bien
 	}
-	entrada_nueva->numero_entrada = entrada_LRU->numero_entrada;
-	list_replace_and_destroy_element(tabla_entradas,auxiliar->numero_entrada,entrada_nueva,borrar_entrada);
-	log_info(logger, "La entrada elegida es la %d", auxiliar->numero_entrada);
 }
 
-void aplicar_algoritmo_BSU(estructura_clave* entrada_nueva, t_log* logger){
+int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva){
 	log_info(logger,"Entro al algoritmo del BSU");
 	estructura_clave* entrada_BSU;
 	estructura_clave* auxiliar;
@@ -403,21 +449,24 @@ void aplicar_algoritmo_BSU(estructura_clave* entrada_nueva, t_log* logger){
 	entrada_nueva->numero_entrada = auxiliar->numero_entrada;
 	list_replace_and_destroy_element(tabla_entradas,auxiliar->numero_entrada,entrada_nueva,borrar_entrada);
 	log_info(logger, "La entrada elegida es la %d", auxiliar->numero_entrada);
+	return 1; //solo caso de que haya salido bien
 }
 
 
-void implementar_algoritmo(estructura_clave* entrada_nueva, t_log* logger){
+int implementar_algoritmo(estructura_clave* entrada_nueva){
+	int resultado = 0;;
 	switch(mi_configuracion.algoritmoDeReemplazo){
 	case(CIRC):
-		aplicar_algoritmo_circular(entrada_nueva, logger);
+		resultado = aplicar_algoritmo_circular(entrada_nueva);
 		break;
 	case(LRU):
-		aplicar_algoritmo_LRU(entrada_nueva, logger);
+		resultado = aplicar_algoritmo_LRU(entrada_nueva);
 		break;
 	case(BSU):
-		aplicar_algoritmo_BSU(entrada_nueva, logger);
+		resultado = aplicar_algoritmo_BSU(entrada_nueva);
 		break;
 	}
+	return resultado;
 }
 
 void compactar(){
