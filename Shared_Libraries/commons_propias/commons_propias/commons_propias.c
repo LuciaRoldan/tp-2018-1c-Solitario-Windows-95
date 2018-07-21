@@ -38,7 +38,8 @@ int inicializar_servidor(int puerto, t_log * logger){
 		infoSocket.ai_socktype = SOCK_STREAM; //Socket de tipo TCP/IP
 
 		char * dirIP = NULL;
-		char * port = puerto;
+		char * port = malloc(sizeof(int));
+		memcpy(port, &puerto, sizeof(int));
 
 		//Obtenemos la direccion y los datos del socket y los mete en infoServidor
 		if (getaddrinfo(dirIP, port, &infoSocket, &infoServidor) != 0) {
