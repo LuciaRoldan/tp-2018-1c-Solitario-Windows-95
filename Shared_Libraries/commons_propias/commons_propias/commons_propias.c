@@ -7,6 +7,7 @@ int connect_to_server(char * ip, char * port, t_log *  logger){
 
 	memset(&hints, 0 ,sizeof(hints));
 	hints.ai_family = AF_UNSPEC; //se fija solo si es IPv4 o IPv6
+	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM; //protocolo TCP
 
 	getaddrinfo(ip, port, &hints, &server_info); //guarda en server_info los datos de la conexion
