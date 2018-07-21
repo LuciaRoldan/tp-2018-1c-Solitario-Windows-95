@@ -12,6 +12,7 @@ int main(int argc, char* argv[]){
 	activa = true;
 	puntero_circular = 0;
 	lugar_de_memoria = 0;
+	puntero_pagina = 0;
 	char log[10] = "INSTANCIA";
 	memcpy(&log[9], argv[2], 1);
 	leer_configuracion_propia(argv[1], &mi_configuracion);
@@ -41,7 +42,8 @@ int main(int argc, char* argv[]){
 	}
 	configuracion = recibir_configuracion(socket_coordinador,logger);
 	log_info(logger,"Recibi la configuracion! ");
-	log_info(logger,"Mi cantidad de entradas es: %d ", configuracion.cantidad_entradas);
+	cantidad_entradas = configuracion.cantidad_entradas;
+	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
 	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion.tamano_entrada);
 
 	const int cantidad_entradas = 3; //ACORDATE DE VOLVER A configuracion.cantidad_entradas;
