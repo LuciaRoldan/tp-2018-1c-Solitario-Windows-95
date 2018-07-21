@@ -218,9 +218,9 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,
 			asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
 		}
 
-		//free(entrada_encontrada->valor); //No lo cambien de lugar
+		free(entrada_encontrada->valor); //No lo cambien de lugar
 		entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)
-				* configuracion.cantidad_entradas + inicio_memoria;
+				* configuracion.tamano_entrada + inicio_memoria;
 		memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor,
 				tamanio_valor);
 
@@ -269,6 +269,7 @@ int cantidad_entradas_ocupa(int tamanio_valor){
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
 	int contador = 0;
 	int espacios_libres = 0;
+	puntero_pagina = 0;
 	log_info(logger,"entro a asignar memoria");
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
 
@@ -352,6 +353,7 @@ void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) 
 		}
 	}
 	log_info(logger, "Sale del while");
+	puntero_pagina = puntero_circular;
 	entrada_nueva->numero_entrada = entrada_original->numero_entrada;
 	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,borrar_entrada);
 	log_info(logger, "Deberia reemplazar el elemento");
