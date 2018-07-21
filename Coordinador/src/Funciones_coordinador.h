@@ -80,7 +80,7 @@ sem_t s_cerrar_hilo;
 ///////////////////////// FUNCIONES /////////////////////////
 
 //INICIALIZACION
-void leer_archivo_configuracion();
+void leer_archivo_configuracion(char* path);
 void inicializar_coordinador();
 void conectar_planificador();
 void inicializar_semaforos();

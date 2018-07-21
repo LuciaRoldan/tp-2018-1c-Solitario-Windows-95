@@ -2,9 +2,9 @@
 
 ///////////////////////////////////////////////// INICIALIZACION /////////////////////////////////////////////////
 
-void leer_archivo_configuracion(){
+void leer_archivo_configuracion(char* path){
 	//Supongo que en el archivo el orden es: ip, puerto, algoritmo, entradas, tamaño y retardo
-	FILE* archivo = fopen("Configuracion_coordinador.txt", "r");
+	FILE* archivo = fopen(path, "r");
 
 	fscanf(archivo, "%s %d %d %d %d %d",
 			info_coordinador.ip,

@@ -218,7 +218,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion,
 			asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
 		}
 
-		free(entrada_encontrada->valor); //No lo cambien de lugar
+		//free(entrada_encontrada->valor); //No lo cambien de lugar
 		entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)
 				* configuracion.cantidad_entradas + inicio_memoria;
 		memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor,

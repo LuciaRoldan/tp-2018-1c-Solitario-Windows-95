@@ -4,7 +4,7 @@
 #include "Funciones_coordinador.h"
 
 
-int main(){
+int main(int argc, char* argv[]){
 
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
 	log_operaciones = log_create("Operaciones.log", "LOGOP", true, LOG_LEVEL_INFO);
@@ -13,7 +13,7 @@ int main(){
 	log_info(log_operaciones, "  ");
 	log_info(logger,"Loggers creados");
 
-	leer_archivo_configuracion();
+	leer_archivo_configuracion(argv[1]);
 	inicializar_coordinador();
 	conectar_planificador();
 	log_info(logger,"Inicializacion completa");

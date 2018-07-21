@@ -186,7 +186,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
 		break;
 	case SET:
-		log_info(log_operaciones, "ESI %d GET %s %s", esi_ejecutando->id, instruccion.argumentos.SET.clave, instruccion.argumentos.SET.valor);
+		log_info(log_operaciones, "ESI %d SET %s %s", esi_ejecutando->id, instruccion.argumentos.SET.clave, instruccion.argumentos.SET.valor);
 		clave = malloc(strlen(instruccion.argumentos.SET.clave)+1);
 		memcpy(clave, instruccion.argumentos.SET.clave, strlen(instruccion.argumentos.SET.clave)+1);
 		break;
