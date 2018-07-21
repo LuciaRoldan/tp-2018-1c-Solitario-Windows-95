@@ -91,7 +91,6 @@ bool condicion_clave_entrada(void* datos){
 	return !strcmp(entrada->clave, clave_buscada);
 }
 
-}
 
 char* recibe_pedido_status() {
 	int tamanio;
@@ -171,7 +170,8 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 		if (!list_any_satisfy(tabla_entradas, condicion_clave_entrada)) {
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
-			int entrada_libre = entrada_bitmap_libre();
+			int entrada_libre = any_entrada_bitmap_libre();
+				log_info(logger,"hace el bitmap");
 			if (entrada_libre != -1) {
 				log_info(logger,"Hay lugar para guardar la clave");
 				entrada_nueva->numero_entrada = entrada_libre;
@@ -179,6 +179,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				acceso_tabla[entrada_libre] = 1; // ahora esa entrada esta ocupada
 				list_add_in_index(tabla_entradas, entrada_libre, entrada_nueva);
 //				indice++; parece que no lo voy a necesitar
+			}
 		}
 		free(clave_buscada);
 		enviar_exito(socket_coordinador,logger);
@@ -190,18 +191,25 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor)+1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave)+1;
 
+		log_info(logger, "Se guardaron los tamaños");
+
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
+		log_info(logger, "Paso el find");
 		int cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
-		entrada_encontrada->cantidad_entradas = cantidad_entradas;
+		log_info(logger, "a las primeras entradas llega %d ", cantidad_entradas);
+		entrada_encontrada->cantidad_entradas = cantidad_entradas; //el problema esta acaaa
+		log_info(logger, "a las entradas llega %d ", entrada_encontrada->cantidad_entradas);
 		entrada_encontrada->tamanio_valor = tamanio_valor;
+		log_info(logger, "al tamanio llega %d ", entrada_encontrada->tamanio_valor);
 		entrada_encontrada->cantidad_operaciones = 0;
-
+		log_info(logger, "Antes de asignar memoria");
 		//valor = encontrar_espacio(cantidad_entradas); //devuelve void*
 		//valor = malloc(tamanio_valor);
 		int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+		log_info(logger, "se asigno memoria %d: ", resultado);
 
 		if(resultado < 0){
 			asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
@@ -234,8 +242,10 @@ int any_entrada_bitmap_libre() {
 	int i = 0;
 	while (i < configuracion.cantidad_entradas) {
 		if (acceso_tabla[i] == 0) {
+			i++;
 			return i;
 		}
+		i++;
 	}
 	return -1;
 }
@@ -247,24 +257,24 @@ int cantidad_entradas_ocupa(int tamanio_valor){
 		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
 				return resultado.quot +1;
 	}
-
-int entradas_contiguas_bitmap(int necesarias){
-	int contador = 0;
-	int tiene = 0;
-	while(contador == necesarias || contador == configuracion.cantidad_entradas){
-		if(acceso_tabla[tiene] == 0){
-			tiene ++;
-			contador ++;
-		}
-		tiene++;
-	}
-
-
 }
 
+//int entradas_contiguas_bitmap(int necesarias){
+//	int contador = 0;
+//	int tiene = 0;
+//	while(contador == necesarias || contador == configuracion.cantidad_entradas){
+//		if(acceso_tabla[tiene] == 0){
+//			tiene ++;
+//			contador ++;
+//		}
+//		tiene++;
+//	}
+
+
+
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
+
 	int contador = 0;
-	int posicion_siguiente = 1; //la primera que quiero reservar
 	int espacios_libres = 0;
 	log_info(logger,"entro a asignar memoria");
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
@@ -282,8 +292,10 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 
 	if(contador == entradas_contiguas_necesarias){ //Si tengo las necesarias
 		//salio todo bien, hay que poner los bitmap en 1
+		for(int i = 0; i < entradas_contiguas_necesarias; i++){
+			acceso_tabla[puntero_pagina - i] = 1;
+		}
 		return 1;
-
 	} else {
 		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
 			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
@@ -296,7 +308,7 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 		}
 	}
 
-
+}
 
 
 /*	//busca entradas vacias contiguas hasta que no haya mas
@@ -328,7 +340,7 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 		almacenar_valor(valor, clave.tamanio_valor);
 
 	}*/
-}
+
 
 void sumar_operacion(void* entradas){
 	estructura_clave* entrada = entradas;
@@ -559,14 +571,6 @@ void dumpear(void* datos){
 }
 
 
-	 /*algoritmo_distribucion(){
-
-	}*/
 
 
-//Falta hacer la funcion en donde se busque la direccion donde guardar la value es decir con la clave vamos buscando donde se
-//encuentra y de ahi tomamos el lugar de la matriz en donde vamos a guardar la informacion (en el caso de que ya haya algo guardado
-//esto se pisa)
-//Si el coordinador pide un key que no existe lo va a identificar y me va a avisar mediante una instruccion que la agregue
-//asique lo tengo que agregar al protocolo a esta nueva instruccion
-//(ver issues puede ayudar)
+

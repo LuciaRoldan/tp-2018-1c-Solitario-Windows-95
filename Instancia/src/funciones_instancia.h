@@ -90,7 +90,7 @@ void aplicar_algoritmo_LRU(estructura_clave* entrada_nueva, t_log* logger);
 void aplicar_algoritmo_BSU(estructura_clave* entrada_nueva, t_log* logger);
 
 // AGREGO LAS QUE FALTABAN
-void asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor, t_log* logger);
+int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor);
 bool existe_clave(char* clave);
 int cantidad_entradas_ocupa(int tamanio_valor);
 bool condicion_clave_entrada(void* datos);
@@ -101,9 +101,10 @@ void implementar_algoritmo();
 void procesarID(int socket_coordinador, t_log* logger);
 void borrar_entrada(void* entrada);
 void sumar_operacion(void* entradas);
-void dump();
 void dumpear(void* datos);
+void dump();
 int entrada_bitmap_libre();
 int entradas_contiguas_bitmap(int necesarias);
+int any_entrada_bitmap_libre();
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
