@@ -197,6 +197,11 @@ void free_esi_finalizado(void* id);
 void cerrar_planificador();
 void despedir_esi(void* pcb);
 void quitar_primer_esi_de_cola_bloqueados(char* clave);
+bool el_esi_espera_la_clave(int esi_que_la_usa, clave_bloqueada* nodo_clave);
+bool ids_iguales_ints(void* id1);
+bool el_esi_la_esta_esperando(void* clave);
+bool el_esi_la_espera(void* clave);
+bool el_duenio_esta_en_deadlock(clave_bloqueada* nodo_clave);
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 

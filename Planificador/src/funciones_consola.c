@@ -268,6 +268,70 @@ void pedir_status(char* clave){
 	sleep(2);
 	//se recibe la respuesta por otro hilo
 }
-void deadlock(){
 
+void deadlock(){
+	int cantidad_claves_bloqueadas = list_size(claves_bloqueadas);
+	t_list* esis_en_deadlock = list_create();
+	while(cantidad_claves_bloqueadas>0){
+		clave_bloqueada* nodo_clave = list_get(claves_bloqueadas, cantidad_claves_bloqueadas);
+		if(el_duenio_esta_en_deadlock(nodo_clave)){
+			list_add(esis_en_deadlock, &nodo_clave->esi_que_la_usa);
+		}
+		cantidad_claves_bloqueadas--;
+	}
+	int cantidad_esis_en_deadlock = list_size(esis_en_deadlock);
+	while(cantidad_esis_en_deadlock>0){
+		int* esi = list_get(esis_en_deadlock, cantidad_esis_en_deadlock);
+		log_info(logger, "El esi de ID: %d se encuentra en deadlock", *esi);
+		cantidad_esis_en_deadlock--;
+	}
+}
+
+bool el_duenio_esta_en_deadlock(clave_bloqueada* nodo_clave){
+	log_info(logger, "Analizando si el esi de ID %d se encuentra en deadlock", nodo_clave->esi_que_la_usa);
+	//Yo se que el esi que la usa tiene una clave, entonces voy a buscar si hay otra clave que
+	//ese esi esta esperando, y si hay, me voy a fijar si el esi que la tiene esta esperando esta clave.
+	if(list_size(nodo_clave->esis_en_espera)>0){
+		log_info(logger, "Hay por lo menos un esi en la cola de espera de la clave que le pertenece al esi %d", nodo_clave->esi_que_la_usa);
+		pthread_mutex_lock(&m_id_buscado);
+		id_buscado = nodo_clave->esi_que_la_usa;
+		if(list_any_satisfy(claves_bloqueadas, el_esi_la_esta_esperando)){
+			log_info(logger, "El esi %d se encuentra bloqueado esperando una clave", nodo_clave->esi_que_la_usa);
+			clave_bloqueada* bloqueada = list_find(claves_bloqueadas, el_esi_la_espera);
+			log_info(logger, "La clave que ese esi espera es: %s", bloqueada->clave);
+			pthread_mutex_unlock(&m_id_buscado);
+			if(el_esi_espera_la_clave(bloqueada->esi_que_la_usa, nodo_clave)){
+				return true;
+			}
+		}
+	}
+	pthread_mutex_unlock(&m_id_buscado);
+	return false;
+}
+
+bool el_esi_la_esta_esperando(void* clave){
+	clave_bloqueada* bloqueada = clave;
+	return list_any_satisfy(bloqueada->esis_en_espera, ids_iguales_ints);
+}
+
+bool el_esi_la_espera(void* clave){
+	clave_bloqueada* bloqueada = clave;
+	return bloqueada->esi_que_la_usa == id_buscado;
+}
+
+bool ids_iguales_ints(void* id1){
+	int* id_1 = id1;
+	return *id_1 == id_buscado;
+}
+
+bool el_esi_espera_la_clave(int esi_que_la_usa, clave_bloqueada* nodo_clave){
+	pthread_mutex_lock(&m_id_buscado);
+	id_buscado = esi_que_la_usa;
+	if(list_any_satisfy(nodo_clave->esis_en_espera, ids_iguales_ints)){
+		pthread_mutex_unlock(&m_id_buscado);
+		return true;
+	} else {
+		pthread_mutex_unlock(&m_id_buscado);
+		return false;
+	}
 }
