@@ -250,8 +250,8 @@ void manejar_coordinador(void* socket){
 	int socket_coordinador = *((int*) socket);
 	//log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
 	log_info(logger, "Entre al hilo manejar_coordinador");
-	int conexion_valida = true;
-	while(conexion_valida){
+	int conexion_valida = 1;
+	while(conexion_valida > 0){
 
 		int id;
 		void* buffer_int = malloc(sizeof(int));
