@@ -89,6 +89,11 @@ int implementar_algoritmo(estructura_clave* entrada_nueva);
 int aplicar_algoritmo_circular(estructura_clave* entrada_nueva);
 int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva);
 int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva);
+int bsu_atomicos_contiguos(int necesarias);
+int lru_atomicos_contiguos(int necesarias);
+int entradas_atomicas_contiguas(int puntero, int necesarias);
+
+
 
 // AGREGO LAS QUE FALTABAN
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor);
@@ -96,7 +101,6 @@ bool existe_clave(char* clave);
 bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
 void compactar();
-int implementar_algoritmo();
 int cantidad_entradas_ocupa(int tamanio_valor);
 void procesarID(int socket_coordinador, t_log* logger);
 void borrar_entrada(void* entrada);
