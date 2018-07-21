@@ -1,1 +1,1 @@
-127.0.0.1 8001 CIRC /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Instancia/prueba.txt 1 10
+127.0.0.1 8001 1 /home/utnso/inst1/ Inst1 10
