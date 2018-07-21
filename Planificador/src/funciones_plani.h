@@ -79,6 +79,7 @@ pthread_t* hilo_a_cerrar;
 int hay_hilos_por_cerrar;
 int pausar_planificador;
 int terminar_todo;
+int fin_de_programa;
 
 
 ///---SEMAFOROS---///
@@ -114,8 +115,8 @@ sem_t un_semaforo;
 int handshake_esi(int socket_esi);
 void handshake_coordinador(int socket_coordinador);
 pcb* crear_pcb_esi(int socket_cliente, int id_esi, pthread_t hilo_esi);
-sockets inicializar_planificador(char* path);
-void leer_archivo_configuracion(char* path);
+sockets inicializar_planificador();
+void leer_archivo_configuracion();
 void conectarse_al_coordinador(int socket_coordinador);
 void inicializar_semaforos();
 

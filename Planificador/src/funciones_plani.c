@@ -7,9 +7,9 @@
 
 /////-----INICIALIZANDO-----/////
 
-sockets inicializar_planificador(char* path){
+sockets inicializar_planificador(){
 	sockets sockets_planificador;
-	leer_archivo_configuracion(path);
+	leer_archivo_configuracion();
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
@@ -17,8 +17,8 @@ sockets inicializar_planificador(char* path){
 	return sockets_planificador;
 }
 
-void leer_archivo_configuracion(char* path){
-	t_config* configuracion = config_create(path);
+void leer_archivo_configuracion(){
+	t_config* configuracion = config_create("config_planificador");
 
 		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
 		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
@@ -153,7 +153,7 @@ void manejar_esis(){
 			log_info(logger, "Dentro manejar_esis (planificando)");
 
 			planificar();
-			sleep(1);
+			sleep(0.5);
 		}
 	}
 	}
@@ -211,14 +211,14 @@ void manejar_esi(void* la_pcb){
 	while(chau){
 		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
-		sleep(1);
+		//sleep(1);
 
 		void* buffer_resultado = malloc(sizeof(int));
 		recibir(pcb_esi.socket, buffer_resultado, sizeof(int), logger);
 		int resultado = deserializar_id(buffer_resultado);
 		free(buffer_resultado);//PELIGRO
 
-		log_info(logger, "El ESI me envio el resultado_esi %d:", resultado);
+		log_info(logger, "El ESI %d me envio el resultado_esi %d:", pcb_esi.id, resultado);
 
 		if (resultado >= 0){
 			switch (resultado){
@@ -299,6 +299,7 @@ void manejar_coordinador(void* socket){
 	} else {
 	log_error(logger, "Se rompio todo");
 	}
+	cerrar_planificador();
 	pthread_exit(NULL);
 }
 
@@ -712,7 +713,7 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	int* id = malloc(sizeof(int));
 	memcpy(id, &esi_id, sizeof(int));
 	list_add(nodo_clave_buscada->esis_en_espera, id);
-	int tam_lista = list_size(nodo_clave_buscada->esis_en_espera);
+	//int tam_lista = list_size(nodo_clave_buscada->esis_en_espera);
 	//log_info(logger, "El tam de la lista de los esis_en_espera es %d", tam_lista);
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = esi_id;
@@ -853,7 +854,7 @@ void liberar_clave(char* clave){
 
 //FUNCIONES AUXILIARES CLAVE_BLOQUEADA//
 bool claves_iguales_nodo_clave(void* nodo_clave){
-	int tamanio = list_size(claves_bloqueadas);
+	//int tamanio = list_size(claves_bloqueadas);
 	//log_info(logger, "El tamanio de la lista de claves bloqueadas es %d", tamanio);
 
 	clave_bloqueada* una_clave = (clave_bloqueada*) nodo_clave;
@@ -923,6 +924,7 @@ void cerrar_planificador(){
 	serializar_id(envio, 20);
 	enviar(sockets_planificador.socket_coordinador, envio, sizeof(int), logger);
 	free(envio);
+	fin_de_programa=1;
 
 	list_iterate(pcbs, despedir_esi);
 	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
@@ -981,12 +983,15 @@ void cerrar_cosas_de_un_esi(void* esi){
 	pcb* esi_a_cerrar = esi;
 	close(esi_a_cerrar->socket);
 	log_info(logger, "Entre en cerrar_cosas");
-	pthread_mutex_lock(&m_hilo_a_cerrar);
+	//pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
+	log_info(logger, "hola");
 	hay_hilos_por_cerrar = 1;
 	if(list_size(esis_ready)>0){
+		log_info(logger, "hay mas de un esi ready");
 	sem_post(&s_planificar);
 	}
+	log_info(logger, "Post a cerrar_un_hilo");
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }
@@ -1000,5 +1005,3 @@ void cerrar_cosas_de_un_esi(void* esi){
 //SEM
 //sem_wait(&un_semaforo); //WAIT
 //sem_post(&un_semaforo); //SIGNAL
-
-
