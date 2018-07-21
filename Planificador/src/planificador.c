@@ -19,7 +19,7 @@ int main() {
 		pausar_planificador = 0;
 		terminar_todo = 1;
 
-	logger = log_create("planificador.log", "PLANIFICADOR", 0, LOG_LEVEL_INFO);
+	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(); //leyendo archivo configuracion
 
 	pthread_t hilo_escucha_esis;

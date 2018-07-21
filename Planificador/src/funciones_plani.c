@@ -921,16 +921,7 @@ void imprimir_id_esi(void* esi){
 }
 
 
-// Rutinas de cierre
-void cerrar_sockets(){
-	close(sockets_planificador.socket_coordinador);
-	//cerrar los sockets de la lista de pcbs
-}
-void cerrar_hilos(){
-	//joinear los hilos (?
-}
-
-
+//--Cerrar cosas--//
 void cerrar_planificador(){
 
 	terminar_todo = -1;

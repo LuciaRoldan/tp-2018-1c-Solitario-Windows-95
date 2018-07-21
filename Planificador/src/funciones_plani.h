@@ -196,6 +196,7 @@ void eliminar_esi_en_espera(void* esi);
 void free_esi_finalizado(void* id);
 void cerrar_planificador();
 void despedir_esi(void* pcb);
+void quitar_primer_esi_de_cola_bloqueados(char* clave);
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 
