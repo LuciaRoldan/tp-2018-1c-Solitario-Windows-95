@@ -9,6 +9,6 @@ make all
 
 cd ../../
 
-./ESI/Debug/ESI "ESI/Pruebas-ESI/ESI_MultiClave" 1
+./ESI/Debug/ESI "ESI/Pruebas-ESI/ESI_MultiClave" 10
 
-./ESI/Debug/ESI "ESI/Pruebas-ESI/ESI_Largo" 2
+./ESI/Debug/ESI "ESI/Pruebas-ESI/ESI_Largo" 20

@@ -7,4 +7,4 @@ cd ../Instancia/Debug
 make clean
 make all
 
-./instancia "../../prueba1/Configuracion_instancia1.txt" 2
+./instancia "../../prueba1/Configuracion_instancia1.txt" 1

@@ -4,29 +4,60 @@
 #include <sys/mman.h>
 /////////////////////// INICIALIZACION ///////////////////////
 
-void leer_configuracion_propia(char* path, configuracion_propia* configuracion, t_log* logger) {
+void leer_configuracion_propia(char* path, configuracion_propia* configuracion) {
 
 	FILE* archivo = fopen(path, "r");
 
-	if (archivo < 1) {
-		log_info(logger,"No se puede abrir el archivo Configuracion_instancia.txt");
-		exit(1);
+	fscanf(archivo, "%s %s %d %s %s %d",
+			mi_configuracion.ipCoordinador,
+			mi_configuracion.puertoCoordinador,
+			&(mi_configuracion.algoritmoDeReemplazo),
+			mi_configuracion.puntoDeMontaje,
+			mi_configuracion.nombreInstancia ,
+			&(mi_configuracion.intervaloDump));
+	fclose(archivo);
+
+	printf("+++ %s +++", configuracion->puntoDeMontaje);
+}
+
+void enviar_exito(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 25);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Le respondi al coordinador");
+	free(buffer);
+}
+
+void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer, 20);
+	enviar(socket_coordinador, buffer, sizeof(int), logger);
+	log_info(logger, "Me estoy cerrando");
+	free(buffer);
+}
+
+bool condicion_clave_entrada(void* datos){
+	estructura_clave* entrada = (estructura_clave*) datos;
+	log_info(logger, "Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
+	return !strcmp(entrada->clave, clave_buscada);
+}
+
+int cantidad_entradas_ocupa(int tamanio_valor){
+	if(tamanio_valor%configuracion.tamano_entrada == 0){
+		return tamanio_valor/configuracion.tamano_entrada;
+	} else {
+		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
+				return resultado.quot +1;
 	}
 
-	fscanf(archivo, "%s %s %d %s %d %d",
-			configuracion->ipCoordinador,
-			configuracion->puertoCoordinador,
-			&(configuracion->algoritmoDeReemplazo),
-			configuracion->puntoDeMontaje,
-			&(configuracion->nombreInstancia),
-			&(configuracion->intervaloDump));
-	fclose(archivo);
 }
 
 datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(sizeof(datos_configuracion));
 	recibir(socket_coordinador, buffer, sizeof(datos_configuracion), logger);
 	datos_configuracion configuracion = deserializar_configuracion_inicial_instancia(buffer);
+
+	configuracion.cantidad_entradas = 3; //BORRAR ES PARA TESTEAR
 
 	free(buffer);
 	return configuracion;
@@ -48,6 +79,11 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		procesar_instruccion(socket_coordinador, instruccion, logger);
 		break;
 	case (83):
+		buffer = malloc(sizeof(int));
+		recibir(socket_coordinador, buffer, sizeof(int), logger);
+		tamanio_clave = deserializar_id(buffer);
+		free(buffer);
+		clave =	malloc(tamanio_clave);
 		clave = recibe_pedido_status();
 		enviar_status_clave(clave); //declarar
 		free(clave);
@@ -59,49 +95,23 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	}
 }
 
-t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
-	int tamanio_operacion = recibir_int(socket_coordinador, logger);
-	void* buffer = malloc(tamanio_operacion);
-	recibir(socket_coordinador, buffer, tamanio_operacion, logger);
-	t_esi_operacion instruccion = deserializar_instruccion(buffer);
-	free(buffer);
-	log_info(logger, "Recibi instrucccion del COORDINADOR");
-	return instruccion;
-}
-
-void enviar_exito(int socket_coordinador, t_log* logger) {
-	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer, 25);
-	enviar(socket_coordinador, buffer, sizeof(int), logger);
-	log_info(logger, "Le respondi al coordinador");
-	free(buffer);
-}
-
-void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
-	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer, 20);
-	enviar(socket_coordinador, buffer, sizeof(int), logger);
-	log_info(logger, "Me estoy cerrando");
-	free(buffer);
-}
-
-bool condicion_clave_entrada(void* datos){
-	log_info(logger,"entro a la condicion");
-	estructura_clave* entrada = (estructura_clave*) datos;
-	log_info(logger,"Clave buscada: %s y encontrada: %s", clave_buscada, entrada->clave);
-	return (strcmp(entrada->clave, clave_buscada)==0);
-}
-
-
 char* recibe_pedido_status() {
+	char* la_clave;
 	int tamanio;
-	recibir(socket_coordinador, &tamanio, sizeof(int), logger);
+	void* buffer_tamanio = malloc(sizeof(int));
+	int num = recibir(socket_coordinador,buffer_tamanio,sizeof(int),logger);
+	printf("me llegaron %d bytes \n", num);
+	tamanio = deserializar_id(buffer_tamanio);
 	void* buffer = malloc(tamanio);
-	char* clave = malloc(tamanio);
-	recibir(socket_coordinador, buffer, tamanio, logger);
-	deserializar_string(buffer, clave);
-	log_info(logger, "todo piola la clave es: %s", clave);
-	return clave;
+	int bytes_recibidos = recibir(socket_coordinador,buffer, tamanio,logger);
+	printf("me llegaron %d bytes \n", bytes_recibidos);
+	log_info(logger,"recibi %d bytes", bytes_recibidos);
+	deserializar_string(buffer, la_clave);
+	log_info(logger,"recibi la clave %s: ", la_clave);
+	free(buffer_tamanio);
+	free(buffer);
+//	hay que agregar un free de la clave
+	return la_clave;
 }
 
 int enviar_status_clave(char* clave){
@@ -111,27 +121,25 @@ int enviar_status_clave(char* clave){
 	if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){
 		log_info(logger, "aguno satisdae busqueda status_clave");
 	estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-	statuss.clave = clave;
-	statuss.id_instancia_actual = idInstancia;
-	statuss.id_instancia_nueva = 0;
-	statuss.contenido = entrada_encontrada->valor;
-	}
-	else {
-	statuss.clave = clave;
-	statuss.id_instancia_actual = 0;
-	statuss.id_instancia_nueva = 0;
-	statuss.contenido = "lol";
-	}
-	log_info(logger, "pase el list_any_satisty");
-	int tamanio_buffer = tamanio_buffer_status(statuss);
-	log_info(logger, "tamanio de %d", tamanio_buffer);
+	status_clave status = {clave,idInstancia, 0, entrada_encontrada->valor};
+	int tamanio_buffer = tamanio_buffer_status(status);
 	void* buffer = malloc(tamanio_buffer);
-	serializar_status_clave(buffer, statuss);
-	int bytes_enviados = enviar(socket_coordinador, buffer, tamanio_buffer,logger);
+	serializar_status_clave(buffer,status);
+	int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
 	free(buffer);
 	return bytes_enviados;
 }
 
+
+t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
+	int tamanio_operacion = recibir_int(socket_coordinador, logger);
+	void* buffer = malloc(tamanio_operacion);
+	recibir(socket_coordinador, buffer, tamanio_operacion, logger);
+	t_esi_operacion instruccion = deserializar_instruccion(buffer);
+	free(buffer);
+	log_info(logger, "Recibi instrucccion del COORDINADOR");
+	return instruccion;
+}
 
 void enviar_fallo(int socket_coordinador, t_log* logger){
 	void* buffer = malloc(sizeof(int));
@@ -164,6 +172,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada,instruccion.argumentos.GET.clave, tamanio_clave);
 		estructura_clave* entrada_nueva = malloc(sizeof(estructura_clave));
+		entrada_nueva->cantidad_operaciones = 0;
 		entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
 		memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
 		entrada_nueva->valor = malloc(1);//hardcode por el plani
@@ -260,8 +269,8 @@ int cantidad_entradas_ocupa(int tamanio_valor){
 }
 
 int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor){
-
 	int contador = 0;
+	int posicion_siguiente = 1; //la primera que quiero reservar
 	int espacios_libres = 0;
 	log_info(logger,"entro a asignar memoria");
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
@@ -332,7 +341,6 @@ void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) 
 	log_info(logger, "variable atomica");
 	estructura_clave* entrada_original;
 	log_info(logger, "armo la estructura original");
-	//hace falta agregar que la entrada que se agrega puede no ser atomica asique deberia hacer un for buscando varias entradas atomicas consecutias
 	while (atomica) {
 		log_info(logger,"Entre en el while");
 		entrada_original = list_get(tabla_entradas, puntero_circular);
@@ -349,7 +357,6 @@ void aplicar_algoritmo_circular(estructura_clave* entrada_nueva, t_log* logger) 
 	}
 	log_info(logger, "Sale del while");
 	entrada_nueva->numero_entrada = entrada_original->numero_entrada;
-	log_info(logger, "el nuevo numero de entrada es: %d", entrada_nueva->numero_entrada);
 	list_replace_and_destroy_element(tabla_entradas,entrada_original->numero_entrada,entrada_nueva,borrar_entrada);
 	log_info(logger, "Deberia reemplazar el elemento");
 }
@@ -540,6 +547,14 @@ void dumpear(void* datos){
 }
 
 
+	 /*algoritmo_distribucion(){
+
+	}*/
 
 
-
+//Falta hacer la funcion en donde se busque la direccion donde guardar la value es decir con la clave vamos buscando donde se
+//encuentra y de ahi tomamos el lugar de la matriz en donde vamos a guardar la informacion (en el caso de que ya haya algo guardado
+//esto se pisa)
+//Si el coordinador pide un key que no existe lo va a identificar y me va a avisar mediante una instruccion que la agregue
+//asique lo tengo que agregar al protocolo a esta nueva instruccion
+//(ver issues puede ayudar)

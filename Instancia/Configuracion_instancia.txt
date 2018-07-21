@@ -1,1 +1,0 @@
-127.0.0.1 8001 LRU /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Instancia/prueba.txt 1 10

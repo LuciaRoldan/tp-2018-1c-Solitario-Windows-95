@@ -67,9 +67,6 @@ void inicializar_semaforos(){
 	sem_init(&s_podes_procesar_una_respuesta, 0, 0);
 	sem_init(&s_podes_procesar_un_pedido, 0, 0);
 	sem_init(&s_planificar, 0, 1);
-	//sem_init(&s_fijate_si_hay_esis, 0, 1);
-	//sem_init(&s_procesa_un_pedido, 0, 0);
-	//sem_init(&s_coordi_manejado, 0, 0);
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -79,7 +76,7 @@ void handshake_coordinador(int socket_coordinador){
 
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_handshake(buffer, yo);
-	log_info(logger, "Serialice el Handshake del Coordinador");
+	//log_info(logger, "Serialice el Handshake del Coordinador");
 
 	enviar(socket_coordinador, buffer, sizeof(int)*3, logger);
 	log_info(logger, "Envie Handshake al Coordinador");
@@ -94,8 +91,8 @@ void handshake_coordinador(int socket_coordinador){
 		proceso_recibido = deserializar_handshake(buffer);
 		free(buffer);
 
-		printf("proceso recibido %d \n", proceso_recibido.proceso);
-		printf("id proceso recibido %d \n", proceso_recibido.id);
+		//printf("Proceso recibido: %d", proceso_recibido.proceso);
+		//printf("ID proceso recibido: %d", proceso_recibido.id);
 
 		if (proceso_recibido.proceso ==  COORDINADOR){
 				log_info(logger, "Se establecio la conexion con el Coordinador");
@@ -115,7 +112,7 @@ int handshake_esi(int socket_esi){
 	void* buffer1 = malloc(sizeof(int)*3);
 	serializar_handshake(buffer1, yo);
 
-	log_info(logger, "Por enviar en Handshake al ESI");
+	//log_info(logger, "Por enviar en Handshake al ESI");
 	int protocolo;
 	recibir(socket_esi, &protocolo, sizeof(int), logger);
 
@@ -125,7 +122,7 @@ int handshake_esi(int socket_esi){
 		proceso_recibido = deserializar_handshake(buffer2);
 		if (proceso_recibido.proceso !=  0){ //validar que no tenía ya al ESI en otra PCB
 			enviar(socket_esi, buffer1, sizeof(int)*3, logger);
-			log_info(logger, "Se establecio la conexion con el Esi de id %d\n", proceso_recibido.id);
+			log_info(logger, "---------Se establecio la conexion con el Esi de id %d \n\n\n", proceso_recibido.id);
 			free(buffer1);
 			free(buffer2);
 			return proceso_recibido.id;
@@ -153,7 +150,7 @@ void manejar_esis(){
 	while(pausar_planificador>=0){
 		if(list_size(esis_ready) > 0){
 			sem_wait(&s_planificar);
-			log_info(logger, "En manejar ESI");
+			log_info(logger, "Dentro manejar_esis (planificando)");
 
 			planificar();
 			sleep(1);
@@ -165,11 +162,11 @@ void manejar_esis(){
 //--RECIBIR ESIS--//
 void recibir_esis(void* socket_esis){
 	int int_socket_esis = *((int*) socket_esis);
-	log_info(logger, "Entre al hilo recibir_esis y el socket es %d\n", int_socket_esis);
+	//log_info(logger, "Dentro de recibir_esis y el socket es %d\n", int_socket_esis);
 
 	int socket_esi_nuevo;
 	while(1){
-		log_info(logger, "Esperando un ESI. Adentro de recibir_esis");
+		log_info(logger, "Esperando un ESI adentro de recibir_esis");
 
 		//sleep(1);
 		socket_esi_nuevo = aceptar_conexion(int_socket_esis);
@@ -207,12 +204,12 @@ void manejar_esi(void* la_pcb){
 		sem_post(&s_planificar);
 	}
 
-	log_info(logger, "Entre a manejar ESI");
+	log_info(logger, "Entre a manejar_esi");
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
 
 	while(chau){
-		log_info(logger, "En manejar ESI: %d", pcb_esi.id);
+		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
 		sleep(1);
 
@@ -221,7 +218,7 @@ void manejar_esi(void* la_pcb){
 		int resultado = deserializar_id(buffer_resultado);
 		free(buffer_resultado);//PELIGRO
 
-		log_info(logger, "El ESI me envio el resultado_esi %d", resultado);
+		log_info(logger, "El ESI me envio el resultado_esi %d:", resultado);
 
 		if (resultado >= 0){
 			switch (resultado){
@@ -251,9 +248,10 @@ void manejar_esi(void* la_pcb){
 //--MANEJAR COORDINADOR--//
 void manejar_coordinador(void* socket){
 	int socket_coordinador = *((int*) socket);
-	log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
-	int conexion_valida = true;
-	while(conexion_valida){
+	//log_info(logger, "Entre al hilo manejar_coordinador y el socket es %d\n", socket_coordinador);
+	log_info(logger, "Entre al hilo manejar_coordinador");
+	int conexion_valida = 1;
+	while(conexion_valida > 0){
 
 		int id;
 		void* buffer_int = malloc(sizeof(int));
@@ -278,7 +276,7 @@ void manejar_coordinador(void* socket){
 				recibir(socket_coordinador, buffer, tamanio, logger);
 				instruccion = deserializar_instruccion(buffer);
 				free(buffer);
-				log_info(logger, "Recibido: %s, %d \n", instruccion.argumentos.GET.clave, instruccion.keyword);
+				log_info(logger, "Recibi del Coordinador: %s, %d", instruccion.argumentos.GET.clave, instruccion.keyword);
 
 				procesar_pedido(instruccion);
 
@@ -485,7 +483,7 @@ void registrar_exito_en_pcb(int id_esi){
 //--Planificar--//
 void planificar(){
 	//export LD_LIBRARY_PATH=$PWD/Shared_Libraries/commons_propias/Debug
-	log_info(logger, "Planificando");
+	log_info(logger, "Dentro de planificar");
 	if(list_size(esis_ready)>0){
 	ordenar_pcbs();
 	void* esi_a_ejecutar = list_get(esis_ready, 0);
@@ -520,7 +518,7 @@ void sumar_ultima_rafaga(int id_esi){
 	pthread_mutex_unlock(&m_id_buscado);
 	pcb* esi_que_ejecuto = pcbb;
 	esi_que_ejecuto->ultimaRafaga+=1;
-	log_info(logger, "La ultima rafaga del ESI: %d que acaba de intentar ejecutar es: %d", esi_que_ejecuto->id, esi_que_ejecuto->ultimaRafaga);
+	//log_info(logger, "La ultima rafaga del ESI: %d que acaba de intentar ejecutar es: %d", esi_que_ejecuto->id, esi_que_ejecuto->ultimaRafaga);
 }
 
 //--Sumar 1 al retardo de los demas ESIs ready--//
@@ -549,7 +547,7 @@ bool no_es_el_primer_esi_ready(void *pcbb){
 
 void ordenar_pcbs(){
 	pthread_mutex_lock(&m_lista_esis_ready);
-	log_info(logger, "El algoritmo es: %s", algoritmo);
+	//log_info(logger, "El algoritmo es: %s", algoritmo);
 	if(strcmp(algoritmo, "SJF_CD") == 0){
 	planificacionSJF_CD();
 	}
@@ -569,7 +567,7 @@ void planificacionSJF_CD(){
 	log_info(logger, "Estoy en SJF_CD. La cantidad de esis ready es %d", list_size(esis_ready));
 	actualizar_ultima_estimacion_SJF();
 	if(list_size(esis_ready) > 1){
-		log_info(logger, "Hay mas de un ESI ready");
+		//log_info(logger, "Hay mas de un ESI ready");
 		list_sort(esis_ready, algoritmo_SJF_CD);
 	}
 }
@@ -583,8 +581,9 @@ void planificacionSJF_SD(){
 }
 
 void planificacionHRRN(){
+	log_info(logger, "Estoy en HRRN. La cantidad de esis ready es %d", list_size(esis_ready));
 	if(list_size(esis_ready) > 1){
-		log_info(logger, "Hay mas de un ESI ready");
+		//log_info(logger, "Hay mas de un ESI ready");
 		list_sort(esis_ready, algoritmo_HRRN);
 		actualizar_ultima_estimacion_HRRN();
 	}
@@ -599,10 +598,10 @@ void actualizar_ultima_estimacion_SJF(){
 void calcular_estimacion_SJF(void* pcbb){
 	pcb* pcb_esi = pcbb;
 	float proxima_rafaga =  (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
-	log_info(logger, "Alpha es: %f", alpha);
+	//log_info(logger, "Alpha es: %f", alpha);
 	log_info(logger, "La ultimaRafaga del esi es: %d", pcb_esi->ultimaRafaga);
 	log_info(logger, "La ultima estimacion del esi es: %f", pcb_esi->ultimaEstimacion);
-	log_info(logger, "Vine a calcular ultimasEstimaciones y es: %f", proxima_rafaga);
+	//log_info(logger, "Vine a calcular ultimasEstimaciones y es: %f", proxima_rafaga);
 	pcb_esi->ultimaEstimacion = proxima_rafaga;
 }
 
@@ -616,7 +615,7 @@ void calcular_estimacion_HRRN(void* pcbb){
 	pcb* pcb_esi = pcbb;
 	float estimacion = (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
 	float tiempo_de_respuesta = (pcb_esi->retardo + estimacion) / estimacion;
-	log_info(logger, "Vine a calcular ultimasEstimaciones");
+	//log_info(logger, "Vine a calcular ultimasEstimaciones");
 	pcb_esi->ultimaEstimacion = tiempo_de_respuesta;
 }
 
@@ -625,11 +624,11 @@ bool algoritmo_SJF_CD(void* pcb_1, void* pcb_2){
 	pcb* pcb1 = pcb_1;
 	pcb* pcb2 = pcb_2;
 
-	log_info(logger, "ultimaRafaga ESI1: %d", pcb1->ultimaRafaga);
-	log_info(logger, "ultimaRafaga ESI2: %d", pcb2->ultimaRafaga);
-	log_info(logger, "alpha es: %f", alpha);
-	log_info(logger, "ultimaEstimacion ESI1: %f", pcb1->ultimaEstimacion);
-	log_info(logger, "ultimaEstimacion ESI2: %f", pcb2->ultimaEstimacion);
+	log_info(logger, "ultimaRafaga ESI 1: %d", pcb1->ultimaRafaga);
+	log_info(logger, "ultimaRafaga ESI 2: %d", pcb2->ultimaRafaga);
+	//log_info(logger, "alpha es: %f", alpha);
+	log_info(logger, "ultimaEstimacion ESI 1: %f", pcb1->ultimaEstimacion);
+	log_info(logger, "ultimaEstimacion ESI 2: %f", pcb2->ultimaEstimacion);
 
 	float proxima_rafaga1;
 	float proxima_rafaga2;
@@ -658,11 +657,11 @@ bool algoritmo_SJF_SD(void* pcb_1, void* pcb_2){
 		return false;
 	} else {
 
-		log_info(logger, "ultimaRafaga ESI1: %d", pcb1->ultimaRafaga);
-		log_info(logger, "ultimaRafaga ESI2: %d", pcb2->ultimaRafaga);
+		log_info(logger, "ultimaRafaga ESI 1: %d", pcb1->ultimaRafaga);
+		log_info(logger, "ultimaRafaga ESI 2: %d", pcb2->ultimaRafaga);
 		log_info(logger, "alpha es: %f", alpha);
-		log_info(logger, "ultimaEstimacion ESI1: %f", pcb1->ultimaEstimacion);
-		log_info(logger, "ultimaEstimacion ESI2: %f", pcb2->ultimaEstimacion);
+		log_info(logger, "ultimaEstimacion ESI 1: %f", pcb1->ultimaEstimacion);
+		log_info(logger, "ultimaEstimacion ESI 2: %f", pcb2->ultimaEstimacion);
 
 		float proxima_rafaga1;
 		float proxima_rafaga2;
@@ -670,7 +669,7 @@ bool algoritmo_SJF_SD(void* pcb_1, void* pcb_2){
 		proxima_rafaga1 =  (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
 		proxima_rafaga2 =  (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
 
-		log_info(logger, "La proxima_rafaga del ESI1 es %f y la del ESI2 es %f", proxima_rafaga1, proxima_rafaga2);
+		log_info(logger, "La proxima_rafaga del ESI 1 es %f y la del ESI 2 es %f", proxima_rafaga1, proxima_rafaga2);
 
 
 		if ( proxima_rafaga1 <= proxima_rafaga2){
@@ -714,11 +713,11 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	memcpy(id, &esi_id, sizeof(int));
 	list_add(nodo_clave_buscada->esis_en_espera, id);
 	int tam_lista = list_size(nodo_clave_buscada->esis_en_espera);
-	log_info(logger, "El tam de la lista de los esis_en_espera es %d", tam_lista);
+	//log_info(logger, "El tam de la lista de los esis_en_espera es %d", tam_lista);
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = esi_id;
 	list_remove_by_condition(esis_ready, ids_iguales_cola_de_esis);
-	log_info(logger, "Esi %d colocado en cola de espera de la clave %s", esi_id, clave_buscada);
+	//log_info(logger, "Esi %d colocado en cola de espera de la clave %s", esi_id, clave_buscada);
 	pthread_mutex_unlock(&m_id_buscado);
 }
 
@@ -726,18 +725,13 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 void abortar_esi(int id_esi){
 	pcb* esi_abortado;
 
-	pcb* primer_elem = list_get(pcbs, 0);
+	//pcb* primer_elem = list_get(pcbs, 0);
 	//log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
 	esi_abortado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_abortado = esi_abortado->id;
-	//pthread_mutex_lock(&m_id_buscado);
-	//id_buscado = id_esi;
-	//void* buscado = list_find(pcbs, ids_iguales_pcb);
-	//memcpy(esi_abortado, buscado, sizeof(buscado));
-	//int id_esi_abortado = esi_abortado->id;
 
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
@@ -765,8 +759,8 @@ void abortar_esi(int id_esi){
 void mover_esi_a_finalizados(int id_esi){
 	pcb* esi_finalizado;
 
-	pcb* primer_elem = list_get(pcbs, 0);
-	log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
+	//pcb* primer_elem = list_get(pcbs, 0);
+	//log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
@@ -804,7 +798,7 @@ void quitar_esi_de_cola_bloqueados(void* clave_bloq){
 	clave_bloqueada* clave = clave_bloq;
 	if(!list_is_empty(clave->esis_en_espera)){
 		if(list_find(clave->esis_en_espera, ids_iguales_cola_de_esis) != NULL){
-			log_info(logger, "Voy a remover de esis_en_espera");
+			//log_info(logger, "Voy a remover de esis_en_espera");
 			list_remove_by_condition(clave->esis_en_espera, ids_iguales_cola_de_esis);
 		}
 	}
@@ -841,13 +835,13 @@ void liberar_clave(char* clave){
 
 	nodo_clave->esi_que_la_usa = 0;
 	log_info(logger, "La clave %s se libero", clave);
-	log_info(logger, "Ahora es ocupada por (deberia ser 0): %d", nodo_clave->esi_que_la_usa);
+	//log_info(logger, "Ahora es ocupada por (deberia ser 0): %d", nodo_clave->esi_que_la_usa);
 
 	if(!list_is_empty(nodo_clave->esis_en_espera)){
 		void* el_esi = list_remove(nodo_clave->esis_en_espera, 0);
 		int* id_esi_ahora_ready = el_esi;
-		int lol = *id_esi_ahora_ready;
-		log_info(logger, "lpmm %d", lol);
+		//int lol = *id_esi_ahora_ready;
+		//log_info(logger, "lpmm %d", lol);
 		nodo_clave->esi_que_la_usa = *id_esi_ahora_ready;
 		id_buscado = *id_esi_ahora_ready;
 		log_info(logger, "y es ahora ocupada por el ESI %d que es lo mismo que %d", nodo_clave->esi_que_la_usa, *id_esi_ahora_ready);
@@ -860,11 +854,11 @@ void liberar_clave(char* clave){
 //FUNCIONES AUXILIARES CLAVE_BLOQUEADA//
 bool claves_iguales_nodo_clave(void* nodo_clave){
 	int tamanio = list_size(claves_bloqueadas);
-	log_info(logger, "El tamanio de la lista de claves bloqueadas es %d", tamanio);
+	//log_info(logger, "El tamanio de la lista de claves bloqueadas es %d", tamanio);
 
 	clave_bloqueada* una_clave = (clave_bloqueada*) nodo_clave;
-	log_info(logger, "La clave_buscada es: %s", clave_buscada);
-	log_info(logger, "La clave que estoy comparando es: %s", una_clave->clave);
+	//log_info(logger, "La clave_buscada es: %s", clave_buscada);
+	//log_info(logger, "La clave que estoy comparando es: %s", una_clave->clave);
 
 	if(strcmp(una_clave->clave, clave_buscada) == 0){
 		return true;
@@ -932,7 +926,7 @@ void cerrar_planificador(){
 
 	list_iterate(pcbs, despedir_esi);
 	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
-	log_info(logger, "el tam de claves_bloqueadas es %d", list_size(claves_bloqueadas));
+	//log_info(logger, "el tam de claves_bloqueadas es %d", list_size(claves_bloqueadas));
 
 	free(conexion_planificador.ip);
 	free(conexion_planificador.puerto);
@@ -963,12 +957,6 @@ void despedir_esi(void* esi){
 	enviar(pcb_esi->socket, envio, sizeof(int), logger);
 	free(envio);
 }
-
-//void cerrar_sockets(void* pcbb){
-//	pcb* pcb_esi = pcbb;
-//	close(pcb_esi->socket);
-//}
-
 
 void borrar_nodo_clave(void* clave){
 	clave_bloqueada* clave_bloq = clave;
