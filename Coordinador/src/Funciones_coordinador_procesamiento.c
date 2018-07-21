@@ -19,6 +19,10 @@ int procesar_mensaje(int socket){
 
 	switch(id){
 		case 20:
+			rta_esi = 44;
+			buffer_int = malloc(sizeof(int));
+			serializar_id(buffer_int, rta_esi);
+			enviar(socket, buffer_int, sizeof(int), logger);
 			return -99;
 		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);

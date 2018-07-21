@@ -8,6 +8,9 @@ int main(){
 
 	logger = log_create("coordinador.log", "COORDINADOR", true, LOG_LEVEL_INFO);
 	log_operaciones = log_create("Operaciones.log", "LOGOP", true, LOG_LEVEL_INFO);
+	log_info(log_operaciones, "  ");
+	log_info(log_operaciones, "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	log_info(log_operaciones, "  ");
 	log_info(logger,"Loggers creados");
 
 	leer_archivo_configuracion();
