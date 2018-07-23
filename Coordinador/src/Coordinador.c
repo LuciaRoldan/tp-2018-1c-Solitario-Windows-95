@@ -31,7 +31,6 @@ int main(int argc, char* argv[]){
 			if(!terminar_programa){
 			pthread_join(*hilo_a_cerrar, NULL);
 			log_info(logger, "Hilo cerrado");
-			pthread_mutex_unlock(&m_hilo_a_cerrar);
 			}
 	}
 

@@ -1,1 +1,1 @@
-127.0.0.1 8001 CIRC /home/utnso/inst2/ Inst2 10
+127.0.0.1 8001 1 /home/utnso/inst2/ Inst2 10

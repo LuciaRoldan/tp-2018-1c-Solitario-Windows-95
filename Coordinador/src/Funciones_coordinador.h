@@ -62,21 +62,7 @@ bool terminar_programa;
 int conexion_hecha;
 
 
-pthread_mutex_t m_operacion_ejecutando;
-pthread_mutex_t m_esi_ejecutando;
-pthread_mutex_t m_instancia_seleccionada;
-pthread_mutex_t m_hilo_a_cerrar;
-pthread_mutex_t m_ultima_instancia_EL;
-pthread_mutex_t m_lista_claves;
-pthread_mutex_t m_socket_instancia_buscado;
-pthread_mutex_t m_socket_esi_buscado;
-pthread_mutex_t m_lista_instancias;
-pthread_mutex_t m_lista_esis;
-pthread_mutex_t m_log_operaciones;
-pthread_mutex_t m_clave_buscada;
-pthread_mutex_t m_id_instancia_buscado;
 sem_t s_cerrar_hilo;
-pthread_mutex_t escucha_esi;
 
 ///////////////////////// FUNCIONES /////////////////////////
 

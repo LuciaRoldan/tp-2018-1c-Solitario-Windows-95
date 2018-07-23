@@ -26,9 +26,7 @@ void agregar_nuevo_esi(int socket_esi, int id_esi){
 	el_nodo->socket = socket_esi;
 	el_nodo->id = id_esi;
 	el_nodo->hilo = hilo_esi;
-	pthread_mutex_lock(&m_lista_esis);
 	list_add(lista_esis, el_nodo);
-	pthread_mutex_unlock(&m_lista_esis);
 }
 
 void agregar_nueva_instancia(int socket_instancia, int id_instancia){
@@ -41,7 +39,5 @@ void agregar_nueva_instancia(int socket_instancia, int id_instancia){
 	el_nodo->socket = socket_instancia;
 	el_nodo->id = id_instancia;
 	el_nodo->hilo = hilo_instancia;
-	pthread_mutex_lock(&m_lista_instancias);
 	list_add(lista_instancias, el_nodo);
-	pthread_mutex_unlock(&m_lista_instancias);
 }
