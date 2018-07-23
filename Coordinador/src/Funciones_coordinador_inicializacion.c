@@ -41,6 +41,7 @@ void inicializar_semaforos(){
 	if (pthread_mutex_init(&m_log_operaciones, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_id_instancia_buscado, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
+	if (pthread_mutex_init(&escucha_esi, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
 }
 

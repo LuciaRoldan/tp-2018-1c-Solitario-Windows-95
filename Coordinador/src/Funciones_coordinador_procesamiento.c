@@ -13,17 +13,18 @@ int procesar_mensaje(int socket){
 	status_clave status;
 	void* buffer_int = malloc(sizeof(int));
 	id = recibir_int(socket, logger);
-	log_info(logger, "Protocolo recibido: %d", id);
+	log_info(logger, "Protocolo recibido: %d del socket: %d", id, socket);
 	free(buffer_int);
 	int rta_esi;
 
 	switch(id){
-		case 20:
+		case 20://Exit
 			rta_esi = 44;
 			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
 			enviar(socket, buffer_int, sizeof(int), logger);
 			return -99;
+
 		case 21: //Recibo una clave
 			clave = recibir_pedido_clave(socket);
 			log_info(logger, "Me llego el pedido de la clave: %d", clave);
@@ -53,10 +54,12 @@ int procesar_mensaje(int socket){
 			log_info(logger, "Le digo al ESI %d que la ejecucion fue exitosa", esi_ejecutando->id);
 			free(buffer_int);
 			pthread_mutex_unlock(&m_esi_ejecutando);
+			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
 
 		case 81: //Fin de ejecucion del ESI
+			pthread_mutex_lock(&escucha_esi);
 			el_nodo = encontrar_esi(socket);
 			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &el_nodo->hilo;
@@ -67,6 +70,7 @@ int procesar_mensaje(int socket){
 			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			pthread_mutex_unlock(&m_lista_esis);
 			pthread_mutex_unlock(&m_socket_esi_buscado);
+			pthread_mutex_unlock(&escucha_esi);
 			close(socket);
 			sem_post(&s_cerrar_hilo);
 			return -1;
@@ -94,7 +98,7 @@ int procesar_mensaje(int socket){
 			return 1;
 
 		case 85: //Fallo
-			log_info(logger, "Fallo por clave no identificada, ID ESI: %d", esi_ejecutando->id);
+			log_info(logger, "Fallo, ID ESI: %d", esi_ejecutando->id);
 			rta_esi = 25;
 			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
@@ -104,6 +108,7 @@ int procesar_mensaje(int socket){
 			pthread_mutex_unlock(&m_operacion_ejecutando);
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
+			pthread_mutex_unlock(&escucha_esi);
 			return 1;
 			break;
 
@@ -121,6 +126,7 @@ int procesar_mensaje(int socket){
 			sem_post(&s_cerrar_hilo);
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
+			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
 
@@ -138,6 +144,7 @@ int procesar_mensaje(int socket){
 			sem_post(&s_cerrar_hilo);
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
+			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
 		case 90://Hay que bloquear al ESI
@@ -149,6 +156,7 @@ int procesar_mensaje(int socket){
 			free(buffer_int);
 			pthread_mutex_unlock(&m_instancia_seleccionada);
 			pthread_mutex_unlock(&m_esi_ejecutando);
+			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
 		case 91:
@@ -164,6 +172,7 @@ int procesar_mensaje(int socket){
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
 			pthread_mutex_unlock(&m_esi_ejecutando); // Esto lo tengo que borrar?
+			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
 		default:
@@ -174,7 +183,9 @@ int procesar_mensaje(int socket){
 
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	char* clave;
+	//pthread_mutex_unlock(&m_esi_ejecutando);
 	pthread_mutex_lock(&m_esi_ejecutando);
+	pthread_mutex_lock(&escucha_esi);
 	esi_ejecutando = encontrar_esi(socket);
 	int rta_esi;
 
@@ -207,6 +218,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		sem_post(&s_cerrar_hilo);
 		pthread_mutex_unlock(&m_log_operaciones);
 		pthread_mutex_unlock(&m_esi_ejecutando);
+		pthread_mutex_unlock(&escucha_esi);
 		free(buffer_int);
 		return -1;
 	} else {
@@ -224,6 +236,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				pthread_mutex_unlock(&m_instancia_seleccionada);
 				pthread_mutex_unlock(&m_log_operaciones);
 				pthread_mutex_unlock(&m_esi_ejecutando);
+				pthread_mutex_unlock(&escucha_esi);
 				return -1;
 		} else {
 			log_info(logger, "El pedido es valido");

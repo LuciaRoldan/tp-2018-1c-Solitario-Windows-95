@@ -214,15 +214,16 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 			enviar_exito(socket_coordinador);
 
-		}
-		if(strlen(instruccion.argumentos.SET.valor) < entrada_encontrada->cantidad_entradas * configuracion.tamano_entrada){
-			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
-			enviar_exito(socket_coordinador);
-			list_iterate(tabla_entradas, sumar_operacion);
-			//free(valor);
-			free(clave_buscada);
 		} else {
-			enviar_fallo(socket_coordinador);
+			if(strlen(instruccion.argumentos.SET.valor) < entrada_encontrada->cantidad_entradas * configuracion.tamano_entrada){
+						memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
+						enviar_exito(socket_coordinador);
+						list_iterate(tabla_entradas, sumar_operacion);
+						//free(valor);
+						free(clave_buscada);
+					} else {
+						enviar_fallo(socket_coordinador);
+					}
 		}
 		log_info(logger, "Termine el set");
 		break;
@@ -564,8 +565,7 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 			estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 			entrada_encontrada->cantidad_operaciones = 0;
 			int tamanio_valor = entrada_encontrada->tamanio_valor;
-			valor = malloc(tamanio_valor + sizeof(char));
-			memcpy(valor," ",sizeof(char));
+			valor = malloc(tamanio_valor);
 			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
 
 			fd =  open(path, O_RDWR | O_CREAT, S_IRWXU);
@@ -574,13 +574,15 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 				log_info(logger, "No se pudo abrir el archivo");
 			}
 
-			lseek(fd,lugar_de_memoria - 1,SEEK_CUR);
-			lugar_de_memoria += tamanio_valor + 1;
+			/*lseek(fd,lugar_de_memoria - 1,SEEK_CUR);
+			lugar_de_memoria += tamanio_valor + 1;*/
 
-			write(fd, valor, (tamanio_valor + sizeof(char)));
+			lseek(fd,0,SEEK_SET);
+
+			write(fd, valor, tamanio_valor);
 
 			puntero_memoria = mmap(NULL,tamanio_valor + sizeof(char),PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
-			log_info(logger, "Voy a guardar algo de tamanio %d", tamanio_valor);
+			log_info(logger, "Voy a guardar algo de tamanio %d: %s", tamanio_valor, entrada_encontrada->valor);
 			memcpy(puntero_memoria, valor, (tamanio_valor + sizeof(char)));
 			msync(puntero_memoria, (tamanio_valor + sizeof(char)), MS_SYNC);
 			munmap(puntero_memoria, (tamanio_valor + sizeof(char)));
@@ -631,7 +633,6 @@ void dump(){
 }
 
 void dumpear(void* datos){
-	log_info(logger, "Entre a dumpear");
 	estructura_clave* entrada = datos;
 	guardar_archivo(entrada->clave, strlen(entrada->clave)+1, logger);
 }
