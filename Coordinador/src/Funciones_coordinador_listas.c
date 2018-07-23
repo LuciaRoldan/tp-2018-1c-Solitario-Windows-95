@@ -49,14 +49,12 @@ void reemplazar_instancia(nodo un_nodo){
 }
 
 bool clave_accesible(char* clave){
-	log_info(logger, "Estoy en clave accesible");
 	if(list_size(lista_claves) > 0){
 		clave_buscada = malloc(strlen(clave)+1);
 		memcpy(clave_buscada, clave, strlen(clave)+1);
 		if(list_any_satisfy(lista_claves, condicion_clave)){
 			nodo_clave* n_clave = list_find(lista_claves, condicion_clave);
 			id_instancia_buscado = n_clave->nodo_instancia.id;
-			log_info(logger, "Voy a buscar");
 			bool resultado = list_any_satisfy(lista_instancias, condicion_id_instancia);
 			return resultado;
 		}
@@ -67,15 +65,14 @@ bool clave_accesible(char* clave){
 }
 
 nodo* buscar_instancia(char* clave){
-	log_info(logger, "Entre a buscar instancia");
+	log_info(logger, "Estoy buscando una instancia");
 	nodo* nodo_instancia;
 	nodo_clave* nodito;
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
-		log_info(logger, "Hay una instancia que cumple la condicion");
 		nodito = list_find(lista_claves, condicion_clave); //Esto no deberia funcionar?????
-		id_instancia_buscado = nodito->nodo_instancia.id; //Agregar semaforos
+		id_instancia_buscado = nodito->nodo_instancia.id;
 		nodo_instancia = list_find(lista_instancias, condicion_id_instancia);
 	} else {
 		nodo_instancia = seleccionar_instancia(clave);
@@ -101,7 +98,6 @@ nodo* seleccionar_instancia(char* clave){
 	switch(info_coordinador.algoritmo_distribucion){
 
 	case EL:
-		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
 		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
 		if(ultima_instancia_EL++ == list_size(lista_instancias)-1){ultima_instancia_EL = 0;}
 		break;
@@ -112,7 +108,6 @@ nodo* seleccionar_instancia(char* clave){
 			socket_instancia_buscado = nodo_auxiliar->socket;
 			if(list_count_satisfying(lista_claves, condicion_socket_clave) < minimo_LSU){
 				minimo_LSU = list_count_satisfying(lista_claves, condicion_socket_clave);
-				log_info(logger, "Los que cumplen son: %d el minimo es: %d",list_count_satisfying(lista_claves, condicion_socket_clave), minimo_LSU);
 				instancia_seleccionada = nodo_auxiliar;
 			}
 		}
@@ -152,7 +147,6 @@ int buscar_instancia_ficticia(char* clave){
 nodo* encontrar_esi(int socket){//verificar semaforos
 	socket_esi_buscado = socket;
 	nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
-	log_info(logger, "Socket ESI encontrado: %d, y su id: %d", el_nodo->socket, el_nodo->id);
 	return el_nodo;
 }
 

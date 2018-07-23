@@ -13,7 +13,7 @@ int procesar_mensaje(int socket){
 	status_clave status;
 	void* buffer_int = malloc(sizeof(int));
 	id = recibir_int(socket, logger);
-	log_info(logger, "Protocolo recibido: %d", id);
+	//log_info(logger, "Protocolo recibido: %d", id);
 	free(buffer_int);
 	int rta_esi;
 
@@ -59,7 +59,8 @@ int procesar_mensaje(int socket){
 			el_nodo = encontrar_esi(socket);
 			hilo_a_cerrar = &el_nodo->hilo;
 			socket_esi_buscado = el_nodo->socket;
-			log_info(logger, "Voy a eliminar");
+			log_info(logger, "El ESI %d termino", el_nodo->id);
+			log_info(log_operaciones, "El ESI %d termino", el_nodo->id);
 			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			close(socket);
 			sem_post(&s_cerrar_hilo);
@@ -166,6 +167,7 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 		default:
+			log_error(logger, "Protocolo desconocido");
 			return -1;
 			break;
 	}
@@ -211,7 +213,6 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				serializar_id(buffer_int, rta_esi);
 				enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 				free(buffer_int);
-				log_info(logger, "Pase el lock");
 				hilo_a_cerrar = &esi_ejecutando->hilo;
 				sem_post(&s_cerrar_hilo);
 				return -1;
@@ -224,7 +225,6 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				memcpy(nodito->clave, clave, strlen(clave));
 				nodito->nodo_instancia = *instancia_seleccionada;
 				list_add(lista_claves, nodito);
-				log_info(logger, "lo agregue %d", list_size(lista_claves));
 			}
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);
