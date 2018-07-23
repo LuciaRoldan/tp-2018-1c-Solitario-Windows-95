@@ -54,37 +54,48 @@ int main(int argc, char* argv[]){
 				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
 				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
-				break;
-			case 61: //solicitud de ejecucion
-				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
-				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
-				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
 				if((confirmacion > 84) && (confirmacion < 90)){
 					abortoESI = 1;
+					informar_fin_de_programa(conexiones, abortoESI);
 				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				break;
+			case 61: //solicitud de ejecucion
+				if(ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi) > 0){
+					confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
+					log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
+					if((confirmacion > 84) && (confirmacion < 90)){
+						abortoESI = 1;
+						informar_fin_de_programa(conexiones, abortoESI);
+					} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				} else {
+					log_info(logger_esi, "La clave no paso la prueba");
+					error_clave_larga(conexiones);
+					flag_exit = 1;
+				}
 				break;
 			case 62: //abortar ESI
 				abortoESI = 1;
 				log_info(logger_esi, "Abortando ESI %d", idEsi);
+				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 			case 85: //exit por consola
 				log_info(logger_esi, "Cerrando ESI %d por 'exit' de consola", idEsi);
 				void* buffer_exit = malloc(sizeof(int));
 				serializar_id(buffer_exit, 20);
 				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
+				flag_exit = 1;
 				break;
 			default:
-				_exit_with_error(conexiones.socket_plani, "Mensaje fuera de protocolo", NULL, logger_esi);
+				log_info(logger_esi, "Mensaje fuera de protocolo: %d", codigo_plani);
+				abortoESI = 1;
+				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 		}
 	}
 	fclose(script_prueba);
-	if(flag_exit == 0){
-		informar_fin_de_programa(conexiones, abortoESI);
-	}
 	free(mensaje_coordi);
 	free(configuracion_esi);
+	liberar_instruccion(ultima_instruccion);
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);

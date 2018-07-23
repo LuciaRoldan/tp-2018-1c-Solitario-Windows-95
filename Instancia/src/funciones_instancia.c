@@ -290,7 +290,6 @@ int any_entrada_bitmap_libre() {
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
-	log_info(logger, "El tamanio es: %d y divido por %d", tamanio_valor, configuracion_coordi.tamano_entrada);
 	if(tamanio_valor % configuracion_coordi.tamano_entrada == 0){
 		return tamanio_valor/configuracion_coordi.tamano_entrada;
 	} else {
@@ -563,11 +562,8 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 				strcat(path + tamanio_path -1, clave);
 				strcat(path + tamanio_path + tamanio_clave -2, ".txt\0");
 
-				log_info(logger, "Tengo el path piola: %s", path);
-
 				int fd;
 				char* puntero_memoria;
-
 
 				int tamanio_valor = entrada_encontrada->tamanio_valor;
 				valor = malloc(tamanio_valor);
@@ -577,6 +573,7 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 
 				if (fd < 0) {
 					log_info(logger, "No se pudo abrir el archivo");
+					_exit_with_error(socket_coordinador, "Error al abrir el archivo", NULL, logger);
 				}
 
 							/*lseek(fd,lugar_de_memoria - 1,SEEK_CUR);

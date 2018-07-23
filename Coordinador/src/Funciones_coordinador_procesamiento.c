@@ -111,6 +111,15 @@ int procesar_mensaje(int socket){
 			pthread_mutex_unlock(&escucha_esi);
 			return 1;
 			break;
+		case 86: //ESI avisa calve muy larga
+			log_info(logger, "Fallo de clave muy larga, ID ESI a cerrar: %d", esi_ejecutando->id);
+			liberar_instruccion();
+			pthread_mutex_unlock(&m_operacion_ejecutando);
+			pthread_mutex_unlock(&m_instancia_seleccionada);
+			pthread_mutex_unlock(&m_esi_ejecutando);
+			pthread_mutex_unlock(&escucha_esi);
+			return 1;
+			break;
 
 		case 87: //Fallo clave no identificada
 			log_info(logger, "Fallo por clave no identificada, ID ESI: %d", esi_ejecutando->id);
