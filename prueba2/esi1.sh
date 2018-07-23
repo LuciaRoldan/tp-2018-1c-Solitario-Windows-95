@@ -9,4 +9,4 @@ cd ../../
 
 export LD_LIBRARY_PATH=$PWD/Shared_Libraries/commons_propias/Debug
 
-./ESI/Debug/ESI "ESI/TestFinales/ESI_MultiReemplazo" 1
+./ESI/Debug/ESI "ESI/TestFinales/ESI_MenuCompleto" 1

@@ -27,21 +27,56 @@ int connect_to_server(char * ip, char * port, t_log *  logger){
 
 int inicializar_servidor(int puerto, t_log * logger){
 
-	struct sockaddr_in configuracion;
+	int descrip_socket; //Declaramos el descriptor
+
+		struct addrinfo infoSocket, *infoServidor; //Declaramos las estructuras
+
+		memset(&infoSocket, 0, sizeof(infoSocket)); //Seteamos el valor de la informacion de la direccion a 0
+		//Asignamos los valores de info de la conexion
+		infoSocket.ai_family = AF_UNSPEC; //Indica a getaddrinfo(3) que la direccion va a ser de tipo IPv4 o IPv6
+		infoSocket.ai_flags = AI_PASSIVE; //Solo para cuando se quiere utilizar el socket para un servidor
+		infoSocket.ai_socktype = SOCK_STREAM; //Socket de tipo TCP/IP
+
+		char * dirIP = NULL;
+		char * port = malloc(sizeof(int));
+		memcpy(port, &puerto, sizeof(int));
+
+		//Obtenemos la direccion y los datos del socket y los mete en infoServidor
+		if (getaddrinfo(dirIP, port, &infoSocket, &infoServidor) != 0) {
+			perror("No se pudo obtener la direccion correctamente.");
+			return -1;
+		}
+
+		//Creamos el socket
+		descrip_socket = socket(infoServidor->ai_family, infoServidor->ai_socktype,
+				infoServidor->ai_protocol);
+		if (descrip_socket == -1) {
+			freeaddrinfo(infoServidor);
+			perror("No se pudo crear el socket");
+			return -1;
+		}
+
+		while (bind(descrip_socket, infoServidor->ai_addr, infoServidor->ai_addrlen)<0){}
+
+
+
+	/*struct addrinfo configuracion;
 	int servidor;
 
 	servidor = socket(AF_INET, SOCK_STREAM, 0);
 
-	configuracion.sin_family = AF_INET;
-	configuracion.sin_addr.s_addr = INADDR_ANY;
+	configuracion.ai_family = AF_INET;
+	configuracion.ai_addr.s_addr = INADDR_ANY;
+	configuracion.ai_flags = AI_PASSIVE;
+	configuracion.ai_socktype = SOCK_STREAM;
 	configuracion.sin_port = htons( puerto );
 
-	while(bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0){}
+	while(bind(servidor,(struct sockaddr *)&configuracion , sizeof(configuracion)) < 0){}*/
 
-	listen(servidor, 100);
+	listen(descrip_socket, 100);
 	log_info(logger, "Soy servidor y estoy escuchando!");
 
-	return servidor;
+	return descrip_socket;
 }
 
 //Funciones para enviar y recibir cosas serializadas

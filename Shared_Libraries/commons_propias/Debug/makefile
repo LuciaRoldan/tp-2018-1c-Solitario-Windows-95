@@ -25,14 +25,11 @@ endif
 # All Target
 all: libcommons_propias.so
 
-dependents:
-	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug && $(MAKE) all
-
 # Tool invocations
-libcommons_propias.so: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug/libcommons.so
+libcommons_propias.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug" -shared -o "libcommons_propias.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libcommons_propias.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -42,6 +39,5 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug/libcommons.so:
 
 -include ../makefile.targets
