@@ -6,7 +6,7 @@
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
 
-datos_configuracion configuracion;
+datos_configuracion configuracion_coordi;
 int* acceso_tabla;
 t_list* tabla_entradas;
 char* clave_buscada;
@@ -19,7 +19,7 @@ int id_instancia;
 int puntero_circular;
 int lugar_de_memoria;
 int puntero_pagina;
-
+//t_bitarray* precencia;
 
 
 typedef enum {
@@ -64,7 +64,7 @@ int socket_coordinador;
 ///////////////////////// FUNCIONES /////////////////////////
 ///---Inicializacion---///
 int handshake_instancia(int socket_coordinador, t_log* logger, int id_proceso);
-datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger);
+void recibir_configuracion(int socket_coordinador, t_log* logger);
 void deserializar_configuracion(void* buffer);
 void leer_configuracion_propia(char* path, configuracion_propia* configuracion);
 void inicializar_instancia();

@@ -39,15 +39,12 @@ bool condicion_clave_entrada(void* datos){
 	return !strcmp(entrada->clave, clave_buscada);
 }
 
-datos_configuracion recibir_configuracion(int socket_coordinador, t_log* logger) {
-	void* buffer = malloc(sizeof(datos_configuracion));
-	recibir(socket_coordinador, buffer, sizeof(datos_configuracion), logger);
-	datos_configuracion configuracion = deserializar_configuracion_inicial_instancia(buffer);
-
-	configuracion.cantidad_entradas = 3; //BORRAR ES PARA TESTEAR
+void recibir_configuracion(int socket_coordinador, t_log* logger) {
+	void* buffer = malloc(sizeof(int)*2);
+	recibir(socket_coordinador, buffer, sizeof(sizeof(int)*2), logger);
+	configuracion_coordi = deserializar_configuracion_inicial_instancia(buffer);
 
 	free(buffer);
-	return configuracion;
 }
 
 void procesarID(int socket_coordinador, t_log* logger) {
@@ -188,8 +185,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 
 		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-		log_info(logger, "Paso el find %d",
-		entrada_encontrada->cantidad_operaciones);
+		log_info(logger, "Paso el find %d", entrada_encontrada->cantidad_operaciones);
 
 		cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		log_info(logger, "tiene %d entradas ", cantidad_entradas);
@@ -208,7 +204,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 			free(entrada_encontrada->valor); //No lo cambien de lugar
 
-			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion.tamano_entrada + inicio_memoria;
+			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
 
 			log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
 
@@ -217,7 +213,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			enviar_exito(socket_coordinador);
 
 		} else {
-			if(strlen(instruccion.argumentos.SET.valor) < entrada_encontrada->cantidad_entradas * configuracion.tamano_entrada){
+			if(strlen(instruccion.argumentos.SET.valor) < entrada_encontrada->cantidad_entradas * configuracion_coordi.tamano_entrada){
 						memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 						enviar_exito(socket_coordinador);
 						list_iterate(tabla_entradas, sumar_operacion);
@@ -281,7 +277,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 //me deja saber si aluna entrada de la tabla de entradas esta libre
 int any_entrada_bitmap_libre() {
 	int i = 0;
-	while (i != configuracion.cantidad_entradas) {
+	while (i != configuracion_coordi.cantidad_entradas) {
 		log_info(logger, "El numero del bitmap es: %d", i);
 		if (acceso_tabla[i] == 0) {
 			log_info(logger, "El contenido del bitmap es: %d", acceso_tabla[i]);
@@ -294,10 +290,11 @@ int any_entrada_bitmap_libre() {
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
-	if(tamanio_valor % configuracion.tamano_entrada == 0){
-		return tamanio_valor/configuracion.tamano_entrada;
+	log_info(logger, "El tamanio es: %d y divido por %d", tamanio_valor, configuracion_coordi.tamano_entrada);
+	if(tamanio_valor % configuracion_coordi.tamano_entrada == 0){
+		return tamanio_valor/configuracion_coordi.tamano_entrada;
 	} else {
-		div_t resultado = div(tamanio_valor,configuracion.tamano_entrada);
+		div_t resultado = div(tamanio_valor,configuracion_coordi.tamano_entrada);
 				return resultado.quot +1;
 	}
 }
@@ -309,7 +306,7 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 	puntero_pagina = 0;
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
 
-	while(contador != entradas_contiguas_necesarias && puntero_pagina <= configuracion.cantidad_entradas){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
+	while(contador != entradas_contiguas_necesarias && puntero_pagina <= configuracion_coordi.cantidad_entradas -1){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
 		log_info(logger, "El bit map de en %d es %d", puntero_pagina, acceso_tabla[puntero_pagina]);
 		if(acceso_tabla[puntero_pagina] == 0){
 			espacios_libres += 1;
@@ -370,7 +367,7 @@ int entradas_atomicas_contiguas(int puntero, int necesarias) {
 
 	int puntero_buscador = puntero;
 	int contador = 0;
-	while (contador != necesarias && puntero_buscador <= configuracion.cantidad_entradas) {
+	while (contador != necesarias && puntero_buscador <= configuracion_coordi.cantidad_entradas) {
 		estructura_clave* victima = list_get(tabla_entradas, puntero_buscador);
 		if (victima->cantidad_entradas == 1) {
 			puntero_buscador += 1;
@@ -401,7 +398,7 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 			entrada_nueva->numero_entrada = victima->numero_entrada;
 			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
 			puntero_circular ++;
-			if(puntero_circular == configuracion.cantidad_entradas){
+			if(puntero_circular == configuracion_coordi.cantidad_entradas){
 			puntero_circular = 0;
 			}
 		}
@@ -422,7 +419,7 @@ int lru_atomicos_contiguos(int necesarias) {
 	int maximo_LRU = 0;
 	estructura_clave* entrada_LRU;
 	estructura_clave* auxiliar;
-	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
+	for (int i = 0; i < configuracion_coordi.cantidad_entradas; i++) {
 		entrada_LRU = list_get(tabla_entradas, i);
 		if (entrada_LRU->cantidad_operaciones > maximo_LRU) {
 			maximo_LRU = entrada_LRU->cantidad_operaciones;
@@ -454,7 +451,7 @@ int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
 			entrada_nueva->numero_entrada = victima->numero_entrada;
 			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
 			puntero ++;
-			if(puntero == configuracion.cantidad_entradas){
+			if(puntero == configuracion_coordi.cantidad_entradas){
 			puntero = 0;
 			}
 		}
@@ -477,7 +474,7 @@ int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva) {
 			entrada_nueva->numero_entrada = victima->numero_entrada;
 			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada, entrada_nueva, borrar_entrada);
 			puntero++;
-			if (puntero == configuracion.cantidad_entradas) {
+			if (puntero == configuracion_coordi.cantidad_entradas) {
 				puntero = 0;
 			}
 		}
@@ -491,7 +488,7 @@ int bsu_atomicos_contiguos(int necesarias) {
 	int maximo_BSU = 0;
 	estructura_clave* entrada_BSU;
 	estructura_clave* auxiliar;
-	for (int i = 0; i < configuracion.cantidad_entradas; i++) {
+	for (int i = 0; i < configuracion_coordi.cantidad_entradas; i++) {
 		entrada_BSU = list_get(tabla_entradas, i);
 		if (entrada_BSU->cantidad_operaciones > maximo_BSU) {
 			maximo_BSU = entrada_BSU->cantidad_operaciones;
@@ -550,50 +547,55 @@ void compactar(){
 void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 
 			log_info(logger, "Entre a guardar");
-			char* path;
-			char* valor;
-			int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
-			path = malloc(tamanio_path + tamanio_clave + sizeof(char)*5);
-			strcpy(path, mi_configuracion.puntoDeMontaje);
-			log_info(logger, "La clave es: %s", clave);
-			strcat(path + tamanio_path -1, clave);
-			strcat(path + tamanio_path + tamanio_clave -2, ".txt\0");
-
-			log_info(logger, "Tengo el path piola: %s", path);
-
-			int fd;
-			char* puntero_memoria;
-
 			clave_buscada = malloc(tamanio_clave);
 			memcpy(clave_buscada, clave, tamanio_clave);
 
 			estructura_clave *entrada_encontrada = list_find(tabla_entradas,condicion_clave_entrada);
 			entrada_encontrada->cantidad_operaciones = 0;
-			int tamanio_valor = entrada_encontrada->tamanio_valor;
-			valor = malloc(tamanio_valor);
-			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
 
-			fd =  open(path, O_RDWR | O_CREAT, S_IRWXU);
+			if(strcmp(entrada_encontrada->valor, "") != 0){
+				char* path;
+				char* valor;
+				int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
+				path = malloc(tamanio_path + tamanio_clave + sizeof(char)*5);
+				strcpy(path, mi_configuracion.puntoDeMontaje);
+				log_info(logger, "La clave es: %s", clave);
+				strcat(path + tamanio_path -1, clave);
+				strcat(path + tamanio_path + tamanio_clave -2, ".txt\0");
 
-			if (fd < 0) {
-				log_info(logger, "No se pudo abrir el archivo");
+				log_info(logger, "Tengo el path piola: %s", path);
+
+				int fd;
+				char* puntero_memoria;
+
+
+				int tamanio_valor = entrada_encontrada->tamanio_valor;
+				valor = malloc(tamanio_valor);
+				memcpy(valor,entrada_encontrada->valor,tamanio_valor);
+
+				fd =  open(path, O_RDWR | O_CREAT, S_IRWXU);
+
+				if (fd < 0) {
+					log_info(logger, "No se pudo abrir el archivo");
+				}
+
+							/*lseek(fd,lugar_de_memoria - 1,SEEK_CUR);
+							lugar_de_memoria += tamanio_valor + 1;*/
+
+				lseek(fd,0,SEEK_SET);
+
+				write(fd, valor, tamanio_valor);
+
+				puntero_memoria = mmap(NULL,tamanio_valor + sizeof(char),PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
+				log_info(logger, "Voy a guardar algo de tamanio %d: %s", tamanio_valor, entrada_encontrada->valor);
+				memcpy(puntero_memoria, valor, (tamanio_valor + sizeof(char)));
+				msync(puntero_memoria, (tamanio_valor + sizeof(char)), MS_SYNC);
+				munmap(puntero_memoria, (tamanio_valor + sizeof(char)));
+				close(fd);
+				free(clave_buscada);
+				free(path);
 			}
 
-			/*lseek(fd,lugar_de_memoria - 1,SEEK_CUR);
-			lugar_de_memoria += tamanio_valor + 1;*/
-
-			lseek(fd,0,SEEK_SET);
-
-			write(fd, valor, tamanio_valor);
-
-			puntero_memoria = mmap(NULL,tamanio_valor + sizeof(char),PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
-			log_info(logger, "Voy a guardar algo de tamanio %d: %s", tamanio_valor, entrada_encontrada->valor);
-			memcpy(puntero_memoria, valor, (tamanio_valor + sizeof(char)));
-			msync(puntero_memoria, (tamanio_valor + sizeof(char)), MS_SYNC);
-			munmap(puntero_memoria, (tamanio_valor + sizeof(char)));
-			close(fd);
-			free(clave_buscada);
-			free(path);
 }
 
 

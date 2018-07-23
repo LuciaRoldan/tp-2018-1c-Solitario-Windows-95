@@ -36,24 +36,35 @@ int main(int argc, char* argv[]){
 		log_info(logger,"Pero no es el de configuracion :( ");
 		id = recibir_int(socket_coordinador,logger);
 	}
-	configuracion = recibir_configuracion(socket_coordinador,logger);
-	log_info(logger,"Recibi la configuracion! ");
-	cantidad_entradas = configuracion.cantidad_entradas;
-	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
-	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion.tamano_entrada);
 
-	const int cantidad_entradas = 3; //ACORDATE DE VOLVER A configuracion.cantidad_entradas;
-	configuracion.cantidad_entradas = 3; // Y ESTOO
+	//recibir_configuracion(socket_coordinador,logger);
+	configuracion_coordi.cantidad_entradas = recibir_int(socket_coordinador,logger);
+	configuracion_coordi.tamano_entrada = recibir_int(socket_coordinador,logger);
+
+	log_info(logger,"Recibi la configuracion! ");
+	cantidad_entradas = configuracion_coordi.cantidad_entradas;
+	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
+	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion_coordi.tamano_entrada);
+
+	/*char* espacio_bitmap = malloc(cantidad_entradas);
+	precencia = bitarray_create_with_mode(espacio_bitmap, cantidad_entradas, MSB_FIRST);*/ //Lo de bitarray
+
 	acceso_tabla = (int*) malloc(cantidad_entradas*sizeof(int));
 	for(int i = 0; i< cantidad_entradas; i++){
 		acceso_tabla[i]=0;
 	}
+	log_info(logger, "La cantidad de entradas es: %d", cantidad_entradas);
+
+	for(int i = 0; i< cantidad_entradas; i++){
+		printf("%d, ", acceso_tabla[i]);
+	}
+
 	memoria_usada = 0;
 	indice = 0;
 	log_info(logger,"Creo un array para saber las entradas ocupadas y la vacio para que la tabla de entradas comience vacia");
 	tabla_entradas = list_create();
 	log_info(logger,"Creo la tabla de entradas");
-	memoria_total = configuracion.cantidad_entradas * configuracion.tamano_entrada;
+	memoria_total = configuracion_coordi.cantidad_entradas * configuracion_coordi.tamano_entrada;
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
