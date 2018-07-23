@@ -54,10 +54,12 @@ int main(int argc, char* argv[]){
 				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
 				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				if((confirmacion > 84) && (confirmacion < 90)){
+				abortoESI = informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				/*if((confirmacion > 84) && (confirmacion < 90)){
 					abortoESI = 1;
 					informar_fin_de_programa(conexiones, abortoESI);
-				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);*/
+				if(abortoESI) informar_fin_de_programa(conexiones, abortoESI);
 				break;
 			case 61: //solicitud de ejecucion
 				if(ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi) > 0){
@@ -68,6 +70,7 @@ int main(int argc, char* argv[]){
 						abortoESI = 1;
 						informar_fin_de_programa(conexiones, abortoESI);
 					} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);*/
+					if(abortoESI) informar_fin_de_programa(conexiones, abortoESI);
 				} else {
 					log_info(logger_esi, "La clave no paso la prueba");
 					error_clave_larga(conexiones);
@@ -85,6 +88,7 @@ int main(int argc, char* argv[]){
 				serializar_id(buffer_exit, 20);
 				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
 				flag_exit = 1;
+				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 			default:
 				log_info(logger_esi, "Mensaje fuera de protocolo: %d", codigo_plani);
@@ -93,6 +97,7 @@ int main(int argc, char* argv[]){
 				break;
 		}
 	}
+	if(feof(script_prueba)) informar_fin_de_programa(conexiones, abortoESI);
 	fclose(script_prueba);
 	free(mensaje_coordi);
 	free(configuracion_esi);

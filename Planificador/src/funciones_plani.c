@@ -147,15 +147,15 @@ int handshake_esi(int socket_esi){
 void manejar_esis(){
 
 	while(terminar_todo){
-	while(pausar_planificador>=0){
-		if(list_size(esis_ready) > 0){
-			sem_wait(&s_planificar);
-			log_info(logger, "Dentro manejar_esis (planificando)");
+		while(pausar_planificador>=0){
+			if(list_size(esis_ready) > 0){
+				sem_wait(&s_planificar);
+				log_info(logger, "Dentro manejar_esis (planificando)");
 
-			planificar();
-			sleep(1);
+				planificar();
+				//sleep(1);
+			}
 		}
-	}
 	}
 }
 
@@ -220,30 +220,30 @@ void manejar_esi(void* la_pcb){
 
 		log_info(logger, "El ESI %d me envio el resultado_esi %d:", pcb_esi.id, resultado);
 
-		if (resultado >= 0){
-			switch (resultado){
-				case (84):
-					pthread_mutex_lock(&m_lista_pcbs);
-					registrar_exito_en_pcb(pcb_esi.id);
-					pthread_mutex_unlock(&m_lista_pcbs);
-				break;
-				case (90):
-					mover_esi_a_bloqueados(clave_buscada, id_esi_ejecutando);
-				break;
-				case (81):
-					mover_esi_a_finalizados(id_esi_ejecutando);
-					chau = 0;
-				break;
-				default:
-					abortar_esi(pcb_esi.id);
-					procesar_motivo_aborto(resultado);
-					chau = 0;
-				break;
+			if (resultado >= 0){
+				switch (resultado){
+					case (84):
+						pthread_mutex_lock(&m_lista_pcbs);
+						registrar_exito_en_pcb(pcb_esi.id);
+						pthread_mutex_unlock(&m_lista_pcbs);
+					break;
+					case (90):
+						mover_esi_a_bloqueados(clave_buscada, id_esi_ejecutando);
+					break;
+					case (81):
+						mover_esi_a_finalizados(id_esi_ejecutando);
+						chau = 0;
+					break;
+					default:
+						procesar_motivo_aborto(resultado);
+						abortar_esi(pcb_esi.id);
+						chau = 0;
+					break;
+				}
 			}
+			sem_post(&s_planificar);
 		}
-		sem_post(&s_planificar);
 	}
-}
 
 //--MANEJAR COORDINADOR--//
 void manejar_coordinador(void* socket){
@@ -276,7 +276,7 @@ void manejar_coordinador(void* socket){
 				recibir(socket_coordinador, buffer, tamanio, logger);
 				instruccion = deserializar_instruccion(buffer);
 				free(buffer);
-				log_info(logger, "Recibi del Coordinador: %s, %d", instruccion.argumentos.GET.clave, instruccion.keyword);
+				log_info(logger, "Recibi del Coordinador la keyword: %d", instruccion.keyword);
 
 				procesar_pedido(instruccion);
 
@@ -315,94 +315,95 @@ void procesar_pedido(t_esi_operacion instruccion){
 
 	if (pcb_pedido_esi != NULL){ //VERIFICO QUE EL ESI SEA VALIDO
 
-	switch(instruccion.keyword){
-	case(GET):
+		switch(instruccion.keyword){
+		case(GET):
 
-		pthread_mutex_lock(&m_clave_buscada);
-		clave_buscada = instruccion.argumentos.GET.clave;
-		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-		pthread_mutex_unlock(&m_clave_buscada);
+			pthread_mutex_lock(&m_clave_buscada);
+			clave_buscada = instruccion.argumentos.GET.clave;
+			nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+			pthread_mutex_unlock(&m_clave_buscada);
 
-		if(nodo_clave_buscada == NULL){
-			//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas, la creo
-			clave_bloqueada* clave_nueva = malloc(sizeof(clave_bloqueada));
-			clave_buscada = instruccion.argumentos.GET.clave; //deberia memcpy
-			clave_nueva->esi_que_la_usa = id_esi_ejecutando;
-			clave_nueva->clave = clave_buscada; //deberia memcpy
-			clave_nueva->esis_en_espera = list_create();
-			pthread_mutex_lock(&m_lista_claves_bloqueadas);
-			list_add(claves_bloqueadas, clave_nueva);
-			pthread_mutex_unlock(&m_lista_claves_bloqueadas);
-			log_info(logger, "Nueva clave_bloqueada creada %s para el ESI %d", clave_buscada, clave_nueva->esi_que_la_usa);
-			informar_exito_coordinador();
-			}
-
-			else {
-				if (nodo_clave_buscada->esi_que_la_usa == 0){
-					//Existe esa clave_bloqueada en mi lista de claves pero no esta asignada a ningun ESI
-					pthread_mutex_lock(&m_lista_claves_bloqueadas);
-					nodo_clave_buscada->esi_que_la_usa = id_esi_ejecutando;
-					pthread_mutex_unlock(&m_lista_claves_bloqueadas);
-					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, id_esi_ejecutando);
-					informar_exito_coordinador();
+			if(nodo_clave_buscada == NULL){
+				//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas, la creo
+				clave_bloqueada* clave_nueva = malloc(sizeof(clave_bloqueada));
+				clave_buscada = instruccion.argumentos.GET.clave; //deberia memcpy
+				clave_nueva->esi_que_la_usa = id_esi_ejecutando;
+				clave_nueva->clave = clave_buscada; //deberia memcpy
+				clave_nueva->esis_en_espera = list_create();
+				pthread_mutex_lock(&m_lista_claves_bloqueadas);
+				list_add(claves_bloqueadas, clave_nueva);
+				pthread_mutex_unlock(&m_lista_claves_bloqueadas);
+				log_info(logger, "Nueva clave_bloqueada creada %s para el ESI %d", clave_buscada, clave_nueva->esi_que_la_usa);
+				informar_exito_coordinador();
 				}
 
 				else {
-					if(nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
-					//Me hacen un GET sobre una clave que ya tenia asignado ese ESI entonces no hago nada.
-					log_info(logger, "GET realizado por el ESI %d sobre la clave %s que ya le pertenecia", id_esi_ejecutando, clave_buscada);
-					informar_exito_coordinador();
-					}
-
-					else {
-						//Me hacen un GET sobre una clave que estaba asignada a otro ESI entonces lo pongo en
-						//la lista de espera de esa clave y lo saco de ready
-						log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
-						//clave_buscada se mantiene igual para que la use la funcion de mover_esi_a_bloqueados cuando recibo respuesta del esi!!
-						informar_bloqueo_coordinador();
-					}
-				}
-			}
-			break;
-
-	case(SET):
-
-		pthread_mutex_lock(&m_clave_buscada);
-		clave_buscada = instruccion.argumentos.SET.clave;
-		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-		pthread_mutex_unlock(&m_clave_buscada);
-		log_info(logger, "Nodo_clave_buscada en SET el id del esi que la usa es: %d", nodo_clave_buscada->esi_que_la_usa);
-
-		if(nodo_clave_buscada == NULL){
-				log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, id_esi_ejecutando);
-				informar_aborto_coordinador_clave_no_id();
-			}
-
-			else {
-				if (nodo_clave_buscada->esi_que_la_usa == 0){
-					log_info(logger, "SET realizado por el ESI %d sobre una clave %s sin ESIS asignados", id_esi_ejecutando, clave_buscada);
-					informar_aborto_coordinador_clave_no_b();
-				}
-
-				else {
-					if (nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
-						log_info(logger, "SET realizado por el ESI %d sobre la clave que le pertenecia %s", id_esi_ejecutando, clave_buscada);
+					if (nodo_clave_buscada->esi_que_la_usa == 0){
+						//Existe esa clave_bloqueada en mi lista de claves pero no esta asignada a ningun ESI
+						pthread_mutex_lock(&m_lista_claves_bloqueadas);
+						nodo_clave_buscada->esi_que_la_usa = id_esi_ejecutando;
+						pthread_mutex_unlock(&m_lista_claves_bloqueadas);
+						log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, id_esi_ejecutando);
 						informar_exito_coordinador();
 					}
 
 					else {
-						log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
-						informar_aborto_coordinador_clave_no_b();
+						if(nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
+						//Me hacen un GET sobre una clave que ya tenia asignado ese ESI entonces no hago nada.
+						log_info(logger, "GET realizado por el ESI %d sobre la clave %s que ya le pertenecia", id_esi_ejecutando, clave_buscada);
+						informar_exito_coordinador();
+						}
+
+						else {
+							//Me hacen un GET sobre una clave que estaba asignada a otro ESI entonces lo pongo en
+							//la lista de espera de esa clave y lo saco de ready
+							log_info(logger, "GET realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
+							//clave_buscada se mantiene igual para que la use la funcion de mover_esi_a_bloqueados cuando recibo respuesta del esi!!
+							// DONDE SE BLOQUEA ESTA CLAVE?? En manejar ESI
+							informar_bloqueo_coordinador();
+						}
 					}
 				}
-			}
+				break;
+
+		case(SET):
+
+			pthread_mutex_lock(&m_clave_buscada);
+			clave_buscada = instruccion.argumentos.SET.clave;
+			nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+			pthread_mutex_unlock(&m_clave_buscada);
+			log_info(logger, "Nodo_clave_buscada en SET el id del esi que la usa es: %d", nodo_clave_buscada->esi_que_la_usa);
+
+			if(nodo_clave_buscada == NULL){
+					log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, id_esi_ejecutando);
+					informar_aborto_coordinador_clave_no_id();
+				}
+
+				else {
+					if (nodo_clave_buscada->esi_que_la_usa == 0){
+						log_info(logger, "SET realizado por el ESI %d sobre una clave %s sin ESIS asignados", id_esi_ejecutando, clave_buscada);
+						informar_aborto_coordinador_clave_no_b();
+					}
+
+					else {
+						if (nodo_clave_buscada->esi_que_la_usa == id_esi_ejecutando){
+							log_info(logger, "SET realizado por el ESI %d sobre la clave que le pertenecia %s", id_esi_ejecutando, clave_buscada);
+							informar_exito_coordinador();
+						}
+
+						else {
+							log_info(logger, "SET realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
+							informar_aborto_coordinador_clave_no_b();
+						}
+					}
+				}
 			break;
 
-	case(STORE):
-		pthread_mutex_lock(&m_clave_buscada);
-		clave_buscada = instruccion.argumentos.STORE.clave;
-		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-		pthread_mutex_unlock(&m_clave_buscada);
+		case(STORE):
+			pthread_mutex_lock(&m_clave_buscada);
+			clave_buscada = instruccion.argumentos.STORE.clave;
+			nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+			pthread_mutex_unlock(&m_clave_buscada);
 
 			if(nodo_clave_buscada == NULL){
 				log_info(logger, "STORE realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, id_esi_ejecutando);
@@ -434,7 +435,7 @@ void procesar_pedido(t_esi_operacion instruccion){
 	}
 	} else {
 		log_info(logger, "Pedido invalido. No conozco al ESI %d", id_esi_ejecutando);
-	}
+		}
 }
 
 
@@ -448,8 +449,10 @@ void informar_aborto_coordinador_clave_no_b(){
 	enviar(sockets_planificador.socket_coordinador, &aborto, sizeof(int), logger);
 }
 void informar_exito_coordinador(){
+	log_info(logger, "Entre a ciclo de informar coordi");
 	int exito = 84;
 	enviar(sockets_planificador.socket_coordinador, &exito, sizeof(int), logger);
+	log_info(logger, "Envié el 84 todo piola");
 }
 void informar_bloqueo_coordinador(){
 	int fallo = 90;
@@ -486,19 +489,20 @@ void planificar(){
 	//export LD_LIBRARY_PATH=$PWD/Shared_Libraries/commons_propias/Debug
 	log_info(logger, "Dentro de planificar");
 	if(list_size(esis_ready)>0){
-	ordenar_pcbs();
-	void* esi_a_ejecutar = list_get(esis_ready, 0);
-	pcb* pcb_esi;
-	pcb_esi = esi_a_ejecutar;
-	pthread_mutex_lock(&m_id_esi_ejecutando);
-	id_esi_ejecutando = pcb_esi->id;
-	pthread_mutex_unlock(&m_id_esi_ejecutando);
-	sumar_retardo_otros_ready();
-	void* buffer = malloc(sizeof(int));
-	serializar_id(buffer, 61);
-	enviar(pcb_esi->socket, buffer, sizeof(int), logger);
-	log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
-	free(buffer); //PELIGRO
+		ordenar_pcbs();
+		void* esi_a_ejecutar = list_get(esis_ready, 0);
+		pcb* pcb_esi = malloc(sizeof(pcb));
+		memcpy(pcb_esi, esi_a_ejecutar, sizeof(pcb));
+		pthread_mutex_lock(&m_id_esi_ejecutando);
+		id_esi_ejecutando = pcb_esi->id;
+		pthread_mutex_unlock(&m_id_esi_ejecutando);
+		sumar_retardo_otros_ready();
+		void* buffer = malloc(sizeof(int));
+		serializar_id(buffer, 61);
+		enviar(pcb_esi->socket, buffer, sizeof(int), logger);
+		log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
+		free(buffer); //PELIGRO
+		free(pcb_esi);
 	}
 }
 
@@ -724,14 +728,19 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 
 //--Abortar ESI--//
 void abortar_esi(int id_esi){
-	pcb* esi_abortado;
+	log_info(logger, "Entre a la funcion de abortar_esi");
+	void *el_esi_a_abortar = malloc(sizeof(pcb));
+
+	//pcb* esi_abortado;
 
 	//pcb* primer_elem = list_get(pcbs, 0);
 	//log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
-	esi_abortado = list_find(pcbs, ids_iguales_pcb);
+	el_esi_a_abortar = list_find(pcbs, ids_iguales_pcb);
+	memcpy(esi_abortado, el_esi_a_abortar, sizeof(pcb));
+	free(el_esi_a_abortar);
 	int id_esi_abortado = esi_abortado->id;
 
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
@@ -822,6 +831,7 @@ void procesar_motivo_aborto(int protocolo){
 		break;
 	default:
 		log_info(logger, "ESI abortado por ESI desconocido");
+		break;
 	}
 }
 
@@ -980,7 +990,7 @@ void destruir_pcb(void* pcbb){
 
 //--Cerrar hilo y socket ESI abortado--//
 void cerrar_cosas_de_un_esi(void* esi){
-	pcb* esi_a_cerrar = esi;
+	pcb* esi_a_cerrar = esi; // hay problema de tipos?
 	close(esi_a_cerrar->socket);
 	log_info(logger, "Entre en cerrar_cosas");
 	//pthread_mutex_lock(&m_hilo_a_cerrar);

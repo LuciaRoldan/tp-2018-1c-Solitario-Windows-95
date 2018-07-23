@@ -117,9 +117,9 @@ void error_clave_larga(sockets_conexiones las_conexiones){
 }
 
 void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
-	int envio;
-	serializar_id(&envio, 81);
 	if(flag == 0){
+		int envio;
+		serializar_id(&envio, 81);
 		log_info(logger_esi, "Fin de script.\n");
 		enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
 		enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
