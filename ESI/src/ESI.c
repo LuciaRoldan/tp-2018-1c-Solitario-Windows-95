@@ -63,10 +63,11 @@ int main(int argc, char* argv[]){
 				if(ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi) > 0){
 					confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 					log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-					if((confirmacion > 84) && (confirmacion < 90)){
+					abortoESI = informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+					/*if((confirmacion > 84) && (confirmacion < 90)){
 						abortoESI = 1;
 						informar_fin_de_programa(conexiones, abortoESI);
-					} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+					} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);*/
 				} else {
 					log_info(logger_esi, "La clave no paso la prueba");
 					error_clave_larga(conexiones);
