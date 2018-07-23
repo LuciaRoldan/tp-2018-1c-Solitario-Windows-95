@@ -3,7 +3,9 @@
 ///////////////////////////////////////////////// COMUNICACION /////////////////////////////////////////////////
 
 int enviar_configuracion_instancia(int socket){
-	datos_configuracion mensaje = {info_coordinador.tamano_entrada, info_coordinador.cantidad_entradas};
+	int tamanio = info_coordinador.tamano_entrada;
+	int cantidad = info_coordinador.cantidad_entradas;
+	datos_configuracion mensaje = {tamanio, cantidad};
 	void* buffer = malloc(sizeof(int)*3);
 	serializar_configuracion_inicial_instancia(buffer, mensaje);
 	int bytes_enviados = enviar(socket, buffer, sizeof(int)*3, logger);

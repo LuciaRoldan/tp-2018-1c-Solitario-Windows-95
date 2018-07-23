@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lcommons_propias -lreadline -lcommons
+LIBS := -lcommons_propias -lparsi -lreadline -lcommons
 

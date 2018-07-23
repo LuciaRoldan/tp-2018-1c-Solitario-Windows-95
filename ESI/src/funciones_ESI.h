@@ -31,12 +31,17 @@ int conectarse_al_Planificador(void);
 
 // Acciones
 t_esi_operacion parsear_linea(FILE* archivo);
-int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador);
-int enviar_instruccion(t_esi_operacion operacion, int socket_destino);
-void ejecutar_ultima_instruccion(int socket_destino);
-void procesar_confirmacion(int confirmacion, int socket_destino);
-void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi);
+void mostrar_instruccion(t_esi_operacion instruccion);
 void informar_fin_de_programa(sockets_conexiones conexiones, int flag);
+int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador);
+void error_clave_larga(sockets_conexiones las_conexiones);
+int enviar_instruccion(t_esi_operacion operacion, int socket_destino);
+int ejecutar_ultima_instruccion(int socket_destino);
+void liberar_instruccion(t_esi_operacion instruccion);
+void procesar_confirmacion(int confirmacion, int socket_destino);
+int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi);
+int enviar_exit_coordi(int socket);
+
 
 // Serializacion-Deserializacion
 void serializar_confirmacion(void* buffer, resultado_esi *msj_confirmacion);

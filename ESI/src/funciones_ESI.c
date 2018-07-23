@@ -94,59 +94,32 @@ int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
 	return exito;
 }
 
-int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
-	t_esi_operacion operacion = parsear_linea(archivo);
-	log_info(logger_esi,"Parseado de instruccion completo");
-	ultima_instruccion = operacion;
-	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
-		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
-		return 1;
-		} else {
-			log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
-			return 0;
+void mostrar_instruccion(t_esi_operacion instruccion){
+	switch(instruccion.keyword){
+		case GET:
+			log_info(logger_esi, "La instruccion parseada es: GET %s", instruccion.argumentos.GET.clave);
+			break;
+		case SET:
+			log_info(logger_esi, "La instruccion parseada es: SET %s %s", instruccion.argumentos.SET.clave, instruccion.argumentos.SET.valor);
+			break;
+		case STORE:
+			log_info(logger_esi, "La instruccion parseada es: STORE %s", instruccion.argumentos.STORE.clave);
+			break;
 		}
 }
 
-void ejecutar_ultima_instruccion(int socket_destino){
-	enviar_instruccion(ultima_instruccion, socket_destino);
-}
-
-void informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi){
-	switch(confirmacion){
-		case 84:
-			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
-			break;
-		case 85:
-			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
-			break;
-		case 86:
-			log_info(logger_esi, "Error de clave muy larga.");
-			break;
-		case 87:
-			log_info(logger_esi, "Error de clave no identificada.");
-			break;
-		case 88:
-			log_info(logger_esi, "Error de clave inaccesible.");
-			break;
-		case 89:
-			log_info(logger_esi, "Error de clave no bloqueada.");
-			break;
-		case 90:
-			log_info(logger_esi, "Bloquear ESI.");
-			break;
-		default:
-			break;
-	}
-	void* buffer_confirmacion = malloc(sizeof(int));
-	serializar_id(buffer_confirmacion, confirmacion);
-	enviar(socket_destino, buffer_confirmacion, sizeof(int), logger_esi);
-	free(buffer_confirmacion);
+void error_clave_larga(sockets_conexiones las_conexiones){
+	void *protocolo = malloc(sizeof(int));
+	serializar_id(protocolo, 86);
+	enviar(las_conexiones.socket_coordi, protocolo, sizeof(int), logger_esi);
+	enviar(las_conexiones.socket_plani, protocolo, sizeof(int), logger_esi);
+	free(protocolo);
 }
 
 void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
-	int envio;
-	serializar_id(&envio, 81);
 	if(flag == 0){
+		int envio;
+		serializar_id(&envio, 81);
 		log_info(logger_esi, "Fin de script.\n");
 		enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
 		enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
@@ -158,16 +131,93 @@ void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
 	}
 }
 
+int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
+	t_esi_operacion operacion = parsear_linea(archivo);
+	if(!operacion.valido) return -1;
+	log_info(logger_esi,"Parseado de instruccion completo");
+	mostrar_instruccion(operacion);
+	ultima_instruccion = operacion;
+	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
+		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
+		liberar_instruccion(operacion);
+		return 1;
+	} else {
+		log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
+		liberar_instruccion(operacion);
+		return -1;
+	}
+}
+
+int ejecutar_ultima_instruccion(int socket_destino){
+	if(enviar_instruccion(ultima_instruccion, socket_destino) > 0){
+		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
+		return 1;
+	} else {
+		log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
+		return -1;
+	}
+}
+
+void liberar_instruccion(t_esi_operacion operacion){
+	switch(operacion.keyword){
+	case GET:
+		free(operacion.argumentos.GET.clave);
+		break;
+	case SET:
+		free(operacion.argumentos.SET.clave);
+		free(operacion.argumentos.SET.valor);
+		break;
+	case STORE:
+		free(operacion.argumentos.STORE.clave);
+		break;
+	}
+}
+
+int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi){
+	int aborto = 0;
+	switch(confirmacion){
+		case 84:
+			log_info(logger_esi, "Instruccion ejecutada satisfactoriamente.");
+			break;
+		case 85:
+			log_info(logger_esi, "Fallo al ejecutar la instruccion.");
+			aborto = 1;
+			break;
+		case 87:
+			log_info(logger_esi, "Error de clave no identificada.");
+			aborto = 1;
+			break;
+		case 88:
+			log_info(logger_esi, "Error de clave inaccesible.");
+			aborto = 1;
+			break;
+		case 89:
+			log_info(logger_esi, "Error de clave no bloqueada.");
+			aborto = 1;
+			break;
+		case 90:
+			log_info(logger_esi, "Bloquear ESI.");
+			break;
+		default:
+			log_info(logger_esi, "Id fuera de protocolo");
+			return 1;
+			break;
+	}
+	void* buffer_confirmacion = malloc(sizeof(int));
+	serializar_id(buffer_confirmacion, confirmacion);
+	enviar(socket_destino, buffer_confirmacion, sizeof(int), logger_esi);
+	free(buffer_confirmacion);
+	return aborto;
+}
+
+int enviar_exit_coordi(int socket){
+	int envio;
+	serializar_id(&envio, 81);
+	return enviar(socket, envio, sizeof(int), logger_esi);
+}
+
+
 // Serializacion/Deserializacion
-void serializar_confirmacion(void* buffer, resultado_esi *msj_confirmacion){
-	int id_protocolo = 41;
-	memcpy(buffer, &id_protocolo, sizeof(int));
-	memcpy(buffer, msj_confirmacion, sizeof(resultado_esi));
-}
-resultado_esi deserializar_confirmacion(void* buffer_receptor){
-	resultado_esi confirmacion;
-	memcpy(&confirmacion, buffer_receptor + sizeof(int), sizeof(resultado_esi));
-	return confirmacion;
-}
+
 
 #endif /* ESI_FUNCIONES_H_ */

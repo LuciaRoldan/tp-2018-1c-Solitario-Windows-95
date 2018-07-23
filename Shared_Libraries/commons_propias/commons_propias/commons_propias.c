@@ -282,12 +282,19 @@ int tamanio_buffer_instruccion(t_esi_operacion instruccion){
 }
 
 void serializar_configuracion_inicial_instancia(void* buffer, datos_configuracion configuracion){
-	int* id_protocolo = malloc(sizeof(int));
+	/*int* id_protocolo = malloc(sizeof(int));
 	*id_protocolo = 0;
+	datos_configuracion *info_configuracion = malloc(sizeof(datos_configuracion));
+	*info_configuracion = configuracion;
 	memcpy(buffer, id_protocolo, sizeof(int));
-	memcpy(buffer + sizeof(int), &(configuracion.cantidad_entradas), sizeof(int));
-	memcpy(buffer + sizeof(int)*2, &(configuracion.tamano_entrada), sizeof(int));
-	free(id_protocolo);
+	memcpy((buffer + (sizeof(int))), info_configuracion, sizeof(t_handshake));
+	free(info_configuracion);
+	free(id_protocolo);*/
+
+	int id_protocolo = 0;
+	memcpy(buffer, &id_protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &configuracion.cantidad_entradas, sizeof(int));
+	memcpy(buffer + sizeof(int)*2, &configuracion.tamano_entrada, sizeof(int));
 }
 
 datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer) {

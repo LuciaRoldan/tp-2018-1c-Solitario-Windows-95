@@ -13,7 +13,7 @@ int procesar_mensaje(int socket){
 	status_clave status;
 	void* buffer_int = malloc(sizeof(int));
 	id = recibir_int(socket, logger);
-	log_info(logger, "Protocolo recibido: %d del socket: %d", id, socket);
+	//log_info(logger, "Protocolo recibido: %d", id);
 	free(buffer_int);
 	int rta_esi;
 
@@ -46,33 +46,25 @@ int procesar_mensaje(int socket){
 
 		case 25: //Exito instancia
 			log_info(logger, "Recibi confirmacion de la Instancia %d", instancia_seleccionada->id);
-			pthread_mutex_unlock(&m_instancia_seleccionada);
 			rta_esi = 84;
 			buffer_int = malloc(sizeof(int));
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			log_info(logger, "Le digo al ESI %d que la ejecucion fue exitosa", esi_ejecutando->id);
 			free(buffer_int);
-			pthread_mutex_unlock(&m_esi_ejecutando);
-			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
 
 		case 81: //Fin de ejecucion del ESI
-			pthread_mutex_lock(&escucha_esi);
 			el_nodo = encontrar_esi(socket);
-			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &el_nodo->hilo;
-			pthread_mutex_lock(&m_socket_esi_buscado);
 			socket_esi_buscado = el_nodo->socket;
-			log_info(logger, "Voy a eliminar");
-			pthread_mutex_lock(&m_lista_esis);
+			log_info(logger, "El ESI %d termino", el_nodo->id);
+			log_info(log_operaciones, "El ESI %d termino", el_nodo->id);
 			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
-			pthread_mutex_unlock(&m_lista_esis);
-			pthread_mutex_unlock(&m_socket_esi_buscado);
-			pthread_mutex_unlock(&escucha_esi);
 			close(socket);
 			sem_post(&s_cerrar_hilo);
+			pthread_exit(NULL);
 			return -1;
 			break;
 
@@ -93,7 +85,6 @@ int procesar_mensaje(int socket){
 			log_info(logger, "Recibi confirmacion del Planificador");
 			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
 			liberar_instruccion();
-			pthread_mutex_unlock(&m_operacion_ejecutando);
 			log_info(logger, "Envie la instruccion a la instancia %d", instancia_seleccionada->id);
 			return 1;
 
@@ -105,11 +96,19 @@ int procesar_mensaje(int socket){
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			free(buffer_int);
 			liberar_instruccion();
-			pthread_mutex_unlock(&m_operacion_ejecutando);
-			pthread_mutex_unlock(&m_instancia_seleccionada);
-			pthread_mutex_unlock(&m_esi_ejecutando);
-			pthread_mutex_unlock(&escucha_esi);
 			return 1;
+			break;
+
+		case 86: //ESI avisa calve muy larga
+			socket_esi_buscado = socket;
+			nodo* el_nodo = list_find(lista_esis, condicion_socket_esi);
+			log_info(logger, "Fallo de clave muy larga, ID ESI: %d", el_nodo->id);
+			hilo_a_cerrar = &el_nodo->hilo;
+			list_remove_and_destroy_by_condition(lista_instancias, condicion_socket_esi, eliminar_nodo);
+			sem_post(&s_cerrar_hilo);
+			close(socket);
+			pthread_exit(NULL);
+			return -1;
 			break;
 
 		case 87: //Fallo clave no identificada
@@ -120,13 +119,10 @@ int procesar_mensaje(int socket){
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			free(buffer_int);
 			liberar_instruccion();
-			pthread_mutex_unlock(&m_operacion_ejecutando);
-			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
-			pthread_mutex_unlock(&m_instancia_seleccionada);
-			pthread_mutex_unlock(&m_esi_ejecutando);
-			pthread_mutex_unlock(&escucha_esi);
+			close(socket);
+			pthread_exit(NULL);
 			return resultado;
 			break;
 
@@ -138,15 +134,13 @@ int procesar_mensaje(int socket){
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			free(buffer_int);
 			liberar_instruccion();
-			pthread_mutex_unlock(&m_operacion_ejecutando);
-			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
-			pthread_mutex_unlock(&m_instancia_seleccionada);
-			pthread_mutex_unlock(&m_esi_ejecutando);
-			pthread_mutex_unlock(&escucha_esi);
+			close(socket);
+			pthread_exit(NULL);
 			return resultado;
 			break;
+
 		case 90://Hay que bloquear al ESI
 			log_info(logger, "Le digo al ESI %d que esta bloqueado", esi_ejecutando->id);
 			rta_esi = 90;
@@ -154,11 +148,9 @@ int procesar_mensaje(int socket){
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 			free(buffer_int);
-			pthread_mutex_unlock(&m_instancia_seleccionada);
-			pthread_mutex_unlock(&m_esi_ejecutando);
-			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
+
 		case 91:
 			id_esi = recibir_int(socket_planificador, logger);
 			id_esi_buscado = id_esi;
@@ -168,14 +160,14 @@ int procesar_mensaje(int socket){
 			log_info(logger, "Abortando ESI %d por operacion 'kill' de consola", el_esi_buscado->id);
 			resultado = enviar(el_esi_buscado->socket, buffer_int, sizeof(int), logger);
 			free(buffer_int);
-			pthread_mutex_lock(&m_hilo_a_cerrar);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
-			pthread_mutex_unlock(&m_esi_ejecutando); // Esto lo tengo que borrar?
-			pthread_mutex_unlock(&escucha_esi);
+			close(socket);
+			pthread_exit(NULL);
 			return resultado;
 			break;
 		default:
+			log_error(logger, "Protocolo desconocido");
 			return -1;
 			break;
 	}
@@ -183,13 +175,9 @@ int procesar_mensaje(int socket){
 
 int procesar_instruccion(t_esi_operacion instruccion, int socket){
 	char* clave;
-	//pthread_mutex_unlock(&m_esi_ejecutando);
-	pthread_mutex_lock(&m_esi_ejecutando);
-	pthread_mutex_lock(&escucha_esi);
 	esi_ejecutando = encontrar_esi(socket);
 	int rta_esi;
 
-	pthread_mutex_lock(&m_log_operaciones);
 	switch(instruccion.keyword){
 	case GET:
 		log_info(log_operaciones, "ESI %d GET %s", esi_ejecutando->id, instruccion.argumentos.GET.clave);
@@ -213,12 +201,8 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		void* buffer_int = malloc(sizeof(int));
 		serializar_id(buffer_int, rta_esi);
 		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-		pthread_mutex_lock(&m_hilo_a_cerrar);
 		hilo_a_cerrar = &esi_ejecutando->hilo;
 		sem_post(&s_cerrar_hilo);
-		pthread_mutex_unlock(&m_log_operaciones);
-		pthread_mutex_unlock(&m_esi_ejecutando);
-		pthread_mutex_unlock(&escucha_esi);
 		free(buffer_int);
 		return -1;
 	} else {
@@ -229,30 +213,19 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				serializar_id(buffer_int, rta_esi);
 				enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
 				free(buffer_int);
-				pthread_mutex_lock(&m_hilo_a_cerrar);
-				log_info(logger, "Pase el lock");
 				hilo_a_cerrar = &esi_ejecutando->hilo;
 				sem_post(&s_cerrar_hilo);
-				pthread_mutex_unlock(&m_instancia_seleccionada);
-				pthread_mutex_unlock(&m_log_operaciones);
-				pthread_mutex_unlock(&m_esi_ejecutando);
-				pthread_mutex_unlock(&escucha_esi);
 				return -1;
 		} else {
 			log_info(logger, "El pedido es valido");
-			pthread_mutex_unlock(&m_log_operaciones);
-			pthread_mutex_lock(&m_instancia_seleccionada);
 			instancia_seleccionada = buscar_instancia(clave);
-					/*if(instruccion.keyword == GET){
-						nodo_clave* nodito = malloc(sizeof(nodo_clave));
-						nodito->clave = malloc(strlen(clave));
-						memcpy(nodito->clave, clave, strlen(clave));
-						nodito->nodo_instancia = *instancia_seleccionada;
-						list_add(lista_claves, nodito);
-						log_info(logger, "lo agregue %d", list_size(lista_claves));
-					}*/
-			pthread_mutex_unlock(&m_operacion_ejecutando); //verificar
-			pthread_mutex_lock(&m_operacion_ejecutando);
+			if(instruccion.keyword == GET){
+				nodo_clave* nodito = malloc(sizeof(nodo_clave));
+				nodito->clave = malloc(strlen(clave));
+				memcpy(nodito->clave, clave, strlen(clave));
+				nodito->nodo_instancia = *instancia_seleccionada;
+				list_add(lista_claves, nodito);
+			}
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);
 		}

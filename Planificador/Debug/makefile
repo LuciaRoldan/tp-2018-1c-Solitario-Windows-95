@@ -33,7 +33,7 @@ dependents:
 planificador: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug/libcommons.so /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug/libcommons_propias.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug" -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug" -pthread -o "planificador" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug" -L/home/utnso/workspace/parsi -L"/home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug" -pthread -o "planificador" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

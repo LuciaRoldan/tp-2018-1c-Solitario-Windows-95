@@ -206,6 +206,8 @@ bool el_duenio_esta_en_deadlock(clave_bloqueada* nodo_clave);
 void liberar_instruccion(t_esi_operacion instruccion);
 void sumar_retardo_menos_primero(void* pcbb);
 void desencadenar_cerrar_planificador();
+void cerrar_cosas_de_un_esi(void* esi);
+
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 

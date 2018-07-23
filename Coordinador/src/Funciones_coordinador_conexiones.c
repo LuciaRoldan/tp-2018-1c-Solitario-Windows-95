@@ -33,7 +33,6 @@ int handshake(int socket_cliente){
 
 	case INSTANCIA:
 		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
-		log_info(logger, "Su socket es: %d", socket_cliente);
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
 		return 1;
 		break;
@@ -91,7 +90,6 @@ void atender_esi(void* datos_esi){
 	while(resultado > 0 && !terminar_programa){
 		resultado = procesar_mensaje(mis_datos.socket);
 	}
-	//pthread_exit(NULL);
 }
 
 void atender_instancia(void* datos_instancia){
@@ -111,12 +109,8 @@ void atender_instancia(void* datos_instancia){
 }
 
 void desconectar_instancia(int socket){
-	pthread_mutex_lock(&m_socket_instancia_buscado);
 	socket_instancia_buscado = socket;
-	pthread_mutex_lock(&m_lista_instancias);
 	nodo* el_nodo = list_find(lista_instancias, condicion_socket_instancia);
-	pthread_mutex_unlock(&m_lista_instancias);
-	pthread_mutex_unlock(&m_socket_instancia_buscado);
 	close(socket);
 	hilo_a_cerrar = &el_nodo->hilo;
 	list_remove_and_destroy_by_condition(lista_instancias, condicion_socket_instancia, eliminar_nodo);

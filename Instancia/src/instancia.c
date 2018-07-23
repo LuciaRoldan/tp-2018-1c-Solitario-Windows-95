@@ -21,8 +21,6 @@ int main(int argc, char* argv[]){
 
 	if (pthread_mutex_init(&m_tabla, NULL) != 0) {printf("Fallo al inicializar mutex\n");}
 
-	log_info(logger, "Mi algoritmo es: %d", mi_configuracion.algoritmoDeReemplazo);
-
 	socket_coordinador = connect_to_server(mi_configuracion.ipCoordinador, mi_configuracion.puertoCoordinador, logger);
 
 	log_info(logger,"Hay socket con el Coordinador");
@@ -30,39 +28,48 @@ int main(int argc, char* argv[]){
 	handshake_instancia(socket_coordinador,logger, id_instancia);
 	log_info(logger,"Recibi el handshake del cordi");
 	log_info(logger, "Mi algoritmo de reemplazo es: %d ", mi_configuracion.algoritmoDeReemplazo);
-	printf("Mi nombre es: %d ", mi_configuracion.nombreInstancia);
 
 	int id = recibir_int(socket_coordinador,logger);
 	log_info(logger,"recibo un int \n");
-	printf("El int es: %d \n", id);
 
 	while(id != 00){
 		log_info(logger,"Pero no es el de configuracion :( ");
 		id = recibir_int(socket_coordinador,logger);
 	}
-	configuracion = recibir_configuracion(socket_coordinador,logger);
-	log_info(logger,"Recibi la configuracion! ");
-	cantidad_entradas = configuracion.cantidad_entradas;
-	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
-	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion.tamano_entrada);
 
-	const int cantidad_entradas = 3; //ACORDATE DE VOLVER A configuracion.cantidad_entradas;
-	configuracion.cantidad_entradas = 3; // Y ESTOO
+	//recibir_configuracion(socket_coordinador,logger);
+	configuracion_coordi.cantidad_entradas = recibir_int(socket_coordinador,logger);
+	configuracion_coordi.tamano_entrada = recibir_int(socket_coordinador,logger);
+
+	log_info(logger,"Recibi la configuracion! ");
+	cantidad_entradas = configuracion_coordi.cantidad_entradas;
+	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
+	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion_coordi.tamano_entrada);
+
+	/*char* espacio_bitmap = malloc(cantidad_entradas);
+	precencia = bitarray_create_with_mode(espacio_bitmap, cantidad_entradas, MSB_FIRST);*/ //Lo de bitarray
+
 	acceso_tabla = (int*) malloc(cantidad_entradas*sizeof(int));
 	for(int i = 0; i< cantidad_entradas; i++){
 		acceso_tabla[i]=0;
 	}
+	log_info(logger, "La cantidad de entradas es: %d", cantidad_entradas);
+
+	for(int i = 0; i< cantidad_entradas; i++){
+		printf("%d, ", acceso_tabla[i]);
+	}
+
 	memoria_usada = 0;
 	indice = 0;
 	log_info(logger,"Creo un array para saber las entradas ocupadas y la vacio para que la tabla de entradas comience vacia");
 	tabla_entradas = list_create();
 	log_info(logger,"Creo la tabla de entradas");
-	memoria_total = configuracion.cantidad_entradas * configuracion.tamano_entrada;
+	memoria_total = configuracion_coordi.cantidad_entradas * configuracion_coordi.tamano_entrada;
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
 //
 	pthread_t hilo_dump;
-	//pthread_create(&hilo_dump, 0, dump, NULL);
+	pthread_create(&hilo_dump, 0, dump, NULL);
 
 	while(activa){
 		pthread_mutex_lock(&m_tabla);
