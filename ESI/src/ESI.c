@@ -102,9 +102,12 @@ int main(int argc, char* argv[]){
 	free(mensaje_coordi);
 	free(configuracion_esi);
 	liberar_instruccion(ultima_instruccion);
+	log_info(logger_esi, "Holi");
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
+	log_info(logger_esi, "Termine wacho :7");
 	free(logger_esi);
-	exit(1);
+	//exit(1);
+	return 0;
 }

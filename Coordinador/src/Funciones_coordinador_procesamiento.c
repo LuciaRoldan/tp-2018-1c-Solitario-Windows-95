@@ -56,7 +56,6 @@ int procesar_mensaje(int socket){
 			break;
 
 		case 81: //Fin de ejecucion del ESI
-			log_info(logger, "WIIIIIIIIIIIIIIII");
 			el_nodo = encontrar_esi(socket);
 			hilo_a_cerrar = &el_nodo->hilo;
 			socket_esi_buscado = el_nodo->socket;
