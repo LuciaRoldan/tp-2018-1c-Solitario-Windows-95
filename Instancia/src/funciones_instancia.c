@@ -105,17 +105,18 @@ char* recibe_pedido_status() {
 
 int enviar_status_clave(char* clave){
 	clave_buscada = clave;
-	status_clave statuss;
 	log_info(logger, "llegue hasta enviar status");
 	if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){
-	estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-	status_clave status = {clave,idInstancia, 0, entrada_encontrada->valor};
-	int tamanio_buffer = tamanio_buffer_status(status);
-	void* buffer = malloc(tamanio_buffer);
-	serializar_status_clave(buffer,status);
-	int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
-	free(buffer);
-	return bytes_enviados;
+		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+		status_clave status = {clave,idInstancia, 0, entrada_encontrada->valor};
+		int tamanio_buffer = tamanio_buffer_status(status);
+		void* buffer = malloc(tamanio_buffer);
+		serializar_status_clave(buffer,status);
+		int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
+		free(buffer);
+		return bytes_enviados;
+	} else {
+		return -1;
 	}
 }
 
@@ -148,7 +149,6 @@ bool existe_clave(char* clave) {
 }
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
-	char* clave;
 	char* valor;
 	int tamanio_valor = 0;
 	int tamanio_clave = 0;
@@ -156,7 +156,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
-		int entrada_libre = 0;
 		tamanio_clave = strlen(instruccion.argumentos.GET.clave) + 1;
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.GET.clave, tamanio_clave);
@@ -181,6 +180,53 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 	case (SET):
 		log_info(logger, "Se pidio operacion con SET");
+		estructura_clave* entrada_encontrada;
+		tamanio_valor = strlen(instruccion.argumentos.SET.valor) + 1;
+		tamanio_clave = strlen(instruccion.argumentos.SET.clave) + 1;
+
+		log_info(logger, "Se guardaron los tamaños");
+
+		clave_buscada = malloc(tamanio_clave);
+		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
+
+		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+		log_info(logger, "Paso el find %d",
+		entrada_encontrada->cantidad_operaciones);
+
+		cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+		log_info(logger, "tiene %d entradas ", cantidad_entradas);
+		entrada_encontrada->cantidad_entradas = cantidad_entradas;
+		entrada_encontrada->tamanio_valor = tamanio_valor;
+		entrada_encontrada->cantidad_operaciones = 0;
+		log_info(logger, "Antes de asignar memoria");
+		if(strcmp(entrada_encontrada->valor, "")==0){
+
+			int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+			log_info(logger, "se asigno memoria %d: ", resultado);
+
+			if (resultado < 0) {
+				asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+			}
+
+			free(entrada_encontrada->valor); //No lo cambien de lugar
+
+			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion.tamano_entrada + inicio_memoria;
+
+			enviar_exito(socket_coordinador);
+
+		}
+		if(strlen(instruccion.argumentos.SET.valor) < entrada_encontrada->cantidad_entradas * configuracion.tamano_entrada){
+			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
+			enviar_exito(socket_coordinador);
+			list_iterate(tabla_entradas, sumar_operacion);
+			//free(valor);
+			free(clave_buscada);
+		} else {
+			enviar_fallo(socket_coordinador);
+		}
+		log_info(logger, "Termine el set");
+		break;
+		/*log_info(logger, "Se pidio operacion con SET");
 		estructura_clave* entrada_encontrada;
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor) + 1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave) + 1;
@@ -215,7 +261,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 			enviar_exito(socket_coordinador);
 			list_iterate(tabla_entradas, sumar_operacion);
-			free(clave_buscada);
+			free(clave_buscada);*/
 			break;
 
 			case (STORE):
@@ -226,7 +272,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			enviar_exito(socket_coordinador);
 			list_iterate(tabla_entradas, sumar_operacion);
 			break;
-		}
 	}
 }
 
@@ -368,7 +413,6 @@ void borrar_entrada(void* entrada){
 }
 
 int lru_atomicos_contiguos(int necesarias) {
-	int contador = 0;
 	int maximo_LRU = 0;
 	estructura_clave* entrada_LRU;
 	estructura_clave* auxiliar;
@@ -393,7 +437,6 @@ int lru_atomicos_contiguos(int necesarias) {
 int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
 	log_info(logger, "Estoy en LRU");
 	int entradas_necesarias = entrada_nueva->cantidad_entradas;
-	int maximo_LRU = 0;
 	int puntero = lru_atomicos_contiguos(entradas_necesarias);
 
 	if(puntero == -1){
@@ -417,7 +460,6 @@ int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva){
 int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva) {
 	log_info(logger, "Entro al algoritmo del BSU");
 	int entradas_necesarias = entrada_nueva->cantidad_entradas;
-	int maximo_BSU = 0;
 	int puntero = bsu_atomicos_contiguos(entradas_necesarias);
 
 	if (puntero == -1) {
@@ -440,7 +482,6 @@ int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva) {
 
 
 int bsu_atomicos_contiguos(int necesarias) {
-	int contador = 0;
 	int maximo_BSU = 0;
 	estructura_clave* entrada_BSU;
 	estructura_clave* auxiliar;
@@ -550,8 +591,6 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 
 
 int handshake_instancia(int socket_coordinador, t_log* logger, int id) {
-		int conexion_hecha = 0;
-
 		t_handshake proceso_recibido;
 		t_handshake yo = { id, INSTANCIA };
 		int id_recibido;

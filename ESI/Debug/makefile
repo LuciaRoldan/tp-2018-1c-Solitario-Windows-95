@@ -26,8 +26,8 @@ endif
 all: ESI
 
 dependents:
-	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug && $(MAKE) all
-	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug && $(MAKE) all
+	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug && $(MAKE) clean all
+	-cd /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug && $(MAKE) clean all
 
 # Tool invocations
 ESI: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons/Debug/libcommons.so /home/utnso/workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug/libcommons_propias.so

@@ -27,7 +27,43 @@ int connect_to_server(char * ip, char * port, t_log *  logger){
 
 int inicializar_servidor(int puerto, t_log * logger){
 
-	int descrip_socket; //Declaramos el descriptor
+	int descrip_socket, optval = 1;
+		struct sockaddr_in servername;
+
+		/* Create the socket. */
+		descrip_socket = socket(AF_INET, SOCK_STREAM, 0);
+		if (descrip_socket < 0) {
+			perror("socket");
+			return -1;
+		}
+
+		/* Set socket options. */
+		if (setsockopt(descrip_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval)
+				== -1) {
+			perror("setsockopt");
+			return -2;
+		}
+
+		/* Fill ip / port info. */
+		servername.sin_family = AF_INET;
+		servername.sin_addr.s_addr = htonl(INADDR_ANY);
+		servername.sin_port = htons(puerto);
+
+		/* Give the socket a name. */
+		if (bind(descrip_socket, (struct sockaddr *) &servername, sizeof servername) < 0) {
+			perror("bind");
+			return -3;
+		}
+
+		/* Listen to incoming connections. */
+		if (listen(descrip_socket, 127) < 0) {
+			perror("listen");
+			return -4;
+		}
+
+
+
+	/*int descrip_socket; //Declaramos el descriptor
 
 		struct addrinfo infoSocket, *infoServidor; //Declaramos las estructuras
 
@@ -56,7 +92,7 @@ int inicializar_servidor(int puerto, t_log * logger){
 			return -1;
 		}
 
-		while (bind(descrip_socket, infoServidor->ai_addr, infoServidor->ai_addrlen)<0){}
+		while (bind(descrip_socket, infoServidor->ai_addr, infoServidor->ai_addrlen)<0){}*/
 
 
 
