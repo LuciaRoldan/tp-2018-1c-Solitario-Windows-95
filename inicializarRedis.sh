@@ -16,12 +16,14 @@ sudo make install
 cd ../
 
 # - - - CREAR CARPETAS DE INSTANCIA - - - 
-mkdir Inst1
-mkdir Inst2
-mkdir Inst3
+cd ../
+# en home/utnso
+mkdir inst1
+mkdir inst2
+mkdir inst3
 
 # - - - BUILDEAR COMMONS_PROPIAS - - - 
-cd tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug/
+cd workspace/tp-2018-1c-Solitario-Windows-95/Shared_Libraries/commons_propias/Debug/
 sudo make clean
 sudo make all
 cd ../..
