@@ -32,7 +32,6 @@ void leer_archivo_configuracion(){
 		char** las_claves_bloqueadas = config_get_array_value(configuracion, "CLAVES_BLOQUEADAS");
 		log_info(logger, "Obtuve las claves bloqueadas");
 		int indice_bloq = 0;
-		//int tam_lista;
 		while(las_claves_bloqueadas[indice_bloq]){
 			clave_bloqueada* clave = malloc(sizeof(clave_bloqueada));
 			clave->esi_que_la_usa = -1;
@@ -150,10 +149,10 @@ void manejar_esis(){
 	while(pausar_planificador>=0){
 		if(list_size(esis_ready) > 0){
 			sem_wait(&s_planificar);
+			sleep(1);
 			log_info(logger, "Dentro manejar_esis (planificando)");
 
 			planificar();
-			//sleep(1);
 		}
 	}
 	}
@@ -165,10 +164,9 @@ void recibir_esis(void* socket_esis){
 	//log_info(logger, "Dentro de recibir_esis y el socket es %d\n", int_socket_esis);
 
 	int socket_esi_nuevo;
-	while(1){
+	while(terminar_todo == 1){
 		log_info(logger, "Esperando un ESI adentro de recibir_esis");
 
-		//sleep(1);
 		socket_esi_nuevo = aceptar_conexion(int_socket_esis);
 
 		if (socket_esi_nuevo > 0){
@@ -216,7 +214,7 @@ void manejar_esi(void* la_pcb){
 		void* buffer_resultado = malloc(sizeof(int));
 		recibir(pcb_esi.socket, buffer_resultado, sizeof(int), logger);
 		int resultado = deserializar_id(buffer_resultado);
-		free(buffer_resultado);//PELIGRO
+		free(buffer_resultado);
 
 		log_info(logger, "El ESI %d me envio el resultado_esi %d:", pcb_esi.id, resultado);
 
@@ -257,7 +255,7 @@ void manejar_coordinador(void* socket){
 		void* buffer_int = malloc(sizeof(int));
 		recibir(socket_coordinador, buffer_int, sizeof(int), logger);
 		id = deserializar_id(buffer_int);
-		free(buffer_int); //PELIGRO
+		free(buffer_int);
 		log_info(logger, "Id recibido del Coordinador: %d", id);
 
 		int tamanio;
@@ -270,7 +268,7 @@ void manejar_coordinador(void* socket){
 				un_buffer_int = malloc(sizeof(int));
 				recibir(socket_coordinador, un_buffer_int, sizeof(int), logger);
 				tamanio = deserializar_id(un_buffer_int);
-				free(un_buffer_int); //PELIGRO
+				free(un_buffer_int);
 
 				buffer = malloc(tamanio);
 				recibir(socket_coordinador, buffer, tamanio, logger);
@@ -279,6 +277,8 @@ void manejar_coordinador(void* socket){
 				log_info(logger, "Recibi del Coordinador: %s, %d", instruccion.argumentos.GET.clave, instruccion.keyword);
 
 				procesar_pedido(instruccion);
+
+				//liberar_instruccion(instruccion);
 
 				conexion_valida = 82;
 		break;
@@ -320,16 +320,25 @@ void procesar_pedido(t_esi_operacion instruccion){
 
 		pthread_mutex_lock(&m_clave_buscada);
 		clave_buscada = instruccion.argumentos.GET.clave;
+		//memcpy(clave_buscada, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 		pthread_mutex_unlock(&m_clave_buscada);
 
 		if(nodo_clave_buscada == NULL){
 			//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas, la creo
 			clave_bloqueada* clave_nueva = malloc(sizeof(clave_bloqueada));
+
 			clave_buscada = instruccion.argumentos.GET.clave; //deberia memcpy
-			clave_nueva->esi_que_la_usa = id_esi_ejecutando;
-			clave_nueva->clave = clave_buscada; //deberia memcpy
+			//memcpy(clave_buscada, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
+
+			clave_nueva->esi_que_la_usa = pcb_pedido_esi->id;
+
+			char* clave_esi_nueva = malloc(strlen(instruccion.argumentos.GET.clave));
+			memcpy(clave_esi_nueva, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave));
+			clave_nueva->clave = clave_esi_nueva; //deberia memcpy
+
 			clave_nueva->esis_en_espera = list_create();
+
 			pthread_mutex_lock(&m_lista_claves_bloqueadas);
 			list_add(claves_bloqueadas, clave_nueva);
 			pthread_mutex_unlock(&m_lista_claves_bloqueadas);
@@ -341,7 +350,9 @@ void procesar_pedido(t_esi_operacion instruccion){
 				if (nodo_clave_buscada->esi_que_la_usa == 0){
 					//Existe esa clave_bloqueada en mi lista de claves pero no esta asignada a ningun ESI
 					pthread_mutex_lock(&m_lista_claves_bloqueadas);
+
 					nodo_clave_buscada->esi_que_la_usa = id_esi_ejecutando;
+
 					pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 					log_info(logger, "Clave %s asignada al ESI %d", clave_buscada, id_esi_ejecutando);
 					informar_exito_coordinador();
@@ -363,12 +374,14 @@ void procesar_pedido(t_esi_operacion instruccion){
 					}
 				}
 			}
+		//free(instruccion.argumentos.GET.clave);
 			break;
 
 	case(SET):
 
 		pthread_mutex_lock(&m_clave_buscada);
 		clave_buscada = instruccion.argumentos.SET.clave;
+		//memcpy(clave_buscada, instruccion.argumentos.SET.clave, strlen(instruccion.argumentos.SET.clave)+1);
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 		pthread_mutex_unlock(&m_clave_buscada);
 		log_info(logger, "Nodo_clave_buscada en SET el id del esi que la usa es: %d", nodo_clave_buscada->esi_que_la_usa);
@@ -396,11 +409,14 @@ void procesar_pedido(t_esi_operacion instruccion){
 					}
 				}
 			}
+		//free(instruccion.argumentos.SET.clave);
+		//free(instruccion.argumentos.SET.valor);
 			break;
 
 	case(STORE):
 		pthread_mutex_lock(&m_clave_buscada);
 		clave_buscada = instruccion.argumentos.STORE.clave;
+		//memcpy(clave_buscada, instruccion.argumentos.SET.clave, strlen(instruccion.argumentos.SET.clave)+1);
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 		pthread_mutex_unlock(&m_clave_buscada);
 
@@ -432,11 +448,26 @@ void procesar_pedido(t_esi_operacion instruccion){
 			}
 	break;
 	}
+	//free(instruccion.argumentos.STORE.clave);
 	} else {
 		log_info(logger, "Pedido invalido. No conozco al ESI %d", id_esi_ejecutando);
 	}
 }
 
+void liberar_instruccion(t_esi_operacion instruccion){
+	switch(instruccion.keyword){
+	case GET:
+		free(instruccion.argumentos.GET.clave);
+		break;
+	case SET:
+		free(instruccion.argumentos.SET.clave);
+		free(instruccion.argumentos.SET.valor);
+		break;
+	case STORE:
+		free(instruccion.argumentos.STORE.clave);
+		break;
+	}
+}
 
 //--RESULTADOS PEDIDOS PARA EL COORDINADOR--//
 void informar_aborto_coordinador_clave_no_id(){
@@ -496,9 +527,10 @@ void planificar(){
 	sumar_retardo_otros_ready();
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 61);
+	log_info(logger, "Voy a enviar al ESI de id %d y socket %d", pcb_esi->id, pcb_esi->socket); //BORRAR
 	enviar(pcb_esi->socket, buffer, sizeof(int), logger);
 	log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
-	free(buffer); //PELIGRO
+	free(buffer);
 	}
 }
 
@@ -525,10 +557,17 @@ void sumar_ultima_rafaga(int id_esi){
 //--Sumar 1 al retardo de los demas ESIs ready--//
 void sumar_retardo_otros_ready(){
 	pthread_mutex_lock(&m_lista_esis_ready);
-	t_list* esis_ready_menos_primero = list_filter(esis_ready, no_es_el_primer_esi_ready);
+	list_iterate(esis_ready, sumar_retardo_menos_primero);
 	pthread_mutex_unlock(&m_lista_esis_ready);
-	list_iterate(esis_ready_menos_primero, sumar_retardo);
-	free(esis_ready_menos_primero); //PELIGRO
+
+}
+
+void sumar_retardo_menos_primero(void* pcbb){
+	pcb* pcb_esi = pcbb;
+	pcb* el_primer_esi = list_get(esis_ready, 0);
+	if (el_primer_esi->id != pcb_esi->id){
+		pcb_esi->retardo+=1;
+	}
 }
 
 void sumar_retardo(void* pcbb){
@@ -583,10 +622,10 @@ void planificacionSJF_SD(){
 
 void planificacionHRRN(){
 	log_info(logger, "Estoy en HRRN. La cantidad de esis ready es %d", list_size(esis_ready));
+	actualizar_ultima_estimacion_HRRN();
 	if(list_size(esis_ready) > 1){
 		//log_info(logger, "Hay mas de un ESI ready");
 		list_sort(esis_ready, algoritmo_HRRN);
-		actualizar_ultima_estimacion_HRRN();
 	}
 }
 
@@ -708,6 +747,7 @@ bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 void mover_esi_a_bloqueados(char* clave, int esi_id){
 	pthread_mutex_lock(&m_clave_buscada);
 	clave_buscada = clave;
+	//memcpy(clave_buscada, clave, sizeof(strlen(clave)+1));
 	clave_bloqueada* nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 	pthread_mutex_unlock(&m_clave_buscada);
 	int* id = malloc(sizeof(int));
@@ -740,20 +780,19 @@ void abortar_esi(int id_esi){
 
 	log_info(logger, "ESI abortado: %d", esi_abortado->id);
 
-	list_remove_by_condition(pcbs, ids_iguales_pcb);
+	//list_remove_by_condition(pcbs, ids_iguales_pcb);
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 
 	pthread_mutex_unlock(&m_id_buscado);
-	//free(esi_abortado); NO ME DEJA HACER FREE
 
 	int* id = malloc(sizeof(int));
 	memcpy(id, &id_esi_abortado, sizeof(int));
-	list_add(esis_finalizados, &id_esi_abortado); //va o no?
+	list_add(esis_finalizados, id); //va o no?
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_abortado);
 
 	cerrar_cosas_de_un_esi(esi_abortado);
 	sem_wait(&s_eliminar_pcb);
-	list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
 }
 
 //--Mover ESI a finalizados--//
@@ -772,14 +811,13 @@ void mover_esi_a_finalizados(int id_esi){
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 
-	
 	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);
 
 	pthread_mutex_lock(&m_lista_esis_ready);
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 	pthread_mutex_unlock(&m_lista_esis_ready);
 
-	list_remove_by_condition(pcbs, ids_iguales_pcb);
+	//list_remove_by_condition(pcbs, ids_iguales_pcb);
 
 	pthread_mutex_unlock(&m_id_buscado);
 	//free(esi_finalizado); //NO ME DEJA HACER FREE
@@ -787,7 +825,7 @@ void mover_esi_a_finalizados(int id_esi){
 	id_buscado = id_esi_finalizado;
 	int* id = malloc(sizeof(int));
 	memcpy(id, &id_esi_finalizado, sizeof(int));
-	list_add(esis_finalizados, &id_esi_finalizado);
+	list_add(esis_finalizados, id);
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_finalizado);
 
 	cerrar_cosas_de_un_esi(esi_finalizado);
@@ -822,6 +860,7 @@ void procesar_motivo_aborto(int protocolo){
 		break;
 	default:
 		log_info(logger, "ESI abortado por ESI desconocido");
+		break;
 	}
 }
 
@@ -829,9 +868,9 @@ void procesar_motivo_aborto(int protocolo){
 /////-----OPERACIONES SOBRE CLAVE_BLOQUEADA-----/////
 void liberar_clave(char* clave){
 	//hacer el lock ANTES de llamar a esta funcion
+	//memcpy(clave_buscada, clave, strlen(clave)+1);
 	clave_buscada = clave;
 	clave_bloqueada* nodo_clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-
 	log_info(logger, "El ESI que ocupaba la clave era: %d", nodo_clave->esi_que_la_usa);
 
 	nodo_clave->esi_que_la_usa = 0;
@@ -917,32 +956,45 @@ void imprimir_id_esi(void* esi){
 
 
 //--Cerrar cosas--//
-void cerrar_planificador(){
 
-	terminar_todo = -1;
+void desencadenar_cerrar_planificador(){
 	void* envio = malloc(sizeof(int));
 	serializar_id(envio, 20);
 	enviar(sockets_planificador.socket_coordinador, envio, sizeof(int), logger);
 	free(envio);
-	fin_de_programa=1;
+}
 
+void cerrar_planificador(){
+
+	terminar_todo = -1;
+	fin_de_programa = 1;
+	log_info(logger, "Pase la parte del exit que no puede fallar");
+
+	log_info(logger, "LA CANTIDAD DE PCBS ES %d", list_size(pcbs));
+	pcb* lolol = list_get(pcbs, 0);
+	log_info(logger, "EL SOCKET DEL PRIMERO ES %d", lolol->socket);
 	list_iterate(pcbs, despedir_esi);
-	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
-	//log_info(logger, "el tam de claves_bloqueadas es %d", list_size(claves_bloqueadas));
+	log_info(logger, "Despedi esis");
 
+	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
+	log_info(logger, "el tam de claves_bloqueadas es %d", list_size(claves_bloqueadas));
+
+	//free(claves_bloqueadas);
 	free(conexion_planificador.ip);
 	free(conexion_planificador.puerto);
 	free(conexion_coordinador.ip);
 	free(conexion_coordinador.puerto);
 	free(algoritmo);
 	free(clave_buscada);
-	free(esi_abortado);
+	//free(esi_abortado);
 
+	free(esis_ready);
 	list_iterate(pcbs, cerrar_cosas_de_un_esi);
 	list_clean_and_destroy_elements(esis_finalizados, free_esi_finalizado);
 	log_info(logger, "el tam de esis_finalizados es %d", list_size(esis_finalizados));
+
 	list_clean_and_destroy_elements(pcbs, destruir_pcb);
-	log_info(logger, "el tam de pcbs es %d", list_size(pcbs));
+	//log_info(logger, "el tam de pcbs es %d", list_size(pcbs));
 	free(hilo_a_cerrar);
 
 }

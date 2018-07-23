@@ -203,6 +203,9 @@ bool ids_iguales_ints(void* id1);
 bool el_esi_la_esta_esperando(void* clave);
 bool el_esi_la_espera(void* clave);
 bool el_duenio_esta_en_deadlock(clave_bloqueada* nodo_clave);
+void liberar_instruccion(t_esi_operacion instruccion);
+void sumar_retardo_menos_primero(void* pcbb);
+void desencadenar_cerrar_planificador();
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 

@@ -62,6 +62,6 @@ int main() {
 
 	//pthread_join(hilo_escucha_esis, NULL);
 	pthread_join(&hilo_coordinador, NULL);
-	pthread_join(&hilo_consola, NULL);
+	//pthread_join(&hilo_consola, NULL);
 	return 0;
 }
