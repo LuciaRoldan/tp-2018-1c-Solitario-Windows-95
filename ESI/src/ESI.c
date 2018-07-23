@@ -56,19 +56,27 @@ int main(int argc, char* argv[]){
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
 				if((confirmacion > 84) && (confirmacion < 90)){
 					abortoESI = 1;
+					informar_fin_de_programa(conexiones, abortoESI);
 				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
 				break;
 			case 61: //solicitud de ejecucion
-				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
-				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
-				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				if((confirmacion > 84) && (confirmacion < 90)){
-					abortoESI = 1;
-				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				if(ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi) > 0){
+					confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
+					log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
+					if((confirmacion > 84) && (confirmacion < 90)){
+						abortoESI = 1;
+						informar_fin_de_programa(conexiones, abortoESI);
+					} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				} else {
+					log_info(logger_esi, "La clave no paso la prueba");
+					error_clave_larga(conexiones);
+					flag_exit = 1;
+				}
 				break;
 			case 62: //abortar ESI
 				abortoESI = 1;
 				log_info(logger_esi, "Abortando ESI %d", idEsi);
+				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 			case 85: //exit por consola
 				log_info(logger_esi, "Cerrando ESI %d por 'exit' de consola", idEsi);
@@ -78,14 +86,13 @@ int main(int argc, char* argv[]){
 				flag_exit = 1;
 				break;
 			default:
-				_exit_with_error(conexiones.socket_plani, "Mensaje fuera de protocolo", NULL, logger_esi);
+				log_info(logger_esi, "Mensaje fuera de protocolo: %d", codigo_plani);
+				abortoESI = 1;
+				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 		}
 	}
 	fclose(script_prueba);
-	if(flag_exit == 0){
-		informar_fin_de_programa(conexiones, abortoESI);
-	}
 	free(mensaje_coordi);
 	free(configuracion_esi);
 	liberar_instruccion(ultima_instruccion);
