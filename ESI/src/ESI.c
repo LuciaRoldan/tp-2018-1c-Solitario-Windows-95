@@ -55,10 +55,6 @@ int main(int argc, char* argv[]){
 				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
 				abortoESI = informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
-				/*if((confirmacion > 84) && (confirmacion < 90)){
-					abortoESI = 1;
-					informar_fin_de_programa(conexiones, abortoESI);
-				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);*/
 				if(abortoESI) informar_fin_de_programa(conexiones, abortoESI);
 				break;
 			case 61: //solicitud de ejecucion
@@ -87,8 +83,7 @@ int main(int argc, char* argv[]){
 				void* buffer_exit = malloc(sizeof(int));
 				serializar_id(buffer_exit, 20);
 				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
-				flag_exit = 1;
-				informar_fin_de_programa(conexiones, abortoESI);
+				flag_exit = enviar_exit_coordi(conexiones.socket_coordi);
 				break;
 			default:
 				log_info(logger_esi, "Mensaje fuera de protocolo: %d", codigo_plani);
@@ -96,8 +91,10 @@ int main(int argc, char* argv[]){
 				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 		}
+		sleep(2);
 	}
 	if(feof(script_prueba)) informar_fin_de_programa(conexiones, abortoESI);
+	sleep(1);
 	fclose(script_prueba);
 	free(mensaje_coordi);
 	free(configuracion_esi);
