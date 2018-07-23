@@ -110,6 +110,7 @@ nodo* seleccionar_instancia(char* clave){
 
 	pthread_mutex_lock(&m_lista_instancias);
 	switch(info_coordinador.algoritmo_distribucion){
+
 	case EL:
 		log_info(logger, "Tamanio: %d", list_size(lista_instancias));
 		pthread_mutex_lock(&m_ultima_instancia_EL);
@@ -117,16 +118,19 @@ nodo* seleccionar_instancia(char* clave){
 		if(ultima_instancia_EL++ == list_size(lista_instancias)-1){ultima_instancia_EL = 0;}
 		pthread_mutex_unlock(&m_ultima_instancia_EL);
 		break;
+
 	case LSU:
 		for(int contador = 0; contador < list_size(lista_instancias); contador++){
 			nodo_auxiliar = list_get(lista_instancias, contador);
 			socket_instancia_buscado = nodo_auxiliar->socket;
 			if(list_count_satisfying(lista_claves, condicion_socket_clave) < minimo_LSU){
 				minimo_LSU = list_count_satisfying(lista_claves, condicion_socket_clave);
+				log_info(logger, "Los que cumplen son: %d el minimo es: %d",list_count_satisfying(lista_claves, condicion_socket_clave), minimo_LSU);
 				instancia_seleccionada = nodo_auxiliar;
 			}
 		}
 		break;
+
 	case KE:
 		memcpy(char_KE, clave, sizeof(char));
 		if( 25 % list_size(lista_instancias) == 0){

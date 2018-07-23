@@ -254,14 +254,14 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 			pthread_mutex_unlock(&m_log_operaciones);
 			pthread_mutex_lock(&m_instancia_seleccionada);
 			instancia_seleccionada = buscar_instancia(clave);
-					/*if(instruccion.keyword == GET){
-						nodo_clave* nodito = malloc(sizeof(nodo_clave));
-						nodito->clave = malloc(strlen(clave));
-						memcpy(nodito->clave, clave, strlen(clave));
-						nodito->nodo_instancia = *instancia_seleccionada;
-						list_add(lista_claves, nodito);
-						log_info(logger, "lo agregue %d", list_size(lista_claves));
-					}*/
+			if(instruccion.keyword == GET){
+				nodo_clave* nodito = malloc(sizeof(nodo_clave));
+				nodito->clave = malloc(strlen(clave));
+				memcpy(nodito->clave, clave, strlen(clave));
+				nodito->nodo_instancia = *instancia_seleccionada;
+				list_add(lista_claves, nodito);
+				log_info(logger, "lo agregue %d", list_size(lista_claves));
+			}
 			pthread_mutex_unlock(&m_operacion_ejecutando); //verificar
 			pthread_mutex_lock(&m_operacion_ejecutando);
 			operacion_ejecutando = instruccion;
