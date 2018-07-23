@@ -53,7 +53,9 @@ int main(int argc, char* argv[]){
 				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
 				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
+				if((confirmacion > 84) && (confirmacion < 90)){
+					abortoESI = 1;
+				} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
 				break;
 			case 61: //solicitud de ejecucion
 				ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
@@ -72,6 +74,7 @@ int main(int argc, char* argv[]){
 				void* buffer_exit = malloc(sizeof(int));
 				serializar_id(buffer_exit, 20);
 				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
+				flag_exit = 1;
 				break;
 			default:
 				_exit_with_error(conexiones.socket_plani, "Mensaje fuera de protocolo", NULL, logger_esi);
@@ -84,6 +87,7 @@ int main(int argc, char* argv[]){
 	}
 	free(mensaje_coordi);
 	free(configuracion_esi);
+	liberar_instruccion(ultima_instruccion);
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);

@@ -568,10 +568,11 @@ void guardar_archivo(char* clave, int tamanio_clave, t_log* logger){
 			memcpy(valor," ",sizeof(char));
 			memcpy(valor,entrada_encontrada->valor,tamanio_valor);
 
-			fd =  open(path, O_RDWR | O_CREAT, S_IRWXU);
+			fd =  open(path, O_RDWR | O_CREAT | O_CLOEXEC, S_IRWXU | S_IRWXG | S_IRWXO);
 
 			if (fd < 0) {
 				log_info(logger, "No se pudo abrir el archivo");
+				_exit_with_error(socket_coordinador, "Error al abrir el archivo", NULL, logger);
 			}
 
 			lseek(fd,lugar_de_memoria - 1,SEEK_CUR);
