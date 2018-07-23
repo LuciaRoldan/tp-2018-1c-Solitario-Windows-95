@@ -16,8 +16,6 @@ void leer_configuracion_propia(char* path, configuracion_propia* configuracion) 
 			mi_configuracion.nombreInstancia ,
 			&(mi_configuracion.intervaloDump));
 	fclose(archivo);
-
-	printf("+++ %s +++", configuracion->puntoDeMontaje);
 }
 
 void enviar_exito(int socket_coordinador) {
@@ -212,6 +210,10 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion.tamano_entrada + inicio_memoria;
 
+			log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
+
+			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
+
 			enviar_exito(socket_coordinador);
 
 		} else {
@@ -308,6 +310,7 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 	log_info(logger,"entradas_contiguas %d:", entradas_contiguas_necesarias);
 
 	while(contador != entradas_contiguas_necesarias && puntero_pagina <= configuracion.cantidad_entradas){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
+		log_info(logger, "El bit map de en %d es %d", puntero_pagina, acceso_tabla[puntero_pagina]);
 		if(acceso_tabla[puntero_pagina] == 0){
 			espacios_libres += 1;
 			puntero_pagina += 1;
@@ -317,11 +320,13 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 			contador = 0;
 		}
 	}
+	log_info(logger, "El contador de pargina quedo en: %d", puntero_pagina);
 
 	if(contador == entradas_contiguas_necesarias){ //Si tengo las necesarias
 		//salio todo bien, hay que poner los bitmap en 1
+		log_info(logger, "Voy a actualizar el bitmap");
 		for(int i = 0; i < entradas_contiguas_necesarias; i++){
-			acceso_tabla[puntero_pagina - i] = 1;
+			acceso_tabla[puntero_pagina - 1 - i] = 1;
 
 		}
 		return 1;
