@@ -153,7 +153,7 @@ void manejar_esis(){
 			log_info(logger, "Dentro manejar_esis (planificando)");
 
 			planificar();
-			sleep(0.5);
+			sleep(1);
 		}
 	}
 	}

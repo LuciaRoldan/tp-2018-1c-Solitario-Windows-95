@@ -8,10 +8,18 @@
 
 int main(int argc, char* argv[]){
 
+	char **array_values = string_split(argv[1], "/");
+	int i = 0;
+	while (array_values[i] != NULL) {
+		string_trim(&(array_values[i]));
+		i++;
+	}
+	char* log = array_values[2];
+
 	idEsi = atoi(argv[2]);
 	sockets_conexiones conexiones;
 
-	logger_esi = log_create("ESI/esi.log", "ESI", true, LOG_LEVEL_INFO);
+	logger_esi = log_create("ESI/esi.log", log, true, LOG_LEVEL_INFO);
 	log_info(logger_esi,"Inicio de ESI %d ---> Logger creado.", idEsi);
 
 	FILE* script_prueba = fopen(argv[1], "r");
