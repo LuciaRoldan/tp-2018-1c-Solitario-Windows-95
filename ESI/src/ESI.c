@@ -47,6 +47,7 @@ int main(int argc, char* argv[]){
 	while((!feof(script_prueba)) && abortoESI == 0 && flag_exit == 0) {
 		codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 		log_info(logger_esi, "Plani me dijo: %d", codigo_plani);
+		//sleep(1);
 		switch(codigo_plani){
 			case 60: //desbloqueo ESI
 				ejecutar_ultima_instruccion(conexiones.socket_coordi);

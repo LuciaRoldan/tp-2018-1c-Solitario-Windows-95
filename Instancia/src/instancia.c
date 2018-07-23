@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
 	log_info(logger,"Guardo la memoria para los valores");
 //
 	pthread_t hilo_dump;
-	pthread_create(&hilo_dump, 0, dump, NULL);
+	//pthread_create(&hilo_dump, 0, dump, NULL);
 
 	while(activa){
 		pthread_mutex_lock(&m_tabla);

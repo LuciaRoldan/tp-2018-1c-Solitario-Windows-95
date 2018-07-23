@@ -81,7 +81,7 @@ nodo* buscar_instancia(char* clave){
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
-		log_info(logger, "Hay una instancia que cumole la condicion");
+		log_info(logger, "Hay una instancia que cumple la condicion");
 		nodito = list_find(lista_claves, condicion_clave); //Esto no deberia funcionar?????
 		id_instancia_buscado = nodito->nodo_instancia.id; //Agregar semaforos
 		nodo_instancia = list_find(lista_instancias, condicion_id_instancia);

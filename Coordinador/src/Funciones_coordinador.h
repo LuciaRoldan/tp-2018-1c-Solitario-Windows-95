@@ -76,6 +76,7 @@ pthread_mutex_t m_log_operaciones;
 pthread_mutex_t m_clave_buscada;
 pthread_mutex_t m_id_instancia_buscado;
 sem_t s_cerrar_hilo;
+pthread_mutex_t escucha_esi;
 
 ///////////////////////// FUNCIONES /////////////////////////
 
