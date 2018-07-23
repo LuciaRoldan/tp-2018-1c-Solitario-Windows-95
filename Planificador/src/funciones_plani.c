@@ -729,18 +729,16 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 //--Abortar ESI--//
 void abortar_esi(int id_esi){
 	log_info(logger, "Entre a la funcion de abortar_esi");
-	void *el_esi_a_abortar = malloc(sizeof(pcb));
+	//void *el_esi_a_abortar = malloc(sizeof(pcb));
 
-	//pcb* esi_abortado;
+	esi_abortado = malloc(sizeof(pcb));
 
 	//pcb* primer_elem = list_get(pcbs, 0);
 	//log_info(logger, "El ID del primer ESI en la lista de PCBs es: %d", primer_elem->id);
 
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
-	el_esi_a_abortar = list_find(pcbs, ids_iguales_pcb);
-	memcpy(esi_abortado, el_esi_a_abortar, sizeof(pcb));
-	free(el_esi_a_abortar);
+	esi_abortado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_abortado = esi_abortado->id;
 
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
@@ -753,7 +751,6 @@ void abortar_esi(int id_esi){
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 
 	pthread_mutex_unlock(&m_id_buscado);
-	//free(esi_abortado); NO ME DEJA HACER FREE
 
 	int* id = malloc(sizeof(int));
 	memcpy(id, &id_esi_abortado, sizeof(int));
@@ -763,6 +760,7 @@ void abortar_esi(int id_esi){
 	cerrar_cosas_de_un_esi(esi_abortado);
 	sem_wait(&s_eliminar_pcb);
 	list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+	free(esi_abortado);
 }
 
 //--Mover ESI a finalizados--//

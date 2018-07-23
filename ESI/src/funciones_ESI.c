@@ -210,6 +210,12 @@ int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_es
 	return aborto;
 }
 
+int enviar_exit_coordi(int socket){
+	int envio;
+	serializar_id(&envio, 81);
+	return enviar(socket, envio, sizeof(int), logger_esi);
+}
+
 
 // Serializacion/Deserializacion
 

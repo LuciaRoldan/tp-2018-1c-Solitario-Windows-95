@@ -40,6 +40,7 @@ int ejecutar_ultima_instruccion(int socket_destino);
 void liberar_instruccion(t_esi_operacion instruccion);
 void procesar_confirmacion(int confirmacion, int socket_destino);
 int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi);
+int enviar_exit_coordi(int socket);
 
 
 // Serializacion-Deserializacion
