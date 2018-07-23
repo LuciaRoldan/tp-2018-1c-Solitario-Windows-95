@@ -156,6 +156,7 @@ int procesar_mensaje(int socket){
 			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
+
 		case 90://Hay que bloquear al ESI
 			log_info(logger, "Le digo al ESI %d que esta bloqueado", esi_ejecutando->id);
 			rta_esi = 90;
@@ -168,6 +169,7 @@ int procesar_mensaje(int socket){
 			pthread_mutex_unlock(&escucha_esi);
 			return resultado;
 			break;
+
 		case 91:
 			id_esi = recibir_int(socket_planificador, logger);
 			id_esi_buscado = id_esi;
