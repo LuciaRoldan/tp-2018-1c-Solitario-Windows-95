@@ -18,7 +18,7 @@ void ejecutar_consola(){
 		if(!strncmp(linea, "exit", 4)) {
 			printf("Cerrando Consola. Hasta luego. \n");
 			free(linea);
-			cerrar_planificador();
+			desencadenar_cerrar_planificador();
 			exit(1);
 			break;
 		}

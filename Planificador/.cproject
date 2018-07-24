@@ -29,19 +29,23 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1771182400" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.977202927" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons_propias}&quot;"/>
+									<listOptionValue builtIn="false" value="/home/utnso/workspace/parsi"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.pthread.1435245116" name="Support for pthread (-pthread)" superClass="gnu.c.compiler.option.pthread" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="gnu.c.compiler.option.misc.pic.1623837939" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.dialect.std.2012268494" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.606060043" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.607805878" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.1069136624" name="Library search path (-L)" superClass="gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons_propias/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="/home/utnso/workspace/parsi"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.741487828" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="commons_propias"/>
+									<listOptionValue builtIn="false" value="parsi"/>
 									<listOptionValue builtIn="false" value="readline"/>
 									<listOptionValue builtIn="false" value="commons"/>
 								</option>
@@ -55,6 +59,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1319829929" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.621045573" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons_propias}&quot;"/>
+									<listOptionValue builtIn="false" value="/home/utnso/workspace/parsi"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.328157467" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
