@@ -91,10 +91,8 @@ int main(int argc, char* argv[]){
 				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 		}
-		sleep(2);
 	}
 	if(feof(script_prueba)) informar_fin_de_programa(conexiones, abortoESI);
-	sleep(1);
 	fclose(script_prueba);
 	free(mensaje_coordi);
 	free(configuracion_esi);

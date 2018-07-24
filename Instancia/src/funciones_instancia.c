@@ -36,7 +36,8 @@ void enviar_confirmacion_cierre(int socket_coordinador, t_log* logger) {
 
 bool condicion_clave_entrada(void* datos){
 	estructura_clave* entrada = (estructura_clave*) datos;
-	return !strcmp(entrada->clave, clave_buscada);
+	log_info(logger, "buscaba %s y encontre %s", clave_buscada, entrada->clave);
+	return strcmp(entrada->clave, clave_buscada) == 0;
 }
 
 void recibir_configuracion(int socket_coordinador, t_log* logger) {
@@ -61,6 +62,7 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	case (82):
 		log_info(logger, "Recibi una instruccion");
 		instruccion = recibir_instruccion(socket_coordinador, logger);
+		log_info(logger,"A VER CA QUE HAYYYYYYYYYY %s", instruccion.argumentos.GET.clave);
 		log_info(logger, "La deserialicé");
 		procesar_instruccion(socket_coordinador, instruccion, logger);
 		break;
@@ -123,6 +125,7 @@ t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	void* buffer = malloc(tamanio_operacion);
 	recibir(socket_coordinador, buffer, tamanio_operacion, logger);
 	t_esi_operacion instruccion = deserializar_instruccion(buffer);
+	log_info(logger,"A VER QUE HAY EN LA CLAVE %s", instruccion.argumentos.SET.clave);
 	free(buffer);
 	log_info(logger, "Recibi instrucccion del COORDINADOR");
 	return instruccion;
@@ -153,22 +156,25 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
-		tamanio_clave = strlen(instruccion.argumentos.GET.clave) + 1;
+		tamanio_clave = strlen(instruccion.argumentos.GET.clave) + 1 ;
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.GET.clave, tamanio_clave);
 		estructura_clave* entrada_nueva = malloc(sizeof(estructura_clave));
 		entrada_nueva->cantidad_operaciones = 0;
 		entrada_nueva->clave = malloc(tamanio_clave); //guardo el espacio porque es un variable
 		memcpy(entrada_nueva->clave, clave_buscada, tamanio_clave);
+		log_info(logger,"######################LA CLAVE ES: %s", entrada_nueva->clave);
 		entrada_nueva->valor = malloc(1); //hardcode por el plani
 		memcpy(entrada_nueva->valor, "", sizeof(char)); //esta guardando una entrada del gran malloc
 		bool validacion = list_any_satisfy(tabla_entradas,condicion_clave_entrada);
+		log_info(logger, "La validacion es %d", validacion);
 		if (!validacion) {
 			printf("No existe la clave %s. Creando nueva. \n", clave_buscada);
 			entrada_nueva->cantidad_operaciones = 0;
 			entrada_nueva->tamanio_valor = 0;
 			entrada_nueva->numero_entrada = list_size(tabla_entradas);
 			list_add(tabla_entradas, entrada_nueva);
+			log_info(logger, "El tamanio de la lista es: %d", list_size(tabla_entradas));
 			log_info(logger, "Lo que guarda es: %s", entrada_nueva->clave);
 		}
 		free(clave_buscada);
@@ -186,18 +192,24 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 
-		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-		log_info(logger, "Paso el find %d", entrada_encontrada->cantidad_operaciones);
+		entrada_encontrada = list_get(tabla_entradas,1);
+
+		log_info(logger, "##############################LA CLAVE PEDIDA ES %d: ", instruccion.argumentos.SET.clave);
+		log_info(logger, "##############################LA CLAVE BUSCADA ES %d: ", clave_buscada);
+
+
+//		entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+
+		log_info(logger, "##############################LA CLAVE ENCONTRADA ES %d: ", entrada_encontrada->clave);
 
 		cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 		log_info(logger, "tiene %d entradas ", cantidad_entradas);
 		entrada_encontrada->cantidad_entradas = cantidad_entradas;
 		entrada_encontrada->tamanio_valor = tamanio_valor;
 		entrada_encontrada->cantidad_operaciones = 0;
-		log_info(logger, "Antes de asignar memoria");
 		if(strcmp(entrada_encontrada->valor, "")==0){
 
-			int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
+			int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
 			log_info(logger, "se asigno memoria %d: ", resultado);
 
 			if (resultado < 0) {
@@ -394,12 +406,13 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		return -1;
 	} else{
 		while(entradas_necesarias > 0){
-			estructura_clave* victima = list_get(tabla_entradas,puntero_circular);
-			log_info(logger,"la valor que tiene es: %s", victima->valor);
-			entrada_nueva->numero_entrada = victima->numero_entrada;
-			log_info(logger,"el numero de entrada de la victima es: %d", victima->numero_entrada);
-			log_info(logger,"el numero de entrada de la entrada_nueva es: %d", entrada_nueva->numero_entrada);
-			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
+//			estructura_clave* victima = list_get(tabla_entradas,puntero_circular);
+			log_info(logger,"entra a hacer el reemplazo");
+//			numero_auxiliar = victima->numero_entrada;
+//			log_info(logger,"el numero de entrada de la victima es: %d", victima->numero_entrada);
+			reemplazar_y_destruir(puntero_circular, entrada_nueva);
+//			log_info(logger,"el numero de entrada de la entrada_nueva es: %d", entrada_nueva->numero_entrada);
+//			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
 			log_info(logger,"reemplaza el elemento");
 			puntero_circular ++;
 			if(puntero_circular == configuracion_coordi.cantidad_entradas){
@@ -411,12 +424,27 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 	}
 }
 
-void borrar_entrada(void* entrada){
-	estructura_clave* clave = entrada;
-	free(clave->clave);
-	free(clave->valor);
-	free(clave);
+void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva){
+	log_info(logger,"entra a reemplazar y destruir");
+	estructura_clave* pruebi = list_get(tabla_entradas, 1);
+	log_info(logger, "Mostrame la clave %s", pruebi->clave);
+	estructura_clave* estructura_vieja = list_remove(tabla_entradas, indice);
+	log_info(logger,"El tamanio de la lista: %d ", list_size(tabla_entradas));
+	log_info(logger, "el lugar donde estoy %d ", indice);
+	free(estructura_vieja->clave);
+	free(estructura_vieja);
+	estructura_nueva->numero_entrada = indice;
+	list_add_in_index(tabla_entradas,indice,estructura_nueva);
+}
 
+void borrar_entrada(void* entrada){
+	log_info(logger,"entra bien");
+	estructura_clave* clave = entrada;
+	log_info(logger,"aca anda todo bien");
+//	free(clave->clave);
+//	log_info(logger, "termino el borrar");
+	free(clave);
+	log_info(logger,"aca anda todo bien1");
 }
 
 int lru_atomicos_contiguos(int necesarias) {

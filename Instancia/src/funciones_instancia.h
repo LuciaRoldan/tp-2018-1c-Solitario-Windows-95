@@ -113,5 +113,6 @@ void dump();
 void dumpear(void* datos);
 int any_entrada_bitmap_libre();
 int buscar_siguiente_entrada_ocupada(int inicio_indice);
+void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
