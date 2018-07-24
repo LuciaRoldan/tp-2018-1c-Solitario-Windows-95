@@ -56,6 +56,8 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	char* clave;
 
 	switch (id) {
+	case (03):
+		compactar();
 	case (82):
 		log_info(logger, "Recibi una instruccion");
 		instruccion = recibir_instruccion(socket_coordinador, logger);
@@ -251,10 +253,8 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			}
 
 			free(entrada_encontrada->valor); //No lo cambien de lugar
-			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)
-					* configuracion.cantidad_entradas + inicio_memoria;
-			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor,
-					tamanio_valor);
+			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion.cantidad_entradas + inicio_memoria;
+			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor,tamanio_valor);
 			log_info(logger, "El valor que guarda es: %s ",
 					entrada_encontrada->valor);
 
@@ -328,7 +328,7 @@ int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, c
 		return 1;
 	} else {
 		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
-			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
+//			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
 			puntero_pagina = 0;
 			log_info(logger,"Entra a compactar");
 			return 1; //solo caso positivo
@@ -358,12 +358,12 @@ void almacenar_valor(char* valor, int tamanio_valor){
 		puntero_pagina += tamanio_valor;
 	} else{
 //	 si no compacta
-		compactar();
+//		compactar();
 	}
 }
 
 int entradas_atomicas_contiguas(int puntero, int necesarias) {
-
+	log_info(logger, "entra a buscar las entradas contiguas");
 	int puntero_buscador = puntero;
 	int contador = 0;
 	while (contador != necesarias && puntero_buscador <= configuracion_coordi.cantidad_entradas) {
@@ -386,6 +386,8 @@ int entradas_atomicas_contiguas(int puntero, int necesarias) {
 int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 	log_info(logger, "Entre al algoritmo circular");
 	int entradas_necesarias = entrada_nueva->cantidad_entradas;
+	entrada_nueva = (estructura_clave*) malloc(sizeof(estructura_clave));
+	log_info(logger, "Las entradas que necesito %d", entradas_necesarias);
 	puntero_circular = entradas_atomicas_contiguas(puntero_circular,entradas_necesarias);
 	if(puntero_circular == -1){
 		log_error(logger,"No hay lugares atomicos para almacenar");
@@ -395,7 +397,10 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 			estructura_clave* victima = list_get(tabla_entradas,puntero_circular);
 			log_info(logger,"la valor que tiene es: %s", victima->valor);
 			entrada_nueva->numero_entrada = victima->numero_entrada;
+			log_info(logger,"el numero de entrada de la victima es: %d", victima->numero_entrada);
+			log_info(logger,"el numero de entrada de la entrada_nueva es: %d", entrada_nueva->numero_entrada);
 			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
+			log_info(logger,"reemplaza el elemento");
 			puntero_circular ++;
 			if(puntero_circular == configuracion_coordi.cantidad_entradas){
 			puntero_circular = 0;
@@ -519,22 +524,100 @@ int implementar_algoritmo(estructura_clave* entrada_nueva){
 }
 
 void compactar(){
-	printf("Quiso compactar");
-	int cantidad_instancias;
-	int mensaje = 22;
-	void* buffercito = malloc(sizeof(int));
-	serializar_id(buffercito, mensaje);
-	enviar(socket_coordinador, buffercito, sizeof(int), logger);//Envia al coordinador el pedido de cantidad instancias
-	free(buffercito);
-	void* buffer = malloc(sizeof(int));
-	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe el protocolo que deberia ser 03
-	mensaje = deserializar_id(buffer);
-	recibir(socket_coordinador, buffer, sizeof(int), logger);//Recibe la cantidad
-	cantidad_instancias = deserializar_id(buffer);
-	log_info(logger, "Voy a hacer %d posts", cantidad_instancias);
+	log_info(logger, "Quiso compactar");
+	int* tabla_auxiliar;
+	int proxima_entrada_ocupada;
+	int puntero_auxiliar = 0;
+	int tamanio_tabla = cantidad_entradas;
+	char* valor_auxiliar;
+	int tamanio_valor_auxiliar = 0;
+	estructura_clave* elemento;
+	tabla_auxiliar = (int*) malloc(cantidad_entradas * sizeof(int));
+	char* memoria_nueva;
+	memoria_nueva = (char*) malloc(memoria_total);
+	while (tamanio_tabla != 0) {
+		if (acceso_tabla[puntero_auxiliar] == 0) {
+			proxima_entrada_ocupada = buscar_siguiente_entrada_ocupada(puntero_auxiliar);
+			elemento = list_get(tabla_entradas, proxima_entrada_ocupada);
+			tamanio_valor_auxiliar = elemento->tamanio_valor;
+			valor_auxiliar = malloc(tamanio_valor_auxiliar);
+			memcpy(valor_auxiliar, elemento->valor, tamanio_valor_auxiliar);
+
+			if (elemento->cantidad_entradas > 1) {
+				for (int i = 0; i < cantidad_entradas; i++) {
+					tabla_auxiliar[puntero_auxiliar + i] = 1;
+					acceso_tabla[puntero_auxiliar + i] = 0;
+					list_replace_and_destroy_element(tabla_entradas, puntero_auxiliar + i, elemento, borrar_entrada);
+					elemento->valor = (puntero_auxiliar - elemento->cantidad_entradas) * cantidad_entradas + memoria_nueva;
+					memcpy(elemento->valor, valor_auxiliar, tamanio_valor_auxiliar);
+				}
+			} else {
+				tabla_auxiliar[puntero_auxiliar] = 1;
+				acceso_tabla[puntero_auxiliar] = 0;
+				list_replace_and_destroy_element(tabla_entradas, puntero_auxiliar, elemento, borrar_entrada);
+				elemento->valor = (puntero_auxiliar - elemento->cantidad_entradas) * cantidad_entradas + memoria_nueva;
+				memcpy(elemento->valor, valor_auxiliar, tamanio_valor_auxiliar);
+			}
+		} else {
+			tabla_auxiliar[puntero_auxiliar] = 1;
+			acceso_tabla[puntero_auxiliar] = 0;
+			elemento = list_get(tabla_entradas, puntero_auxiliar);
+			tamanio_valor_auxiliar = elemento->tamanio_valor;
+			valor_auxiliar = malloc(tamanio_valor_auxiliar);
+			if (elemento->cantidad_entradas > 1) {
+				for (int i = 0; i < cantidad_entradas; i++) {
+					tabla_auxiliar[puntero_auxiliar + i] = 1;
+					acceso_tabla[puntero_auxiliar + i] = 0;
+					list_replace_and_destroy_element(tabla_entradas, puntero_auxiliar + i, elemento, borrar_entrada);
+					elemento->valor = (puntero_auxiliar - elemento->cantidad_entradas) * cantidad_entradas + memoria_nueva;
+					memcpy(elemento->valor, valor_auxiliar, tamanio_valor_auxiliar);
+				}
+			} else {
+				tabla_auxiliar[puntero_auxiliar] = 1;
+				acceso_tabla[puntero_auxiliar] = 0;
+				list_replace_and_destroy_element(tabla_entradas, puntero_auxiliar, elemento, borrar_entrada);
+				elemento->valor = (puntero_auxiliar	- elemento->cantidad_entradas) * cantidad_entradas + memoria_nueva;
+				memcpy(elemento->valor, valor_auxiliar, tamanio_valor_auxiliar);
+			}
+		}
+		free(valor_auxiliar);
+		puntero_auxiliar++;
+	}
+	free(inicio_memoria);
+	inicio_memoria = memoria_nueva;
+	for (int i = 0; i < cantidad_entradas; i++) {
+		acceso_tabla[i] = tabla_auxiliar[i];
+	}
+	free(tabla_auxiliar);
+	free(memoria_nueva);
+
+//	sem_init(&s_compactacion, 0, 0); No se si esta bien esto
 //	for(int i = 0; i < cantidad_instancias; i++){
 //		sem_post(&s_compactacion);//Habilita a todas las instancias a compactar
 //	}
+}
+
+int buscar_siguiente_entrada_ocupada(int inicio_indice) {
+	for (int i = 0; i < cantidad_entradas; i++) {
+		if (acceso_tabla[i] == 1) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void enviar_pedido_compactacion(){
+	void* buffer = malloc(sizeof(int));
+	serializar_id(buffer,22);
+	enviar(socket_coordinador,buffer,sizeof(int),logger);
+	free(buffer);
+}
+
+int recibir_orden_compactacion(){
+	int id;
+	void* buffer = malloc(sizeof(int));
+	id = deserializar_id(buffer);
+	return id;;
 }
 
 //void hilo_compactar(){

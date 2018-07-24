@@ -2,6 +2,7 @@
 #define FUNCIONES_INSTANCIA_H_
 
 #include "commons_propias/commons_propias.h"
+#include <semaphore.h>
 
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
@@ -60,6 +61,7 @@ FILE*archivo;
 t_log * logger;
 pthread_mutex_t m_tabla;
 int socket_coordinador;
+sem_t s_compactacion;
 
 ///////////////////////// FUNCIONES /////////////////////////
 ///---Inicializacion---///
@@ -92,6 +94,8 @@ int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva);
 int bsu_atomicos_contiguos(int necesarias);
 int lru_atomicos_contiguos(int necesarias);
 int entradas_atomicas_contiguas(int puntero, int necesarias);
+void enviar_pedido_compactacion();
+int recibir_orden_compactacion();
 
 
 
@@ -108,5 +112,6 @@ void sumar_operacion(void* entradas);
 void dump();
 void dumpear(void* datos);
 int any_entrada_bitmap_libre();
+int buscar_siguiente_entrada_ocupada(int inicio_indice);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
