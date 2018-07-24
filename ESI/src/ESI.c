@@ -91,20 +91,17 @@ int main(int argc, char* argv[]){
 				informar_fin_de_programa(conexiones, abortoESI);
 				break;
 		}
-		sleep(2);
+		//sleep(2);
 	}
 	if(feof(script_prueba)) informar_fin_de_programa(conexiones, abortoESI);
-	sleep(1);
 	fclose(script_prueba);
 	free(mensaje_coordi);
 	free(configuracion_esi);
-	liberar_instruccion(ultima_instruccion);
 	log_info(logger_esi, "Holi");
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
 	log_info(logger_esi, "Termine wacho :7");
 	free(logger_esi);
-	//exit(1);
 	return 0;
 }
