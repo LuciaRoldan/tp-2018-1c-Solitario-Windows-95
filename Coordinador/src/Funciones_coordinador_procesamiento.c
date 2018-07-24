@@ -41,6 +41,7 @@ int procesar_mensaje(int socket){
 			serializar_id(buffer_int, rta_esi);
 			resultado = enviar(socket, buffer_int, sizeof(int), logger);
 			log_info(logger, "Le digo a la Instancia cuantas Instancias hay");
+			free(buffer_int);
 			return resultado;
 			break;
 

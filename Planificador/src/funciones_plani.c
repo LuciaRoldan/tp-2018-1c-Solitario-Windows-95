@@ -336,8 +336,8 @@ void procesar_pedido(t_esi_operacion instruccion){
 
 			clave_nueva->esi_que_la_usa = pcb_pedido_esi->id;
 
-			char* clave_esi_nueva = malloc(strlen(instruccion.argumentos.GET.clave));
-			memcpy(clave_esi_nueva, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave));
+			char* clave_esi_nueva = malloc(strlen(instruccion.argumentos.GET.clave)+1);
+			memcpy(clave_esi_nueva, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
 			clave_nueva->clave = clave_esi_nueva; //deberia memcpy
 
 			clave_nueva->esis_en_espera = list_create();
@@ -904,8 +904,8 @@ bool claves_iguales_nodo_clave(void* nodo_clave){
 	//log_info(logger, "El tamanio de la lista de claves bloqueadas es %d", tamanio);
 
 	clave_bloqueada* una_clave = (clave_bloqueada*) nodo_clave;
-	//log_info(logger, "La clave_buscada es: %s", clave_buscada);
-	//log_info(logger, "La clave que estoy comparando es: %s", una_clave->clave);
+	log_info(logger, "La clave_buscada es: %s", clave_buscada);
+	log_info(logger, "La clave que estoy comparando es: %s", una_clave->clave);
 
 	if(strcmp(una_clave->clave, clave_buscada) == 0){
 		return true;
