@@ -100,7 +100,7 @@ int recibir_orden_compactacion();
 
 
 // AGREGO LAS QUE FALTABAN
-int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor);
+int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, char* valor);
 bool existe_clave(char* clave);
 bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
