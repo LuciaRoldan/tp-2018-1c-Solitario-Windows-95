@@ -62,9 +62,10 @@ int procesar_mensaje(int socket){
 			socket_esi_buscado = el_nodo->socket;
 			log_info(logger, "El ESI %d termino", el_nodo->id);
 			log_info(log_operaciones, "El ESI %d termino", el_nodo->id);
-			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			close(socket);
 			sem_post(&s_cerrar_hilo);
+			sem_wait(&s_borrar_elemento);
+			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo); //No gusta
 			pthread_exit(NULL);
 			return -1;
 			break;

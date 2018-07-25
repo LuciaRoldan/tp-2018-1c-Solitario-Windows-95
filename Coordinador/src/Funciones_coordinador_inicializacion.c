@@ -29,6 +29,7 @@ void inicializar_coordinador(){
 
 void inicializar_semaforos(){
 	sem_init(&s_cerrar_hilo, 0, 0); //El primer 0 es para compartir solamente con mis hilos y el segundo es el valor
+	sem_init(&s_borrar_elemento, 0, 0);
 }
 
 void conectar_planificador(){

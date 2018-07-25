@@ -29,6 +29,7 @@ int main(int argc, char* argv[]){
 	while(!terminar_programa){
 			sem_wait(&s_cerrar_hilo);
 			if(!terminar_programa){
+			sem_post(&s_borrar_elemento);
 			pthread_join(*hilo_a_cerrar, NULL);
 			log_info(logger, "Hilo cerrado");
 			}

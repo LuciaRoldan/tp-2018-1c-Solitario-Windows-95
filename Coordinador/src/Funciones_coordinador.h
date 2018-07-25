@@ -63,6 +63,7 @@ int conexion_hecha;
 
 
 sem_t s_cerrar_hilo;
+sem_t s_borrar_elemento;
 
 ///////////////////////// FUNCIONES /////////////////////////
 
