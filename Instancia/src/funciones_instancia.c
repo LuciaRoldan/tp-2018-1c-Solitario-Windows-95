@@ -280,7 +280,10 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 	} else {
 		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
 			enviar_pedido_compactacion();
-			recibir_orden_compactacion();
+			int resultado = recibir_orden_compactacion();
+			while(resultado != 3){
+				int resultado = recibir_orden_compactacion();
+			}
 			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
 			puntero_pagina = 0;
 			log_info(logger,"Entra a compactar");
@@ -583,7 +586,7 @@ int recibir_orden_compactacion(){
 	int id;
 	void* buffer = malloc(sizeof(int));
 	id = deserializar_id(buffer);
-	return id;;
+	return id;
 }
 
 //void hilo_compactar(){

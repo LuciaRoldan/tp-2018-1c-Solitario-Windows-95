@@ -35,14 +35,10 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 
-		case 23:
-			rta_esi = list_size(lista_instancias);
-			buffer_int = malloc(sizeof(int));
-			serializar_id(buffer_int, rta_esi);
-			resultado = enviar(socket, buffer_int, sizeof(int), logger);
-			log_info(logger, "Le digo a la Instancia cuantas Instancias hay");
-			free(buffer_int);
-			return resultado;
+		case 22: //Compactacion de las instancias
+			compactar_intancias();
+			log_info(logger, "Les aviso a las Instancias que tienen que compactar");
+			return 1;
 			break;
 
 		case 25: //Exito instancia

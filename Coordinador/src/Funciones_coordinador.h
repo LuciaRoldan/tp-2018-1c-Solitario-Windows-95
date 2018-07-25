@@ -115,6 +115,7 @@ bool clave_accesible(char* clave);
 void cerrar_instancias();
 void fin_instancia(void* datos);
 int buscar_instancia_ficticia(char* clave);
+void compactar_intancias();
 
 //DE HILOS
 void agregar_nuevo_esi(int socket_esi, int id_esi);
