@@ -279,7 +279,9 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 		return 1;
 	} else {
 		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
-//			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
+			enviar_pedido_compactacion();
+			recibir_orden_compactacion();
+			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
 			puntero_pagina = 0;
 			log_info(logger,"Entra a compactar");
 			return 1; //solo caso positivo
