@@ -22,7 +22,7 @@ void enviar_exito(int socket_coordinador) {
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 25);
 	enviar(socket_coordinador, buffer, sizeof(int), logger);
-	log_info(logger, "Le respondi al coordinador");
+	log_info(logger, "Le respondi por exito al coordinador");
 	free(buffer);
 }
 
@@ -53,6 +53,8 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	int id = recibir_int(socket_coordinador, logger);
 	t_esi_operacion instruccion;
 
+	pthread_mutex_lock(&m_tabla);
+
 	char* clave;
 
 	switch (id) {
@@ -79,6 +81,7 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		activa = false;
 		break;
 	}
+	pthread_mutex_unlock(&m_tabla);
 }
 
 char* recibe_pedido_status() {
@@ -132,7 +135,7 @@ void enviar_fallo(int socket_coordinador){
 	void* buffer = malloc(sizeof(int));
 	serializar_id(buffer, 24);
 	enviar(socket_coordinador,buffer,sizeof(int),logger);
-	log_info(logger, "Le respondi al coordinador");
+	log_info(logger, "Le respondi por fallo al coordinador");
 	free(buffer);
 }
 
@@ -202,7 +205,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		if(strcmp(entrada_encontrada->valor, "")==0){
 
 			int resultado = asignar_memoria(*entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
-			log_info(logger, "se asigno memoria %d: ", resultado);
 
 			if (resultado < 0) {
 				asignar_memoria(*entrada_encontrada, cantidad_entradas, valor);
@@ -361,12 +363,12 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		for(int i = 0; entradas_necesarias != i; i++){
 			estructura_clave* victima = list_get(tabla_entradas,puntero_circular);
 			log_info(logger,"entra a hacer el reemplazo");
-			int numero_auxiliar = victima->numero_entrada;
-			log_info(logger,"el numero de entrada de la victima es: %d", victima->numero_entrada);
+			entrada_nueva->numero_entrada = victima->numero_entrada;
+			log_info(logger,"el numero de entrada de la victima es: %d y su clave es %s", victima->numero_entrada, victima->clave);
 
-			reemplazar_y_destruir(puntero_circular, entrada_nueva);
+			//reemplazar_y_destruir(puntero_circular, entrada_nueva);
 			log_info(logger,"el numero de entrada de la entrada_nueva es: %d", entrada_nueva->numero_entrada);
-			list_replace_and_destroy_element(tabla_entradas,victima->numero_entrada,entrada_nueva,borrar_entrada);
+			//list_remove_and_destroy_element(tabla_entradas,victima->numero_entrada,borrar_entrada);
 			log_info(logger,"reemplaza el elemento");
 			puntero_circular ++;
 
@@ -375,14 +377,13 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 			}
 		}
 		puntero_pagina = puntero_circular;
+		log_info(logger, "puntero circular en: %d", puntero_circular);
 		return 0;
 	}
 }
 
 void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva){
 	log_info(logger,"entra a reemplazar y destruir");
-	estructura_clave* pruebi = list_get(tabla_entradas, 1);
-	log_info(logger, "Mostrame la clave %s", pruebi->clave);
 	estructura_clave* estructura_vieja = list_remove(tabla_entradas, indice);
 	log_info(logger,"El tamanio de la lista: %d ", list_size(tabla_entradas));
 	log_info(logger, "el lugar donde estoy %d ", indice);
@@ -696,6 +697,8 @@ void dump(){
 	while(activa){
 		sleep(mi_configuracion.intervaloDump);
 		pthread_mutex_lock(&m_tabla);
+		log_info(logger, "El tamanio de la lista es: %d", list_size(tabla_entradas));
+		log_info(logger, "--------------------------------------");
 		list_iterate(tabla_entradas, dumpear);
 		log_info(logger, "Hice el dump");
 		pthread_mutex_unlock(&m_tabla);
