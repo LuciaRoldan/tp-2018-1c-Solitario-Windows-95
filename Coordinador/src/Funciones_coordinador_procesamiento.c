@@ -228,6 +228,11 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				nodito->nodo_instancia = *instancia_seleccionada;
 				list_add(lista_claves, nodito);
 			}
+			if(instruccion.keyword == STORE){
+				memcpy(clave_buscada, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
+				nodo_clave* nodito = list_remove_by_condition(lista_claves, condicion_clave);
+				eliminar_nodo_clave(nodito);
+			}
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);
 		}
