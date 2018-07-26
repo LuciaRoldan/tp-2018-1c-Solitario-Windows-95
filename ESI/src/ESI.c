@@ -43,6 +43,8 @@ int main(int argc, char* argv[]){
 	int flag_exit = 0;
 	void* mensaje_coordi = malloc(sizeof(int));
 	resultado_esi confirmacion;
+	me_bloquearon = 0; //ro
+	ultimo_read = 0; //ro
 
 	while((!feof(script_prueba)) && abortoESI == 0 && flag_exit == 0) {
 		codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
@@ -98,7 +100,6 @@ int main(int argc, char* argv[]){
 	fclose(script_prueba);
 	free(mensaje_coordi);
 	free(configuracion_esi);
-	liberar_instruccion(ultima_instruccion);
 	log_info(logger_esi, "Holi");
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
