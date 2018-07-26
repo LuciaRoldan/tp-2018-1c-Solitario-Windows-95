@@ -72,9 +72,7 @@ int main(int argc, char* argv[]){
 	pthread_create(&hilo_dump, 0, dump, NULL);
 
 	while(activa){
-		pthread_mutex_lock(&m_tabla);
 		procesarID(socket_coordinador,logger);
-		pthread_mutex_unlock(&m_tabla);
 	}
 
 	//free(espacio_para_memoria);

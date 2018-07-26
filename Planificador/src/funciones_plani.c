@@ -7,9 +7,9 @@
 
 /////-----INICIALIZANDO-----/////
 
-sockets inicializar_planificador(){
+sockets inicializar_planificador(char* path){
 	sockets sockets_planificador;
-	leer_archivo_configuracion();
+	leer_archivo_configuracion(path);
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
@@ -17,8 +17,8 @@ sockets inicializar_planificador(){
 	return sockets_planificador;
 }
 
-void leer_archivo_configuracion(){
-	t_config* configuracion = config_create("../../prueba5/config_planificadorSJFSD");
+void leer_archivo_configuracion(char* path){
+	t_config* configuracion = config_create(path);
 
 		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
 		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
@@ -153,6 +153,8 @@ void manejar_esis(){
 		if(list_size(esis_ready) > 0){
 			log_info(logger, "Dentro manejar_esis (planificando)");
 			sem_wait(&s_planificar);
+			
+
 			planificar();
 		}
 		}
@@ -244,7 +246,9 @@ void manejar_esi(void* la_pcb){
 					chau = 0;
 				break;
 			}
+
 		}
+		
 	}
 }
 
@@ -631,6 +635,7 @@ void planificacionHRRN(){
 	if(list_size(esis_ready) > 1){
 		//log_info(logger, "Hay mas de un ESI ready");
 		list_sort(esis_ready, algoritmo_HRRN);
+		
 	}
 }
 
@@ -727,6 +732,7 @@ bool algoritmo_SJF_SD(void* pcb_1, void* pcb_2){
 }
 
 
+
 bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 
 	pcb* pcb1 = pcb_1;
@@ -745,6 +751,7 @@ bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 	} else {
 	return false;
 	}
+	
 }
 
 /////-----MOVIENDO ESIS-----/////
@@ -886,7 +893,6 @@ void liberar_clave(char* clave){
 
 	nodo_clave->esi_que_la_usa = 0;
 	log_info(logger, "La clave %s se libero", clave);
-	log_info(logger, "El primer esi en espera es: %d", list_get(nodo_clave->esis_en_espera, 0));
 	//log_info(logger, "Ahora es ocupada por (deberia ser 0): %d", nodo_clave->esi_que_la_usa);
 
 	if(!list_is_empty(nodo_clave->esis_en_espera)){

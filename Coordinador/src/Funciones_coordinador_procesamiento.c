@@ -35,14 +35,10 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 
-		case 23:
-			rta_esi = list_size(lista_instancias);
-			buffer_int = malloc(sizeof(int));
-			serializar_id(buffer_int, rta_esi);
-			resultado = enviar(socket, buffer_int, sizeof(int), logger);
-			log_info(logger, "Le digo a la Instancia cuantas Instancias hay");
-			free(buffer_int);
-			return resultado;
+		case 22: //Compactacion de las instancias
+			compactar_intancias();
+			log_info(logger, "Les aviso a las Instancias que tienen que compactar");
+			return 1;
 			break;
 
 		case 25: //Exito instancia
@@ -62,9 +58,10 @@ int procesar_mensaje(int socket){
 			socket_esi_buscado = el_nodo->socket;
 			log_info(logger, "El ESI %d termino", el_nodo->id);
 			log_info(log_operaciones, "El ESI %d termino", el_nodo->id);
-			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo);
 			close(socket);
 			sem_post(&s_cerrar_hilo);
+			sem_wait(&s_borrar_elemento);
+			list_remove_and_destroy_by_condition(lista_esis, condicion_socket_esi, eliminar_nodo); //No gusta
 			pthread_exit(NULL);
 			return -1;
 			break;
@@ -226,6 +223,11 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				memcpy(nodito->clave, clave, strlen(clave));
 				nodito->nodo_instancia = *instancia_seleccionada;
 				list_add(lista_claves, nodito);
+			}
+			if(instruccion.keyword == STORE){
+				memcpy(clave_buscada, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
+				nodo_clave* nodito = list_remove_by_condition(lista_claves, condicion_clave);
+				eliminar_nodo_clave(nodito);
 			}
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);

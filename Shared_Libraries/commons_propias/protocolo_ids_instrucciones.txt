@@ -17,12 +17,12 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 ///////////////// INSTANCIA /////////////////
 00 datos_configuracion
 01 char* pide_status
-03 int cantidad instancias
+03 orden_compactacion
 
 ///////////////// COORDINADOR /////////////////
 20 NULL Exit de planificador y confirmacion instnacia yesi
 21 char* (clave)
-22 NULL cantidad de instancias
+22 NULL pedido compactacion
 23 NULL desconexion instancia
 24 
 25 NULL exito instancia

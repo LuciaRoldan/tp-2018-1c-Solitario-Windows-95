@@ -162,3 +162,17 @@ void fin_instancia(void* datos){
 void cerrar_instancias(){
 	list_iterate(lista_instancias, fin_instancia);
 }
+
+void compactar_intancias(){
+	int mensaje = 3;
+	void* buffer = malloc(sizeof(int));
+	memcpy(buffer, &mensaje, sizeof(int));
+	for(int i = 0; i < list_size(lista_instancias); i++){
+		nodo* nodito = list_get(lista_instancias, i);
+		enviar(nodito->socket, buffer, sizeof(int), logger);
+	}
+}
+
+
+
+

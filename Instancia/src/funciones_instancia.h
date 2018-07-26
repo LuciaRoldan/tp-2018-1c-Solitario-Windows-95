@@ -2,6 +2,7 @@
 #define FUNCIONES_INSTANCIA_H_
 
 #include "commons_propias/commons_propias.h"
+#include <semaphore.h>
 
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
@@ -60,6 +61,7 @@ FILE*archivo;
 t_log * logger;
 pthread_mutex_t m_tabla;
 int socket_coordinador;
+sem_t s_compactacion;
 
 ///////////////////////// FUNCIONES /////////////////////////
 ///---Inicializacion---///
@@ -85,18 +87,23 @@ void enviar_fallo(int socket_coordinador);
 void enviar_exito(int socket_coordinador);
 
 //---Algoritmos de reemplazo---//
-int implementar_algoritmo(estructura_clave* entrada_nueva);
+int implementar_algoritmo(estructura_clave* entrada_nueva, int entradas_contiguas_necesarias);
 int aplicar_algoritmo_circular(estructura_clave* entrada_nueva);
 int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva);
 int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva);
-int bsu_atomicos_contiguos(int necesarias);
-int lru_atomicos_contiguos(int necesarias);
+int buscar_mayor_bsu_atomico(int necesarias);
+int buscar_mayor_lru_atomico(int necesarias);
 int entradas_atomicas_contiguas(int puntero, int necesarias);
+void enviar_pedido_compactacion();
+int recibir_orden_compactacion();
+int usar_algoritmo(estructura_clave* entrada_nueva);
+int cantidadDeEntradasAtomicas();
+int entradas_atomicas_vacias_contiguas(int necesarias);
 
 
 
 // AGREGO LAS QUE FALTABAN
-int asignar_memoria(estructura_clave clave, int entradas_contiguas_necesarias, char* valor);
+int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, char* valor);
 bool existe_clave(char* clave);
 bool condicion_clave_entrada(void* datos);
 void almacenar_valor(char* valor, int tamanio_valor);
@@ -108,5 +115,7 @@ void sumar_operacion(void* entradas);
 void dump();
 void dumpear(void* datos);
 int any_entrada_bitmap_libre();
+int buscar_siguiente_entrada_ocupada(int inicio_indice);
+void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
