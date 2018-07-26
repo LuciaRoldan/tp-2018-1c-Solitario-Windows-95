@@ -41,6 +41,18 @@ int procesar_mensaje(int socket){
 			return 1;
 			break;
 
+		case 24:
+			log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
+			rta_esi = 88;
+			void* buffer_int = malloc(sizeof(int));
+			serializar_id(buffer_int, rta_esi);
+			enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+			free(buffer_int);
+			hilo_a_cerrar = &esi_ejecutando->hilo;
+			sem_post(&s_cerrar_hilo);
+			pthread_exit(NULL);
+			break;
+
 		case 25: //Exito instancia
 			log_info(logger, "Recibi confirmacion de la Instancia %d", instancia_seleccionada->id);
 			rta_esi = 84;
