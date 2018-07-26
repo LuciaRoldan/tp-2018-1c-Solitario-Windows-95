@@ -33,7 +33,7 @@ void leer_archivo_configuracion(char* path){
 		log_info(logger, "Obtuve las claves bloqueadas");
 		int indice_bloq = 0;
 		//int tam_lista;
-		while(las_claves_bloqueadas[indice_bloq]){
+		while(las_claves_bloqueadas[indice_bloq] != NULL){
 			clave_bloqueada* clave = malloc(sizeof(clave_bloqueada));
 			clave->esi_que_la_usa = -1;
 			clave->esis_en_espera = list_create();
@@ -66,7 +66,7 @@ void inicializar_semaforos(){
 	sem_init(&s_eliminar_pcb, 0, 0);
 	sem_init(&s_podes_procesar_una_respuesta, 0, 0);
 	sem_init(&s_podes_procesar_un_pedido, 0, 0);
-	sem_init(&s_planificar, 0, 1);
+	sem_init(&s_planificar, 0, 0);
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -149,11 +149,14 @@ void manejar_esis(){
 	while(terminar_todo){
 	while(pausar_planificador>=0){
 		if(list_size(esis_ready) > 0){
-			sem_wait(&s_planificar);
-			sleep(1);
+		sleep(1);
+		if(list_size(esis_ready) > 0){
 			log_info(logger, "Dentro manejar_esis (planificando)");
+			sem_wait(&s_planificar);
+			
 
 			planificar();
+		}
 		}
 	}
 	}
@@ -200,7 +203,7 @@ void recibir_esis(void* socket_esis){
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
-	if(list_size(esis_ready) < 1){
+	if(list_size(esis_ready) == 1){
 		sem_post(&s_planificar);
 	}
 
@@ -208,7 +211,7 @@ void manejar_esi(void* la_pcb){
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
 
-	while(chau){
+	while(chau > 0){
 		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
 		//sleep(1);
@@ -226,9 +229,12 @@ void manejar_esi(void* la_pcb){
 					pthread_mutex_lock(&m_lista_pcbs);
 					registrar_exito_en_pcb(pcb_esi.id);
 					pthread_mutex_unlock(&m_lista_pcbs);
+					sem_post(&s_planificar);
 				break;
 				case (90):
+					pthread_mutex_lock(&m_lista_esis_ready);
 					mover_esi_a_bloqueados(clave_buscada, id_esi_ejecutando);
+					sem_post(&s_planificar);
 				break;
 				case (81):
 					mover_esi_a_finalizados(id_esi_ejecutando);
@@ -240,9 +246,9 @@ void manejar_esi(void* la_pcb){
 					chau = 0;
 				break;
 			}
-			sem_post(&s_planificar);
+
 		}
-		sem_post(&s_planificar);
+		
 	}
 }
 
@@ -444,7 +450,7 @@ void procesar_pedido(t_esi_operacion instruccion){
 					}
 
 					else {
-						log_info(logger, "STORE realizado por el ESI %d sobre una clave que no le pertenece %d", id_esi_ejecutando, clave_buscada);
+						log_info(logger, "STORE realizado por el ESI %d sobre una clave que no le pertenece %s", id_esi_ejecutando, clave_buscada);
 						informar_aborto_coordinador_clave_no_b();
 					}
 				}
@@ -629,13 +635,13 @@ void planificacionHRRN(){
 	if(list_size(esis_ready) > 1){
 		//log_info(logger, "Hay mas de un ESI ready");
 		list_sort(esis_ready, algoritmo_HRRN);
-		actualizar_ultima_estimacion_HRRN();
+		
 	}
 }
 
 void actualizar_ultima_estimacion_SJF(){
 	pthread_mutex_lock(&m_lista_pcbs);
-	list_iterate(pcbs, calcular_estimacion_SJF);
+	list_iterate(esis_ready, calcular_estimacion_SJF);
 	pthread_mutex_unlock(&m_lista_pcbs);
 }
 
@@ -643,15 +649,17 @@ void calcular_estimacion_SJF(void* pcbb){
 	pcb* pcb_esi = pcbb;
 	float proxima_rafaga =  (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
 	//log_info(logger, "Alpha es: %f", alpha);
-	log_info(logger, "La ultimaRafaga del esi es: %d", pcb_esi->ultimaRafaga);
-	log_info(logger, "La ultima estimacion del esi es: %f", pcb_esi->ultimaEstimacion);
+	log_info(logger, "La ultimaRafaga del esi %d es: %d", pcb_esi->id, pcb_esi->ultimaRafaga);
+	log_info(logger, "La ultima estimacion del esi %d es: %f", pcb_esi->id, pcb_esi->ultimaEstimacion);
 	//log_info(logger, "Vine a calcular ultimasEstimaciones y es: %f", proxima_rafaga);
 	pcb_esi->ultimaEstimacion = proxima_rafaga;
+	log_info(logger, "La estimacion del ESI %d es: %f", pcb_esi->id, proxima_rafaga);
+
 }
 
 void actualizar_ultima_estimacion_HRRN(){
 	pthread_mutex_lock(&m_lista_pcbs);
-	list_iterate(pcbs, calcular_estimacion_HRRN);
+	list_iterate(esis_ready, calcular_estimacion_HRRN);
 	pthread_mutex_unlock(&m_lista_pcbs);
 }
 
@@ -661,29 +669,29 @@ void calcular_estimacion_HRRN(void* pcbb){
 	float tiempo_de_respuesta = (pcb_esi->retardo + estimacion) / estimacion;
 	//log_info(logger, "Vine a calcular ultimasEstimaciones");
 	pcb_esi->ultimaEstimacion = tiempo_de_respuesta;
+	log_info(logger, "La estimacion del ESI %d es: %f", pcb_esi->id, tiempo_de_respuesta);
 }
 
 bool algoritmo_SJF_CD(void* pcb_1, void* pcb_2){
 
 	pcb* pcb1 = pcb_1;
 	pcb* pcb2 = pcb_2;
+//
+//	log_info(logger, "ultimaRafaga ESI %d es: ", pcb1->id, pcb1->ultimaRafaga);
+//	log_info(logger, "ultimaRafaga ESI %d es: ", pcb2->id, pcb2->ultimaRafaga);
+//	//log_info(logger, "alpha es: %f", alpha);
+//	log_info(logger, "ultimaEstimacion ESI %d es: %f", pcb1->id, pcb1->ultimaEstimacion);
+//	log_info(logger, "ultimaEstimacion ESI %d es: %f", pcb2->id, pcb2->ultimaEstimacion);
+//
+//	float proxima_rafaga1;
+//	float proxima_rafaga2;
+//
+//	proxima_rafaga1 =  (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
+//	proxima_rafaga2 =  (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
+//
+//	log_info(logger, "La proxima_rafaga del ESI1 es %f y la del ESI2 es %f", proxima_rafaga1, proxima_rafaga2);
 
-	log_info(logger, "ultimaRafaga ESI 1: %d", pcb1->ultimaRafaga);
-	log_info(logger, "ultimaRafaga ESI 2: %d", pcb2->ultimaRafaga);
-	//log_info(logger, "alpha es: %f", alpha);
-	log_info(logger, "ultimaEstimacion ESI 1: %f", pcb1->ultimaEstimacion);
-	log_info(logger, "ultimaEstimacion ESI 2: %f", pcb2->ultimaEstimacion);
-
-	float proxima_rafaga1;
-	float proxima_rafaga2;
-
-	proxima_rafaga1 =  (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
-	proxima_rafaga2 =  (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
-
-	log_info(logger, "La proxima_rafaga del ESI1 es %f y la del ESI2 es %f", proxima_rafaga1, proxima_rafaga2);
-
-
-	if ( proxima_rafaga1 <= proxima_rafaga2){
+	if ( pcb1->ultimaEstimacion <= pcb2->ultimaEstimacion){
 		return true;
 	} else {
 		return false;
@@ -700,23 +708,22 @@ bool algoritmo_SJF_SD(void* pcb_1, void* pcb_2){
 	} else if (es_el_primer_esi_ready(pcb2)){
 		return false;
 	} else {
+//
+//		log_info(logger, "ultimaRafaga ESI %d es: ", pcb1->id, pcb1->ultimaRafaga);
+//		log_info(logger, "ultimaRafaga ESI %d es: ", pcb2->id, pcb2->ultimaRafaga);
+//		//log_info(logger, "alpha es: %f", alpha);
+//		log_info(logger, "ultimaEstimacion ESI %d es: %f", pcb1->id, pcb1->ultimaEstimacion);
+//		log_info(logger, "ultimaEstimacion ESI %d es: %f", pcb2->id, pcb2->ultimaEstimacion);
+//
+//		float proxima_rafaga1;
+//		float proxima_rafaga2;
+//
+//		proxima_rafaga1 =  (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
+//		proxima_rafaga2 =  (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
+//
+//		log_info(logger, "La proxima_rafaga del ESI 1 es %f y la del ESI 2 es %f", proxima_rafaga1, proxima_rafaga2);
 
-		log_info(logger, "ultimaRafaga ESI 1: %d", pcb1->ultimaRafaga);
-		log_info(logger, "ultimaRafaga ESI 2: %d", pcb2->ultimaRafaga);
-		log_info(logger, "alpha es: %f", alpha);
-		log_info(logger, "ultimaEstimacion ESI 1: %f", pcb1->ultimaEstimacion);
-		log_info(logger, "ultimaEstimacion ESI 2: %f", pcb2->ultimaEstimacion);
-
-		float proxima_rafaga1;
-		float proxima_rafaga2;
-
-		proxima_rafaga1 =  (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
-		proxima_rafaga2 =  (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
-
-		log_info(logger, "La proxima_rafaga del ESI 1 es %f y la del ESI 2 es %f", proxima_rafaga1, proxima_rafaga2);
-
-
-		if ( proxima_rafaga1 <= proxima_rafaga2){
+		if ( pcb1->ultimaEstimacion <= pcb2->ultimaEstimacion){
 			return true;
 		} else {
 			return false;
@@ -731,18 +738,20 @@ bool algoritmo_HRRN(void* pcb_1, void* pcb_2){
 	pcb* pcb1 = pcb_1;
 	pcb* pcb2 = pcb_2;
 
-	float estimacion1 = (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
-	float tiempo_de_respuesta1 = (pcb1->retardo + estimacion1) / estimacion1;
+//	float estimacion1 = (alpha/100) * (pcb1->ultimaRafaga) + (1 - alpha/100)* (pcb1->ultimaEstimacion);
+//	float tiempo_de_respuesta1 = (pcb1->retardo + estimacion1) / estimacion1;
+//
+//	float estimacion2 = (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
+//	float tiempo_de_respuesta2 = (pcb2->retardo + estimacion2) / estimacion2;
+//
+//	log_info(logger, "El tiempo_respuesta del ESI1 es %f y del ESI2 es %f", tiempo_de_respuesta1, tiempo_de_respuesta2);
 
-	float estimacion2 = (alpha/100) * (pcb2->ultimaRafaga) + (1 - alpha/100)* (pcb2->ultimaEstimacion);
-	float tiempo_de_respuesta2 = (pcb2->retardo + estimacion2) / estimacion2;
-
-	log_info(logger, "El tiempo_respuesta del ESI1 es %f y del ESI2 es %f", tiempo_de_respuesta1, tiempo_de_respuesta2);
-
-	if(tiempo_de_respuesta1 >= tiempo_de_respuesta2){
-		return 1;
+	if(pcb1->ultimaEstimacion >= pcb2->ultimaEstimacion){
+		return true;
+	} else {
+	return false;
 	}
-	return 0;
+	
 }
 
 /////-----MOVIENDO ESIS-----/////
@@ -762,8 +771,10 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = esi_id;
 	list_remove_by_condition(esis_ready, ids_iguales_cola_de_esis);
-	//log_info(logger, "Esi %d colocado en cola de espera de la clave %s", esi_id, clave_buscada);
+	log_info(logger, "Esi %d colocado en cola de espera de la clave %s", esi_id, clave_buscada);
+	log_info(logger, "La cantidad de ESIs ready es: %d", list_size(esis_ready));
 	pthread_mutex_unlock(&m_id_buscado);
+	pthread_mutex_unlock(&m_lista_esis_ready); //arranca en mover a bloqueados
 }
 
 //--Abortar ESI--//
@@ -796,7 +807,7 @@ void abortar_esi(int id_esi){
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_abortado);
 
 	cerrar_cosas_de_un_esi(esi_abortado);
-	sem_wait(&s_eliminar_pcb);
+	//sem_wait(&s_eliminar_pcb);
 	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
 }
 
@@ -835,7 +846,7 @@ void mover_esi_a_finalizados(int id_esi){
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_finalizado);
 
 	cerrar_cosas_de_un_esi(esi_finalizado);
-	sem_wait(&s_eliminar_pcb);
+	//sem_wait(&s_eliminar_pcb);
 }
 
 //--Sacar ESI de la cola de bloqueados de una clave--//
@@ -1046,9 +1057,11 @@ void cerrar_cosas_de_un_esi(void* esi){
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	log_info(logger, "hola");
 	hay_hilos_por_cerrar = 1;
-	if(list_size(esis_ready)>0){
-		log_info(logger, "hay mas de un esi ready");
-	sem_post(&s_planificar);
+		sem_post(&s_planificar);
+		log_info(logger, "Post a planificar desde cerrar cosas");
+	if(list_size(esis_ready) == 0){ //no se por que pero hacen falta 2
+		sem_post(&s_planificar);
+		log_info(logger, "Post a planificar desde cerrar cosas");
 	}
 	log_info(logger, "Post a cerrar_un_hilo");
 	sem_post(&s_cerrar_un_hilo);

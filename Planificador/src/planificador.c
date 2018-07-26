@@ -42,13 +42,12 @@ int main(int argc, char* argv[]) {
 				sem_wait(&s_cerrar_un_hilo);
 				log_info(logger, "Vine a cerrar el hilo");
 				hay_hilos_por_cerrar = 0;
+				log_info(logger, "Hilo cerrado");
 				sem_post(&s_hilo_cerrado);
 				pthread_join(*hilo_a_cerrar, NULL);
-				log_info(logger, "Hilo cerrado");
 				//hay_hilos_por_cerrar = 0;
 				//pthread_mutex_unlock(&m_hilo_a_cerrar);
-				sem_post(&s_hilo_cerrado);
-				sem_post(&s_eliminar_pcb);
+				//sem_post(&s_eliminar_pcb);
 			}
 
 //			while(!terminar_programa){
