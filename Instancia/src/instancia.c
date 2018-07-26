@@ -76,7 +76,6 @@ int main(int argc, char* argv[]){
 	}
 
 	//free(espacio_para_memoria);
-	sleep(5);
 	pthread_join(&hilo_dump, NULL);
 	free(acceso_tabla);
 	close(socket_coordinador);

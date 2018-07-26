@@ -166,10 +166,13 @@ void cerrar_instancias(){
 void compactar_intancias(){
 	int mensaje = 3;
 	void* buffer = malloc(sizeof(int));
+
 	memcpy(buffer, &mensaje, sizeof(int));
+	log_info(logger, "El tamanio de la lista es %d", list_size(lista_instancias));
 	for(int i = 0; i < list_size(lista_instancias); i++){
 		nodo* nodito = list_get(lista_instancias, i);
 		enviar(nodito->socket, buffer, sizeof(int), logger);
+		log_info(logger, "Le dije a la instancia %d de socket %d", nodito->id, nodito->socket);
 	}
 }
 

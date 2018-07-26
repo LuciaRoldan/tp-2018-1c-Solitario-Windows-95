@@ -39,7 +39,7 @@ typedef struct{
 
 typedef struct{
 	char* clave;
-	int numero_entrada;
+	int numero_pagina;
 	int cantidad_entradas;
 	int tamanio_valor;
 	int cantidad_operaciones;
@@ -97,7 +97,7 @@ int entradas_atomicas_contiguas(int puntero, int necesarias);
 void enviar_pedido_compactacion();
 int recibir_orden_compactacion();
 int usar_algoritmo(estructura_clave* entrada_nueva);
-int cantidadDeEntradasAtomicas();
+int cantidad_entradas_atomicas();
 int entradas_atomicas_vacias_contiguas(int necesarias);
 
 
