@@ -7,9 +7,9 @@
 
 /////-----INICIALIZANDO-----/////
 
-sockets inicializar_planificador(){
+sockets inicializar_planificador(char* path){
 	sockets sockets_planificador;
-	leer_archivo_configuracion();
+	leer_archivo_configuracion(path);
 	sockets_planificador.socket_coordinador = connect_to_server(conexion_coordinador.ip, conexion_coordinador.puerto, logger);
 	conectarse_al_coordinador(sockets_planificador.socket_coordinador);
 	sockets_planificador.socket_esis = inicializar_servidor(atoi(conexion_planificador.puerto), logger); //pasar ip
@@ -17,8 +17,8 @@ sockets inicializar_planificador(){
 	return sockets_planificador;
 }
 
-void leer_archivo_configuracion(){
-	t_config* configuracion = config_create("config_planificador");
+void leer_archivo_configuracion(char* path){
+	t_config* configuracion = config_create(path);
 
 		conexion_planificador.ip = strdup(config_get_string_value(configuracion,"IP_PLANIFICADOR"));
 		conexion_planificador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_PLANIFICADOR"));
