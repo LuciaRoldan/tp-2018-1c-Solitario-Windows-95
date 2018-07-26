@@ -77,8 +77,12 @@ int cumple_protocolo(int mensaje, int nro){
 t_esi_operacion parsear_linea(FILE* archivo){
 	char* line = NULL;
 	size_t len = 0;
-	ssize_t read;
-	read = getline(&line, &len, archivo);
+	//ssize_t read;
+	if(me_bloquearon > 0){
+		fseek(archivo, -ultimo_read, SEEK_CUR);
+		me_bloquearon = 0;
+	}
+	ultimo_read = getline(&line, &len, archivo);
 	t_esi_operacion parsed = parse(line);
 	return parsed;
 }
@@ -132,11 +136,16 @@ void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
 }
 
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
+	//if(me_bloquearon == 1){
+	//	ejecutar_ultima_instruccion(socket_Coordinador);
+	//	me_bloquearon = 0;
+	//	return 1;
+	//} else {
 	t_esi_operacion operacion = parsear_linea(archivo);
 	if(!operacion.valido) return -1;
 	log_info(logger_esi,"Parseado de instruccion completo");
 	mostrar_instruccion(operacion);
-	ultima_instruccion = operacion;
+	ultima_instruccion = operacion; //no anda
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
 		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
 		liberar_instruccion(operacion);
@@ -196,6 +205,7 @@ int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_es
 			aborto = 1;
 			break;
 		case 90:
+			me_bloquearon = 1;
 			log_info(logger_esi, "Bloquear ESI.");
 			break;
 		default:
@@ -213,7 +223,7 @@ int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_es
 int enviar_exit_coordi(int socket){
 	int envio;
 	serializar_id(&envio, 81);
-	return enviar(socket, envio, sizeof(int), logger_esi);
+	return enviar(socket, &envio, sizeof(int), logger_esi);
 }
 
 
