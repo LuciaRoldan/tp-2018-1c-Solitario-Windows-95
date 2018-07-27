@@ -513,17 +513,19 @@ int entradas_atomicas_vacias_contiguas(int necesarias) {
 int buscar_mayor_bsu_atomico(int necesarias) {
 	log_info(logger,"Busca el mayor bsu");
 	int maximo_BSU = 0;
+	int segmento_seleccionado;
 	estructura_clave* entrada_BSU;
 	estructura_clave* auxiliar;
-	for (int i = 0; i < configuracion_coordi.cantidad_entradas; i++) {
+	for (int i = 0; i < list_size(tabla_entradas); i++) {
 		entrada_BSU = list_get(tabla_entradas, i);
 		if (entrada_BSU->tamanio_valor > maximo_BSU  && entrada_BSU->cantidad_entradas == 1) {
 			maximo_BSU = entrada_BSU->tamanio_valor;
 			auxiliar = entrada_BSU;
+			segmento_seleccionado = i;
 			log_info(logger, "La clave con mayor BSU es %s: ", entrada_BSU->clave);
 		}
 	}
-	return auxiliar->numero_pagina;
+	return segmento_seleccionado;
 }
 
 int buscar_mayor_lru_atomico(int necesarias) {
@@ -534,7 +536,6 @@ int buscar_mayor_lru_atomico(int necesarias) {
 	estructura_clave* auxiliar;
 	for (int i = 0; i < list_size(tabla_entradas); i++) {
 		entrada_LRU = list_get(tabla_entradas, i);
-		log_info(logger, "La clave %s tiene LRU de %d", entrada_LRU->clave, entrada_LRU->cantidad_operaciones);
 		if (entrada_LRU->cantidad_operaciones > maximo_LRU && entrada_LRU->cantidad_entradas == 1) {
 			maximo_LRU = entrada_LRU->cantidad_operaciones;
 			auxiliar = entrada_LRU;
@@ -574,16 +575,6 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		}
 
 	}
-	/*log_info(logger, "EL PUNTERO CIRCULAR ESTA EN: %d", puntero_circular);
-	log_info(logger, "Las entradas borradas son %d", atomicas_borradas);
-	puntero_entrada = puntero_circular - entradas_necesarias;
-	log_info(logger, "********BITMAP EN EL CIRCULAR*************");
-				for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
-						log_info(logger, "El nuevo bitmap en %d en %d", h, acceso_tabla[h]);
-
-	}
-	log_info(logger, "******************************************");
-	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));*/
 	return resultado; // si habia entradas contiguas me lo devuelve en el puntero a donde empezo a borrar sino en -1
 }
 
@@ -595,7 +586,6 @@ int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva) {
 
 	while (entradas_necesarias > 0) {
 		puntero = buscar_mayor_lru_atomico(entradas_necesarias); //cada vez que borre el mayo lru, va a haber uno nuevo
-		//puntero_pagina_buscado = puntero;
 		estructura_clave* auxiliar = list_get(tabla_entradas, puntero);
 		for(int i = 0; i < auxiliar->cantidad_entradas; i++){
 			acceso_tabla[auxiliar->numero_pagina + i] = 0;
@@ -644,16 +634,24 @@ int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva) {
 
 	while (entradas_necesarias > 0) {
 		puntero = buscar_mayor_bsu_atomico(entradas_necesarias);
+		estructura_clave* auxiliar = list_get(tabla_entradas, puntero);
+		for(int i = 0; i < auxiliar->cantidad_entradas; i++){
+			acceso_tabla[auxiliar->numero_pagina + i] = 0;
+		}
 		list_remove_and_destroy_element(tabla_entradas,puntero,borrar_entrada);
-		acceso_tabla[puntero] = 0;
+
 		puntero++;
 		entradas_necesarias--;
 		if (puntero == configuracion_coordi.cantidad_entradas) {
 			puntero = 0;
 		}
 	}
-	puntero_pagina = puntero;
-	return 0;
+	if(entradas_libres_contiguas(entrada_nueva->cantidad_entradas)){
+		puntero_pagina = puntero + entrada_nueva->cantidad_entradas;
+		return puntero;
+	} else {
+		return -1; //para agregar los nuevos valores empieza a recorrer desde le cero (hay que compactar)
+	}
 }
 
 
