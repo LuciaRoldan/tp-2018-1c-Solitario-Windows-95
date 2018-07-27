@@ -34,7 +34,8 @@ void ejecutar_consola(){
 						printf("Operacion: %s ---- ", palabras[0]);
 						printf("Clave: %s ---- ", palabras[1]);
 						printf("ID: %s ---- ", palabras[2]);
-						strcpy(clave, palabras[1]);
+						clave = malloc(strlen(palabras[1]));
+						strcpy(clave, palabras[1]+1);
 						el_id = atoi(palabras[2]);
 						bloquear(clave, el_id);
 					} else {
@@ -50,6 +51,7 @@ void ejecutar_consola(){
 					printf("Usted quiere desbloquear un ESI de para una clave.\n");
 					printf("Operacion: %s ---- ", palabras[0]);
 					printf("Clave: %s ---- ", palabras[1]);
+					clave = malloc(strlen(palabras[1])+1);
 					strcpy(clave, palabras[1]);
 					desbloquear(clave);
 					} else {

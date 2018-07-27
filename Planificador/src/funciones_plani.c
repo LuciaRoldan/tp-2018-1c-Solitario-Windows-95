@@ -148,8 +148,8 @@ void manejar_esis(){
 
 	while(terminar_todo){
 	while(pausar_planificador>=0){
-		if(list_size(esis_ready) > 0){
 		sleep(1);
+		if(list_size(esis_ready) > 0){
 		sem_wait(&s_planificar);
 
 		if(list_size(esis_ready) > 0){
@@ -234,8 +234,11 @@ void recibir_esis(void* socket_esis){
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
+	int* valor_sem = malloc(sizeof(int));
+	sem_getvalue(&s_planificar, valor_sem);
 	if(list_size(esis_ready) == 1){
 		sem_post(&s_planificar);
+		log_info(logger, "Post a planificar");
 	}
 
 	log_info(logger, "Entre a manejar_esi");
