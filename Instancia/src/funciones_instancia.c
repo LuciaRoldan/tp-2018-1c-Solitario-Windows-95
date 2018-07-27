@@ -155,13 +155,13 @@ bool existe_clave(char* clave) {
 }
 
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
-	char* valor;
 	int tamanio_valor = 0;
 	int tamanio_clave = 0;
 	switch (instruccion.keyword) {
 
 	case (GET):
 		log_info(logger, "Se pidio operacion con GET");
+		list_iterate(tabla_entradas, sumar_operacion);
 		enviar_exito(socket_coordinador);
 	break;
 
@@ -171,25 +171,28 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		estructura_clave* entrada_encontrada;
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor) + 1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave) + 1;
-		//list_iterate(tabla_entradas, sumar_operacion);
+		list_iterate(tabla_entradas, sumar_operacion);
 
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 
 		if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){ //En el caso de que se haga set de una clave que ya se habia hecho set
+
 			log_info(logger,"Ya se hizo SET de esta clave");
 			entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
+			entrada_encontrada->cantidad_operaciones = 0;
 
 			if(cantidad_entradas_ocupa(tamanio_valor) <= entrada_encontrada->cantidad_entradas){
 					memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 					entrada_encontrada->tamanio_valor = tamanio_valor;
-					//enviar_exito(socket_coordinador);
-//					list_iterate(tabla_entradas, sumar_operacion);
 					free(clave_buscada);
 					log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
+
 			} else {
+
 				log_info(logger, "El nuevo valor se pasa del tamanio que habia reservado");
-//Cambie que se borra la entrada anterior y agrego una nueva como si fuese la primera vez que se hace el set
+
+				//Cambie que se borra la entrada anterior y agrego una nueva como si fuese la primera vez que se hace el set
 				for(int i = 0; i < entrada_encontrada->cantidad_entradas; i++){
 					acceso_tabla[i + entrada_encontrada->numero_pagina] = 0;
 				}
@@ -203,7 +206,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				log_info(logger, "tiene %d entradas ", cantidad_entradas);
 				entrada_encontrada->cantidad_entradas = cantidad_entradas;
 				entrada_encontrada->tamanio_valor = tamanio_valor;
-				entrada_encontrada->cantidad_operaciones = 0;
+
 
 				int resultado = asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
 				if(resultado < 0){
@@ -211,14 +214,12 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 					asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 				entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
-				//log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
 				log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
 				memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 				entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
 				log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 				log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
 
-				//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
 				list_add(tabla_entradas, entrada_encontrada);
 				/*puntero_entrada++; //Se agrega suma la entrada que se agrega
 
@@ -242,6 +243,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				}
 
 		} else {
+
 			log_info(logger,"Es la primera vez que se hace SET de esta clave");
 			entrada_encontrada = malloc(sizeof(estructura_clave));
 			entrada_encontrada->clave = malloc(tamanio_clave);
@@ -259,14 +261,12 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
-			//log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
 			log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
 			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 			entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
 			log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 			log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
 
-			//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
 			list_add(tabla_entradas, entrada_encontrada);
 			/*puntero_entrada++; //Se suma la entrada que se agrega
 			log_info(logger, "EL PUNTERO AHORA ESTA EN %d:", puntero_entrada);
@@ -459,7 +459,7 @@ void obtener_puntero_entrada(){
 
 bool condicion_tiene_puntero_entrada(void* datos){
 	estructura_clave entrada = *((estructura_clave*) datos);
-	bool respuesta = entrada.numero_pagina < puntero_pagina_buscado && puntero_pagina_buscado <= entrada.numero_pagina + entrada.cantidad_entradas;
+	bool respuesta = (entrada.numero_pagina <= puntero_pagina_buscado) && (puntero_pagina_buscado <= (entrada.numero_pagina + entrada.cantidad_entradas));
 	return respuesta;
 
 }
@@ -529,18 +529,20 @@ int buscar_mayor_bsu_atomico(int necesarias) {
 int buscar_mayor_lru_atomico(int necesarias) {
 	log_info(logger,"Busca el mayor lru");
 	int maximo_LRU = 0;
+	int segmento_seleccionado;
 	estructura_clave* entrada_LRU;
 	estructura_clave* auxiliar;
-	for (int i = 0; i < configuracion_coordi.cantidad_entradas; i++) {
+	for (int i = 0; i < list_size(tabla_entradas); i++) {
 		entrada_LRU = list_get(tabla_entradas, i);
-		log_info(logger, "cantidad operaciones %d", entrada_LRU->cantidad_operaciones);
+		log_info(logger, "La clave %s tiene LRU de %d", entrada_LRU->clave, entrada_LRU->cantidad_operaciones);
 		if (entrada_LRU->cantidad_operaciones > maximo_LRU && entrada_LRU->cantidad_entradas == 1) {
 			maximo_LRU = entrada_LRU->cantidad_operaciones;
 			auxiliar = entrada_LRU;
+			segmento_seleccionado = i;
 			log_info(logger, "La clave con mayor LRU es %s: ", entrada_LRU->clave);
 			}
 		}
-	return auxiliar->numero_pagina; //puntero al elegido para eliminar
+	return segmento_seleccionado; //puntero al elegido para eliminar
 }
 
 int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
@@ -593,18 +595,47 @@ int aplicar_algoritmo_LRU(estructura_clave* entrada_nueva) {
 
 	while (entradas_necesarias > 0) {
 		puntero = buscar_mayor_lru_atomico(entradas_necesarias); //cada vez que borre el mayo lru, va a haber uno nuevo
+		//puntero_pagina_buscado = puntero;
+		estructura_clave* auxiliar = list_get(tabla_entradas, puntero);
+		for(int i = 0; i < auxiliar->cantidad_entradas; i++){
+			acceso_tabla[auxiliar->numero_pagina + i] = 0;
+		}
 		list_remove_and_destroy_element(tabla_entradas, puntero, borrar_entrada);
-		acceso_tabla[puntero] = 0;
+
 		puntero++;
 		entradas_necesarias--;
 		if (puntero == configuracion_coordi.cantidad_entradas) {
 			puntero = 0;
 		}
 	}
-	puntero_pagina = puntero;
-	return 0; //para agregar los nuevos valores empieza a recorrer desde le cero (hay que compactar)
+	if(entradas_libres_contiguas(entrada_nueva->cantidad_entradas)){
+		puntero_pagina = puntero + entrada_nueva->cantidad_entradas;
+		return puntero;
+	} else {
+		return -1; //para agregar los nuevos valores empieza a recorrer desde le cero (hay que compactar)
+	}
 }
 
+bool entradas_libres_contiguas(int necesarias){
+	int contador = 0;
+	int espacios_libres = 0;
+	int puntero_pag = 0;
+	while(contador != necesarias && puntero_pag <= configuracion_coordi.cantidad_entradas -1){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
+			if(acceso_tabla[puntero_pag] == 0){
+				espacios_libres += 1;
+				puntero_pag += 1;
+				contador += 1;
+			} else {
+				puntero_pag += 1;
+				contador = 0;
+			}
+		}
+	if(contador == necesarias){
+		return 1;
+	} else {
+		return 0;
+	}
+}
 
 int aplicar_algoritmo_BSU(estructura_clave* entrada_nueva) {
 	log_info(logger, "Entro al algoritmo del BSU");
@@ -633,7 +664,6 @@ int implementar_algoritmo(estructura_clave* entrada_nueva, int entradas_contigua
 		return -1;
 	} else {
 		respuesta = usar_algoritmo(entrada_nueva);
-		log_info(logger, "Obtuve %d del algoritmo", respuesta);
 		if (respuesta == -1) {
 			enviar_pedido_compactacion();
 			int resultado = recibir_orden_compactacion();
