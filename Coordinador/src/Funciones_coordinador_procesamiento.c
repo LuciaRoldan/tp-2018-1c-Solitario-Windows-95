@@ -51,6 +51,7 @@ int procesar_mensaje(int socket){
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
 			pthread_exit(NULL);
+			return -1;
 			break;
 
 		case 25: //Exito instancia
