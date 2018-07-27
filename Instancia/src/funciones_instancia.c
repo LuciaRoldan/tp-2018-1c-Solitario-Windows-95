@@ -180,7 +180,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			log_info(logger,"Ya se hizo SET de esta clave");
 			entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
-			if(cantidad_entradas_ocupa(tamanio_valor) < entrada_encontrada->cantidad_entradas){
+			if(cantidad_entradas_ocupa(tamanio_valor) <= entrada_encontrada->cantidad_entradas){
 					memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 					entrada_encontrada->tamanio_valor = tamanio_valor;
 					enviar_exito(socket_coordinador);
@@ -193,7 +193,6 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				for(int i = 0; i < entrada_encontrada->cantidad_entradas; i++){
 					acceso_tabla[i + entrada_encontrada->numero_pagina] = 0;
 				}
-
 				list_remove_and_destroy_by_condition(tabla_entradas, condicion_clave_entrada, borrar_entrada);
 
 				entrada_encontrada = malloc(sizeof(estructura_clave));
@@ -207,7 +206,9 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				entrada_encontrada->cantidad_operaciones = 0;
 
 				int resultado = asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
-				if(resultado < 0){asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
+				if(resultado < 0){
+					log_info(logger, "Asigno memoria por segunda vez");
+					asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 				entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
 				log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
@@ -216,28 +217,27 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
 				log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 				log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
-				list_add_in_index(tabla_entradas, entrada_encontrada->numero_pagina, entrada_encontrada);
 
-				list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
-							puntero_entrada++; //Se agrega suma la entrada que se agrega
+				//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
+				list_add(tabla_entradas, entrada_encontrada);
+				puntero_entrada++; //Se agrega suma la entrada que se agrega
 
-							if(cantidad_entradas > 1){
-								for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
-									puntero_pagina += i;
-									if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){ //se cambia cuando es igual porque este todavia no se uso
-										puntero_pagina = 0; // el ultimo usado es cantidad entradas - 1
-									}
-								}
+				if(cantidad_entradas > 1){
+					for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
+						puntero_pagina += i;
+						if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){ //se cambia cuando es igual porque este todavia no se uso
+							puntero_pagina = 0; // el ultimo usado es cantidad entradas - 1
+						}
+					}
 
+				} else{
+					puntero_pagina++;
+					if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){
+						puntero_pagina = 0;
+					}
+				}
 
-							} else{
-								puntero_pagina++;
-								if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){
-									puntero_pagina = 0;
-								}
-							}
-
-				enviar_exito(socket_coordinador);
+				//enviar_exito(socket_coordinador);
 
 				}
 
@@ -254,7 +254,9 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_encontrada->cantidad_operaciones = 0;
 
 			int resultado = asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
-			if(resultado < 0){asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
+			if(resultado < 0){
+				log_info(logger, "Asigno memoria por segunda vez");
+				asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
 			log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
@@ -265,7 +267,8 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
 			log_info(logger, "EL PUNTERO AHORA ESTA EN %d:", puntero_entrada);
 
-			list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
+			//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
+			list_add(tabla_entradas, entrada_encontrada);
 			puntero_entrada++; //Se agrega suma la entrada que se agrega
 
 			if(cantidad_entradas > 1){
@@ -284,20 +287,18 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				}
 			}
 		}
-			enviar_exito(socket_coordinador);
-
-		/*log_info(logger, "*********************");
-			for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
-					log_info(logger, "El nuevo bitmap en %d en %d", h, acceso_tabla[h]);
-
-			}
-		log_info(logger, "El tamanio de la lista es: %d", list_size(tabla_entradas));
-		log_info(logger, "*********************");*/
+			enviar_exito(socket_coordinador); //Revisar si esta bien aca porque siempre va a enviar exito
 
 		log_info(logger, "------------------------------------------------------------");
+		log_info(logger, "---------------------- TABLA ENTRADAS ----------------------");
 		for(int i = 0; i < list_size(tabla_entradas); i++){
 			estructura_clave* nodo = list_get(tabla_entradas, i);
 			log_info(logger, "En la posicion %d esta la clave %s con el valor %s", i, nodo->clave, nodo->valor);
+			log_info(logger, "El segmento ocupa %d paginas", nodo->cantidad_entradas);
+		}
+		log_info(logger, "-------------------------- BITMAP --------------------------");
+		for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
+			log_info(logger, "En la posicion %d el bitmap es %d", i, acceso_tabla[i]);
 		}
 		log_info(logger, "------------------------------------------------------------");
 
@@ -544,17 +545,17 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		puntero_circular = resultado;
 	}
 	while (atomicas_borradas != entradas_necesarias) {
-		log_info(logger, "El puntero circular esta en %d y el tamaño es %d", puntero_circular, list_size(tabla_entradas));
+		//log_info(logger, "El puntero circular esta en %d y el tamaño es %d", puntero_circular, list_size(tabla_entradas));
 		victima = list_get(tabla_entradas, puntero_circular);
-		log_info(logger, "Hice el get y la cantidad de entradas es %d", victima->cantidad_entradas);
+		//log_info(logger, "Hice el get y la cantidad de entradas es %d", victima->cantidad_entradas);
 		if (victima->cantidad_entradas == 1) {
-			log_info(logger, "Antes de eliminar tengo %d entradas", list_size(tabla_entradas));
+			//log_info(logger, "Antes de eliminar tengo %d entradas", list_size(tabla_entradas));
 			acceso_tabla[victima->numero_pagina] = 0;
 			//list_remove_and_destroy_element(tabla_entradas, victima->numero_pagina, borrar_entrada);//Eliminamos el nuemro de pagina, pero deberia ser el numero de indice
 			list_remove_and_destroy_element(tabla_entradas, puntero_circular, borrar_entrada);
 			puntero_circular++;
 			atomicas_borradas++;
-			log_info(logger, "Las entradas borradas son %d", atomicas_borradas);
+
 		} else {
 			puntero_circular++;
 		}
@@ -563,13 +564,14 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		}
 
 	}
+	log_info(logger, "Las entradas borradas son %d", atomicas_borradas);
 	puntero_entrada = puntero_circular - entradas_necesarias;
-	log_info(logger, "*********************");
+	/*log_info(logger, "*********************");
 				for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
 						log_info(logger, "El nuevo bitmap en %d en %d", h, acceso_tabla[h]);
 
 	}
-	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));
+	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));*/
 	return resultado;
 }
 
@@ -652,6 +654,7 @@ int usar_algoritmo(estructura_clave* entrada_nueva){
 }
 
 void compactar(){
+	log_info(logger, "Compactareeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
 	log_info(logger, "Entre a compactar");
 
 	//Declaro nuevas estructuras
@@ -673,9 +676,14 @@ void compactar(){
 
 	//Si tengo algo en la lista entonces esta ocupado, lo paso a la memoria nueva
 	for(int i = 0; i < list_size(tabla_entradas); i++){
+		log_info(logger, "El tamanio dado por el coordi es: %d", configuracion_coordi.tamano_entrada);
+		log_info(logger, "El comienzo de la nueva memoria es: %d y la proxima pagins es: %d", memoria_nueva, proxima_pagina);
 		estructura_clave* nodo = list_get(tabla_entradas, i);
-		memcpy(memoria_nueva + proxima_pagina * configuracion_coordi.tamano_entrada, nodo->valor, nodo->tamanio_valor);
-		nodo->valor = proxima_entrada * configuracion_coordi.tamano_entrada + memoria_nueva;
+		char* nueva_direccion = memoria_nueva + (proxima_pagina * configuracion_coordi.tamano_entrada);
+		log_info(logger, "La variable nueva direccion es: %d", nueva_direccion);
+		memcpy(nueva_direccion, nodo->valor, nodo->tamanio_valor);
+		nodo->valor = nueva_direccion;
+		log_info(logger, "La nueva direccion es: %d", (proxima_entrada * configuracion_coordi.tamano_entrada) + memoria_nueva);
 		nodo->numero_pagina = proxima_pagina;
 		log_info(logger, "La entrada %d tiene %d paginas", i, nodo->cantidad_entradas);
 
@@ -689,7 +697,7 @@ void compactar(){
 
 	log_info(logger, "*********************");
 	for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
-			log_info(logger, "El nuevo bitmap en %d en %d", h, nuevo_acceso_tabla[h]);
+			log_info(logger, "El nuevo bitmap en %d es %d", h, nuevo_acceso_tabla[h]);
 		}
 	log_info(logger, "*********************");
 
