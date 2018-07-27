@@ -7,4 +7,4 @@ make all
 
 export LD_LIBRARY_PATH=$PWD/../../Shared_Libraries/commons_propias/Debug
 
-./planificador "../../prueba3/config_planificadorHRRN"
+./planificador "../../prueba5/config_planificadorHRRN"
