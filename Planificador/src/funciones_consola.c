@@ -8,7 +8,7 @@ void ejecutar_consola(){
 	int el_id;
 
 	while(1) {
-		linea = readline("> Ingrese un comando: ");
+		linea = readline("\n > Ingrese un comando: ");
 		if(linea){
 			add_history(linea);
 			printf("---> La linea ingresada fue: %s\n", linea);
@@ -29,50 +29,47 @@ void ejecutar_consola(){
 			switch(operacion){
 			case BLOQUEAR:
 				if(palabras[1] != NULL && palabras[2] != NULL){
-					printf("Usted quiere bloquear un ESI.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
-					printf("Clave: %s ---- ", palabras[1]);
-					printf("ID: %s ---- ", palabras[2]);
-					if(palabras[3]==NULL)  {printf("Bloque vacio\n");}
-						else {
-							palabras[3] = NULL;
-							printf("Bloque vacio\n");
-						}
-					clave = palabras[1];
-					el_id = atoi(palabras[2]);
-					bloquear(clave, el_id);
+					if(palabras[3]==NULL){
+						printf("Usted quiere bloquear un ESI.\n");
+						printf("Operacion: %s ---- ", palabras[0]);
+						printf("Clave: %s ---- ", palabras[1]);
+						printf("ID: %s ---- ", palabras[2]);
+						strcpy(clave, palabras[1]);
+						el_id = atoi(palabras[2]);
+						bloquear(clave, el_id);
+					} else {
+						printf("Demasiados argumentos para la operacion 'bloquear <clave> <id>'.\n");
+					}
 				} else {
 					printf("Faltan argumentos para la operacion: <clave> <id>\n");
 				}
 				break;
 			case DESBLOQUEAR:
 				if(palabras[1] != NULL){
+					if(palabras[2]==NULL){
 					printf("Usted quiere desbloquear un ESI de para una clave.\n");
 					printf("Operacion: %s ---- ", palabras[0]);
 					printf("Clave: %s ---- ", palabras[1]);
-					if(palabras[2]==NULL) {printf("Bloque vacio\n");}
-						else {
-							palabras[2] = NULL;
-							printf("Bloque vacio\n");
-						}
-					clave = palabras[1];
+					strcpy(clave, palabras[1]);
 					desbloquear(clave);
+					} else {
+						printf("Demasiados argumentos para la operacion 'desbloquear <clave>' \n");
+					}
 				} else {
 					printf("Faltan argumentos para la operacion: <clave> \n");
 				}
 				break;
 			case KILL:
 				if(palabras[1] != NULL){
-					printf("Usted quiere finalizar un proceso.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
-					printf("ID: %s ---- ", palabras[1]);
-					if(palabras[2]==NULL)  {printf("Bloque vacio\n");}
-					else {
-						palabras[2] = NULL;
-						printf("Bloque vacio\n");
+					if(palabras[2]==NULL){
+						printf("Usted quiere finalizar un proceso.\n");
+						printf("Operacion: %s ---- ", palabras[0]);
+						printf("ID: %s ---- ", palabras[1]);
+						el_id = atoi(palabras[1]);
+						kill_esi(el_id);
+					} else {
+						printf("Demasiados argumentos para la operacion 'kill <id>' \n");
 					}
-					el_id = atoi(palabras[1]);
-					kill(el_id);
 				} else {
 					printf("Faltan argumentos para la operacion: <id>\n");
 				}
@@ -81,11 +78,6 @@ void ejecutar_consola(){
 				if(palabras[1] == NULL) {
 					printf("Usted quiere pausar la planificacion.\n");
 					printf("Operacion: %s ---- ", palabras[0]);
-					if(palabras[1]==NULL)  {printf("Bloque vacio\n");}
-					else {
-						palabras[1] = NULL;
-						printf("Bloque vacio\n");
-					}
 					pausar_planificacion();
 				} else {
 					printf("Demasiados argumentos para la operacion de pausar.\n");
@@ -95,11 +87,6 @@ void ejecutar_consola(){
 				if(palabras[1] == NULL) {
 					printf("Usted quiere continuar la planificacion.\n");
 					printf("Operacion: %s ---- ", palabras[0]);
-					if(palabras[1]==NULL)  {printf("Bloque vacio\n");}
-					else {
-						palabras[1] = NULL;
-						printf("Bloque vacio\n");
-					}
 					continuar_planificacion();
 				} else {
 					printf("Demasiados argumentos para la operacion de continuar.\n");
@@ -107,32 +94,30 @@ void ejecutar_consola(){
 				break;
 			case LISTAR:
 				if(palabras[1] != NULL) {
-					printf("Usted quiere listar los procesos en cola de espera para un recurso.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
-					printf("Recurso: %s ---- ", palabras[1]);
-					if(palabras[2]==NULL)  {printf("Bloque vacio\n");}
-					else {
-						palabras[2] = NULL;
-						printf("Bloque vacio\n");
+					if(palabras[2]==NULL){
+						printf("Usted quiere listar los procesos en cola de espera para un recurso.\n");
+						printf("Operacion: %s ---- ", palabras[0]);
+						printf("Recurso: %s ---- ", palabras[1]);
+						recurso = palabras[1];
+						listar_procesos_encolados(recurso);
+					} else {
+						printf("Demasiados argumentos para la operacion de 'listar <recurso>'.\n");
 					}
-					recurso = palabras[1];
-					listar_procesos_encolados(recurso);
 				} else {
 					printf("Faltan argumentos para la operacion: <recurso> \n");
 				}
 				break;
 			case STATUS:
 				if(palabras[1] != NULL) {
-					printf("Usted quiere ver el estado de una clave.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
-					printf("Clave: %s ---- ", palabras[1]);
-					if(palabras[2]==NULL)  {printf("Bloque vacio\n");}
-					else {
-						palabras[2] = NULL;
-						printf("Bloque vacio\n");
+					if(palabras[2]==NULL){
+						printf("Usted quiere ver el estado de una clave.\n");
+						printf("Operacion: %s ---- ", palabras[0]);
+						printf("Clave: %s ---- ", palabras[1]);
+						clave = palabras[1];
+						pedir_status(clave);
+					} else {
+						printf("Demasiados argumentos para la operacion de 'status <clave>'.\n");
 					}
-					clave = palabras[1];
-					pedir_status(clave);
 				} else {
 					printf("Faltan argumentos para la operacion: <clave>\n");
 				}
@@ -141,11 +126,6 @@ void ejecutar_consola(){
 				if(palabras[1] == NULL) {
 					printf("Usted quiere analizar deadlocks.\n");
 					printf("Operacion: %s ---- ", palabras[0]);
-					if(palabras[1]==NULL)  {printf("Bloque vacio\n");}
-					else {
-						palabras[1] = NULL;
-						printf("Bloque vacio\n");
-					}
 					deadlock();
 				} else {
 					printf("Demasiados argumentos para la operacion de deadlock. \n");
@@ -253,7 +233,7 @@ void listar_procesos_encolados(char* recurso){
 	clave_bloqueada* clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 	list_iterate(clave->esis_en_espera, imprimir_id_esi);
 }
-void kill(int id){
+void kill_esi(int id){
 	id_buscado = id;
 	pcb* pcb_esi = list_find(pcbs, ids_iguales_pcb);
 	log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", pcb_esi->id);

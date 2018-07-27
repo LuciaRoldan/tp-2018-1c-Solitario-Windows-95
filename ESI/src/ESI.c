@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
 	handshake_del_esi(conexiones.socket_coordi);
 	handshake_del_esi(conexiones.socket_plani);
 
-	int codigo_plani, resultado;
+	int codigo_plani, codigo_coordi, resultado;
 	int abortoESI = 0;
 	int flag_exit = 0;
 	me_bloquearon = 0;
@@ -79,6 +79,19 @@ int main(int argc, char* argv[]){
 				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
 				flag_exit = enviar_exit_coordi(conexiones.socket_coordi);
 				break;
+			case 91: //kill de consola
+				codigo_coordi = recibir_int(conexiones.socket_coordi, logger_esi);
+				if(codigo_coordi == 91){
+					log_info(logger_esi, "ESI %d abortado por 'kill' de consola.", idEsi);
+				} else{
+					_exit_with_error(conexiones.socket_coordi, "Error al recibir mensaje del Coordinador", NULL, logger_esi);
+				}
+				void* buffer_int = malloc(sizeof(int));
+				serializar_id(buffer_int, 81);
+				enviar(conexiones.socket_coordi, buffer_int, sizeof(int), logger_esi);
+				free(buffer_int);
+				abortoESI = 1;
+				break;
 			default:
 				log_info(logger_esi, "Mensaje fuera de protocolo: %d", codigo_plani);
 				abortoESI = 1;
@@ -93,7 +106,6 @@ int main(int argc, char* argv[]){
 	free(mensaje_coordi);
 	free(configuracion_esi);
 	liberar_instruccion(ultima_instruccion);
-	log_info(logger_esi, "Holi");
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
