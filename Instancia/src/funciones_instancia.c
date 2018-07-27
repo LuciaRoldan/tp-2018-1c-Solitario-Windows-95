@@ -308,9 +308,18 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			case (STORE):
 			log_info(logger, "Se pidio operacion con STORE");
 			tamanio_clave = strlen(instruccion.argumentos.STORE.clave) + 1;
-			guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave,logger);
-			log_info(logger, "Guarde en el archivo");
-			enviar_exito(socket_coordinador);
+
+			clave_buscada = malloc(tamanio_clave);
+			memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
+
+			if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){
+				guardar_archivo(instruccion.argumentos.STORE.clave, tamanio_clave,logger);
+				log_info(logger, "Guarde en el archivo");
+				enviar_exito(socket_coordinador);
+			} else {
+				enviar_fallo(socket_coordinador);
+			}
+
 			list_iterate(tabla_entradas, sumar_operacion);
 			break;
 	}
