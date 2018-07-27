@@ -177,7 +177,7 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 		default:
-			log_error(logger, "Protocolo desconocido");
+			//log_error(logger, "Protocolo desconocido");
 			return -1;
 			break;
 	}
@@ -205,7 +205,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	/*if(strlen(clave) > 40){
+	if(strlen(clave) > 40){																																		//Metete en tu propio codigo
 		log_info(logger, "Fallo por clave muy larga, ID ESI: %d", esi_ejecutando->id);
 		rta_esi = 86;
 		void* buffer_int = malloc(sizeof(int));
@@ -215,7 +215,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		sem_post(&s_cerrar_hilo);
 		free(buffer_int);
 		return -1;
-	} else {*/ // YA NO HACE FALTA PORQUE LO EVALÚA EL ESI
+	} else {
 		if(!clave_accesible(clave)) {
 				log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
 				rta_esi = 88;
@@ -237,14 +237,16 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 				list_add(lista_claves, nodito);
 			}
 			if(instruccion.keyword == STORE){
-				//memcpy(clave_buscada, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
-				//nodo_clave* nodito = list_remove_by_condition(lista_claves, condicion_clave);
-				//eliminar_nodo_clave(nodito);
+				clave_buscada = malloc(strlen(instruccion.argumentos.STORE.clave)+1);
+				memcpy(clave_buscada, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
+				nodo_clave* nodito = list_remove_by_condition(lista_claves, condicion_clave);
+				free(nodito->clave);
+				free(clave_buscada);
 			}
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);
 		}
-	//}
+	}
 	return 1;
 	free(clave);
 }
