@@ -162,7 +162,7 @@ int procesar_mensaje(int socket){
 			return resultado;
 			break;
 
-		case 91:
+		case 91: //Abortar ESI por 'kill' de consola
 			id_esi = recibir_int(socket_planificador, logger);
 			id_esi_buscado = id_esi;
 			buffer_int = malloc(sizeof(int));

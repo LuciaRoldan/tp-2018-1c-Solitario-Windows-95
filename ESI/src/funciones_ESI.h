@@ -14,7 +14,6 @@ typedef struct{
 int idEsi;
 t_config* configuracion_esi;
 t_log * logger_esi;
-t_esi_operacion ultima_instruccion;
 int me_bloquearon;
 int ultimo_read;
 

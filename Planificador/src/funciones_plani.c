@@ -148,7 +148,7 @@ void manejar_esis(){
 
 	while(terminar_todo){
 	while(pausar_planificador>=0){
-		if(list_size(esis_ready) > 0){
+		if(list_size(esis_ready) > 0){ //Por qué  esta repetido el if?
 		sleep(1);
 		sem_wait(&s_planificar);
 
@@ -300,22 +300,22 @@ void manejar_coordinador(void* socket){
 		switch(id){
 		case (82): //nuevo pedido
 
-				un_buffer_int = malloc(sizeof(int));
-				recibir(socket_coordinador, un_buffer_int, sizeof(int), logger);
-				tamanio = deserializar_id(un_buffer_int);
-				free(un_buffer_int);
+			un_buffer_int = malloc(sizeof(int));
+			recibir(socket_coordinador, un_buffer_int, sizeof(int), logger);
+			tamanio = deserializar_id(un_buffer_int);
+			free(un_buffer_int);
 
-				buffer = malloc(tamanio);
-				recibir(socket_coordinador, buffer, tamanio, logger);
-				instruccion = deserializar_instruccion(buffer);
-				free(buffer);
-				log_info(logger, "Recibi del Coordinador: %s, %d", instruccion.argumentos.GET.clave, instruccion.keyword);
+			buffer = malloc(tamanio);
+			recibir(socket_coordinador, buffer, tamanio, logger);
+			instruccion = deserializar_instruccion(buffer);
+			free(buffer);
+			log_info(logger, "Recibi del Coordinador: %s, %d", instruccion.argumentos.GET.clave, instruccion.keyword);
 
-				procesar_pedido(instruccion);
+			procesar_pedido(instruccion);
 
-				//liberar_instruccion(instruccion);
+			//liberar_instruccion(instruccion);
 
-				conexion_valida = 82;
+			conexion_valida = 82;
 		break;
 		case (83):
 			recibir_status_clave();
@@ -524,6 +524,7 @@ void informar_coordi_kill(int id_Esi){
 	void* buffer_envio = malloc(sizeof(int)*2);
 	serializar_int(buffer_envio, id_Esi, 91);
 	enviar(sockets_planificador.socket_coordinador, buffer_envio, sizeof(int)*2, logger);
+	free(buffer_envio);
 }
 
 
@@ -767,7 +768,7 @@ void abortar_esi(int id_esi){
 
 	cerrar_cosas_de_un_esi(esi_abortado);
 	//sem_wait(&s_eliminar_pcb);
-	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb); //Esto estaba comentado
 }
 
 //--Mover ESI a finalizados--//
@@ -992,14 +993,14 @@ void cerrar_cosas_de_un_esi(void* esi){
 	log_info(logger, "Entre en cerrar_cosas");
 	//pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
-	log_info(logger, "hola");
+	//log_info(logger, "hola");
 	hay_hilos_por_cerrar = 1;
+	sem_post(&s_planificar);
+	log_info(logger, "Post a planificar desde cerrar cosas");
+	/*if(list_size(esis_ready) == 0){ //no se por que pero hacen falta 2
 		sem_post(&s_planificar);
 		log_info(logger, "Post a planificar desde cerrar cosas");
-	if(list_size(esis_ready) == 0){ //no se por que pero hacen falta 2
-		sem_post(&s_planificar);
-		log_info(logger, "Post a planificar desde cerrar cosas");
-	}
+	}*/
 	log_info(logger, "Post a cerrar_un_hilo");
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
