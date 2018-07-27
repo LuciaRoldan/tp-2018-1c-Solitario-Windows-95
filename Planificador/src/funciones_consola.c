@@ -9,22 +9,21 @@ void ejecutar_consola(){
 
 	while(1) {
 		linea = readline("\n > Ingrese un comando: ");
-		if(linea){
+		if(!string_is_empty(linea)){
 			add_history(linea);
 			printf("---> La linea ingresada fue: %s\n", linea);
-		}
-		string_to_lower(linea);
+			string_to_lower(linea);
 
-		if(!strncmp(linea, "exit", 4)) {
-			printf("Cerrando Consola. Hasta luego. \n");
-			free(linea);
-			desencadenar_cerrar_planificador();
-			exit(1);
-			break;
-		}
+			if(!strncmp(linea, "exit", 4)) {
+				printf("Cerrando Consola. Hasta luego. \n");
+				free(linea);
+				desencadenar_cerrar_planificador();
+				exit(1);
+				break;
+			}
 
-		op_consola operacion = analizar_linea(linea);
-		char **palabras = string_to_array(linea, " ");
+			op_consola operacion = analizar_linea(linea);
+			char **palabras = string_to_array(linea, " ");
 
 			switch(operacion){
 			case BLOQUEAR:
@@ -66,7 +65,7 @@ void ejecutar_consola(){
 					if(palabras[2]==NULL){
 						printf("Usted quiere finalizar un proceso.\n");
 						printf("Operacion: %s ---- ", palabras[0]);
-						printf("ID: %s ---- ", palabras[1]);
+						printf("ID: %s\n", palabras[1]);
 						el_id = atoi(palabras[1]);
 						kill_esi(el_id);
 					} else {
@@ -79,7 +78,7 @@ void ejecutar_consola(){
 			case PAUSAR:
 				if(palabras[1] == NULL) {
 					printf("Usted quiere pausar la planificacion.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
+					printf("Operacion: %s\n", palabras[0]);
 					pausar_planificacion();
 				} else {
 					printf("Demasiados argumentos para la operacion de pausar.\n");
@@ -88,7 +87,7 @@ void ejecutar_consola(){
 			case CONTINUAR:
 				if(palabras[1] == NULL) {
 					printf("Usted quiere continuar la planificacion.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
+					printf("Operacion: %s\n", palabras[0]);
 					continuar_planificacion();
 				} else {
 					printf("Demasiados argumentos para la operacion de continuar.\n");
@@ -99,7 +98,7 @@ void ejecutar_consola(){
 					if(palabras[2]==NULL){
 						printf("Usted quiere listar los procesos en cola de espera para un recurso.\n");
 						printf("Operacion: %s ---- ", palabras[0]);
-						printf("Recurso: %s ---- ", palabras[1]);
+						printf("Recurso: %s\n", palabras[1]);
 						recurso = palabras[1];
 						listar_procesos_encolados(recurso);
 					} else {
@@ -114,7 +113,7 @@ void ejecutar_consola(){
 					if(palabras[2]==NULL){
 						printf("Usted quiere ver el estado de una clave.\n");
 						printf("Operacion: %s ---- ", palabras[0]);
-						printf("Clave: %s ---- ", palabras[1]);
+						printf("Clave: %s\n", palabras[1]);
 						clave = palabras[1];
 						pedir_status(clave);
 					} else {
@@ -127,7 +126,7 @@ void ejecutar_consola(){
 			case DEADLOCK:
 				if(palabras[1] == NULL) {
 					printf("Usted quiere analizar deadlocks.\n");
-					printf("Operacion: %s ---- ", palabras[0]);
+					printf("Operacion: %s\n", palabras[0]);
 					deadlock();
 				} else {
 					printf("Demasiados argumentos para la operacion de deadlock. \n");
@@ -137,6 +136,7 @@ void ejecutar_consola(){
 			   printf("Comando no reconocido. Ingrese nuevamente. \n");
 			   break;
 			}
+		}
   }
   free(linea);
   exit(1);
@@ -252,6 +252,7 @@ void kill_esi(int id){
 	pcb* pcb_esi = list_find(pcbs, ids_iguales_pcb);
 	log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", pcb_esi->id);
 	informar_coordi_kill(pcb_esi->id);
+	enviar_esi_kill(pcb_esi->socket);
 	abortar_esi(pcb_esi->id);
 }
 void pedir_status(char* clave){
@@ -347,4 +348,10 @@ void imprimir_id_esi(void* esi){
 	int id_esi;
 	memcpy(&id_esi, esi, sizeof(int));
 	printf("%d  ", id_esi);
+}
+
+void enviar_esi_kill(int socket_esi){
+	int protocolo;
+	serializar_id(&protocolo, 91);
+	enviar(socket_esi, &protocolo, sizeof(int), logger);
 }

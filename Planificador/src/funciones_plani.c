@@ -150,6 +150,7 @@ void manejar_esis(){
 	while(pausar_planificador>=0){
 		sleep(1);
 		if(list_size(esis_ready) > 0){
+		
 		sem_wait(&s_planificar);
 
 		if(list_size(esis_ready) > 0){
@@ -234,11 +235,8 @@ void recibir_esis(void* socket_esis){
 
 //--MANEJAR UN ESI--//
 void manejar_esi(void* la_pcb){
-	int* valor_sem = malloc(sizeof(int));
-	sem_getvalue(&s_planificar, valor_sem);
 	if(list_size(esis_ready) == 1){
 		sem_post(&s_planificar);
-		log_info(logger, "Post a planificar");
 	}
 
 	log_info(logger, "Entre a manejar_esi");
@@ -527,6 +525,7 @@ void informar_coordi_kill(int id_Esi){
 	void* buffer_envio = malloc(sizeof(int)*2);
 	serializar_int(buffer_envio, id_Esi, 91);
 	enviar(sockets_planificador.socket_coordinador, buffer_envio, sizeof(int)*2, logger);
+	free(buffer_envio);
 }
 
 
@@ -770,7 +769,7 @@ void abortar_esi(int id_esi){
 
 	cerrar_cosas_de_un_esi(esi_abortado);
 	//sem_wait(&s_eliminar_pcb);
-	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb);
+	//list_remove_and_destroy_by_condition(pcbs, ids_iguales_pcb, destruir_pcb); //Esto estaba comentado
 }
 
 //--Mover ESI a finalizados--//
@@ -997,6 +996,7 @@ void cerrar_cosas_de_un_esi(void* esi){
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	log_info(logger, "hola");
 	hay_hilos_por_cerrar = 1;
+
 		sem_post(&s_planificar);
 		log_info(logger, "Post a planificar desde cerrar cosas");
 	if(list_size(esis_ready) == 0){ //no se por que pero hacen falta 2

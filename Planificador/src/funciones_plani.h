@@ -129,6 +129,7 @@ void ejecutar_consola();
 // Operaciones internas de consola
 op_consola analizar_linea(char* linea);
 char**  string_to_array(char* text, char* separator);
+void enviar_esi_kill(int socket_esi);
 
 // Comandos de consola
 void pausar_planificacion();
