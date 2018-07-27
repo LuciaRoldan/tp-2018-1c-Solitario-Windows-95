@@ -21,6 +21,7 @@ int puntero_circular;
 int lugar_de_memoria;
 int puntero_pagina;
 int puntero_entrada;
+int puntero_pagina_buscado;
 //t_bitarray* precencia;
 
 

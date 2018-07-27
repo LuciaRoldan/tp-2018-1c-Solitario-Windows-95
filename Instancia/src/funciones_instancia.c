@@ -199,7 +199,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				entrada_encontrada->clave = malloc(tamanio_clave);
 				memcpy(entrada_encontrada->clave, instruccion.argumentos.SET.clave, tamanio_clave);
 
-				cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor -1);
+				cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 				log_info(logger, "tiene %d entradas ", cantidad_entradas);
 				entrada_encontrada->cantidad_entradas = cantidad_entradas;
 				entrada_encontrada->tamanio_valor = tamanio_valor;
@@ -211,7 +211,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 					asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 				entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
-				log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
+				//log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
 				log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
 				memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 				entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
@@ -220,7 +220,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 
 				//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
 				list_add(tabla_entradas, entrada_encontrada);
-				puntero_entrada++; //Se agrega suma la entrada que se agrega
+				/*puntero_entrada++; //Se agrega suma la entrada que se agrega
 
 				if(cantidad_entradas > 1){
 					for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
@@ -235,7 +235,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 					if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){
 						puntero_pagina = 0;
 					}
-				}
+				}*/
 
 				//enviar_exito(socket_coordinador);
 
@@ -247,7 +247,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_encontrada->clave = malloc(tamanio_clave);
 			memcpy(entrada_encontrada->clave, instruccion.argumentos.SET.clave, tamanio_clave);
 
-			cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor -1);
+			cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
 			log_info(logger, "tiene %d entradas ", cantidad_entradas);
 			entrada_encontrada->cantidad_entradas = cantidad_entradas;
 			entrada_encontrada->tamanio_valor = tamanio_valor;
@@ -259,16 +259,16 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
-			log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
+			//log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
 			log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
 			memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 			entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
 			log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 			log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
 
-			list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
-//			list_add(tabla_entradas, entrada_encontrada);
-			puntero_entrada++; //Se suma la entrada que se agrega
+			//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
+			list_add(tabla_entradas, entrada_encontrada);
+			/*puntero_entrada++; //Se suma la entrada que se agrega
 			log_info(logger, "EL PUNTERO AHORA ESTA EN %d:", puntero_entrada);
 
 			if(cantidad_entradas > 1){
@@ -285,7 +285,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){
 					puntero_pagina = 0;
 				}
-			}
+			}*/
 		}
 			enviar_exito(socket_coordinador); //Revisar si esta bien aca porque siempre va a enviar exito
 
@@ -341,6 +341,7 @@ int any_entrada_bitmap_libre() {
 }
 
 int cantidad_entradas_ocupa(int tamanio_valor){
+	//int valor_sin_barra_cero = tamanio_valor -1;
 	if(tamanio_valor % configuracion_coordi.tamano_entrada == 0){
 		return tamanio_valor/configuracion_coordi.tamano_entrada;
 	} else {
@@ -458,7 +459,7 @@ void obtener_puntero_entrada(){
 
 bool condicion_tiene_puntero_entrada(void* datos){
 	estructura_clave entrada = *((estructura_clave*) datos);
-	bool respuesta = entrada.numero_pagina < puntero_pagina && puntero_pagina <= entrada.numero_pagina + entrada.cantidad_entradas;
+	bool respuesta = entrada.numero_pagina < puntero_pagina_buscado && puntero_pagina_buscado <= entrada.numero_pagina + entrada.cantidad_entradas;
 	return respuesta;
 
 }
@@ -543,6 +544,7 @@ int buscar_mayor_lru_atomico(int necesarias) {
 }
 
 int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
+	puntero_circular = 0;
 	log_info(logger, "Entre al algoritmo circular");
 	int entradas_necesarias = entrada_nueva->cantidad_entradas;
 	log_info(logger, "Las entradas que necesito %d", entradas_necesarias);
@@ -555,13 +557,9 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		puntero_circular = resultado;
 	}
 	while (atomicas_borradas != entradas_necesarias) {
-		//log_info(logger, "El puntero circular esta en %d y el tamaño es %d", puntero_circular, list_size(tabla_entradas));
 		victima = list_get(tabla_entradas, puntero_circular);
-		//log_info(logger, "Hice el get y la cantidad de entradas es %d", victima->cantidad_entradas);
 		if (victima->cantidad_entradas == 1) {
-			//log_info(logger, "Antes de eliminar tengo %d entradas", list_size(tabla_entradas));
 			acceso_tabla[victima->numero_pagina] = 0;
-			//list_remove_and_destroy_element(tabla_entradas, victima->numero_pagina, borrar_entrada);//Eliminamos el nuemro de pagina, pero deberia ser el numero de indice
 			list_remove_and_destroy_element(tabla_entradas, puntero_circular, borrar_entrada);
 			puntero_circular++;
 			atomicas_borradas++;
@@ -574,6 +572,7 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		}
 
 	}
+	/*log_info(logger, "EL PUNTERO CIRCULAR ESTA EN: %d", puntero_circular);
 	log_info(logger, "Las entradas borradas son %d", atomicas_borradas);
 	puntero_entrada = puntero_circular - entradas_necesarias;
 	log_info(logger, "********BITMAP EN EL CIRCULAR*************");
@@ -582,7 +581,7 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 
 	}
 	log_info(logger, "******************************************");
-	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));
+	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));*/
 	return resultado; // si habia entradas contiguas me lo devuelve en el puntero a donde empezo a borrar sino en -1
 }
 
