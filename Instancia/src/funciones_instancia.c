@@ -183,7 +183,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			if(cantidad_entradas_ocupa(tamanio_valor) <= entrada_encontrada->cantidad_entradas){
 					memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 					entrada_encontrada->tamanio_valor = tamanio_valor;
-					enviar_exito(socket_coordinador);
+					//enviar_exito(socket_coordinador);
 //					list_iterate(tabla_entradas, sumar_operacion);
 					free(clave_buscada);
 					log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
