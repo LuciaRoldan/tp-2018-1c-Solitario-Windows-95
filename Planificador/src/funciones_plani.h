@@ -80,6 +80,7 @@ int hay_hilos_por_cerrar;
 int pausar_planificador;
 int terminar_todo;
 int fin_de_programa;
+int rafaga_actual;
 
 
 ///---SEMAFOROS---///
@@ -147,6 +148,7 @@ void manejar_esi(void* pcb_esi);
 //Planificar
 void planificar();
 void ordenar_pcbs();
+void calcular_estimacion(pcb* una_pcb);
 void planificacionSJF_CD();
 void planificacionSJF_SD();
 void planificacionHRRN();
@@ -158,8 +160,8 @@ bool algoritmo_HRRN(void* pcb1, void* pcb2);
 void actualizar_ultima_estimacion_SJF();
 void actualizar_ultima_estimacion_HRRN();
 
-void calcular_estimacion_SJF(void* pcb);
-void calcular_estimacion_HRRN(void* pcb);
+void calcular_estimacion_SJF(pcb* una_pcb);
+void calcular_estimacion_HRRN(pcb* una_pcb);
 
 //Operaciones sobre PCBs
 void registrar_exito_en_pcb(int id_esi);

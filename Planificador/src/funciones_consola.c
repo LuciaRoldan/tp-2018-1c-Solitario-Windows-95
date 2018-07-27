@@ -224,9 +224,10 @@ void quitar_primer_esi_de_cola_bloqueados(char* clave){
 		if(list_any_satisfy(claves_bloqueadas, claves_iguales_nodo_clave)){
 			void* aux = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 			nodo_clave = aux;
-			if(list_size(nodo_clave->esis_en_espera)>0){
+			if(list_size(nodo_clave->esis_en_espera) > 0){
 				pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 				log_info(logger, "pase el list find");
+
 				//SACO al primer esi de la lista de bloqueados de esa clave
 				void* primero = list_remove(nodo_clave->esis_en_espera, 0);
 				int* primer_esi_en_espera = primero;
@@ -235,17 +236,27 @@ void quitar_primer_esi_de_cola_bloqueados(char* clave){
 				id_buscado = *primer_esi_en_espera;
 				void* un_esi = list_find(pcbs, ids_iguales_pcb);
 				pthread_mutex_unlock(&m_id_buscado);
+
 				pcb* el_nuevo_esi_ready = un_esi;
 				//agrego al esi a ready
+				calcular_estimacion(el_nuevo_esi_ready);
 				list_add(esis_ready, el_nuevo_esi_ready);
-				if(list_is_empty(nodo_clave->esis_en_espera)){
-					liberar_clave(clave);
+				log_info(logger, "Agregue al esi %d a ready", *primer_esi_en_espera);
+				nodo_clave->esi_que_la_usa = *primer_esi_en_espera;
+				log_info(logger, "Ahora el esi %d tiene la clave %s", *primer_esi_en_espera, nodo_clave->clave);
+
+				if(list_size(esis_ready) == 1){
+					sem_post(&s_planificar);
 				}
+
+			} else {
+					liberar_clave(clave);
+					}
 		}
-		}
-		else {pthread_mutex_unlock(&m_lista_claves_bloqueadas);}
+	} else { pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 	}
 }
+
 
 void listar_procesos_encolados(char* recurso){
 	printf("---> Los ESIs a la espera del recurso %s son: ", recurso);
