@@ -116,7 +116,13 @@ int enviar_status_clave(char* clave){
 		free(buffer);
 		return bytes_enviados;
 	} else {
-		return -1;
+		status_clave status = {clave,idInstancia, 0, ""};
+		int tamanio_buffer = tamanio_buffer_status(status);
+		void* buffer = malloc(tamanio_buffer);
+		serializar_status_clave(buffer,status);
+		int bytes_enviados = enviar(socket_coordinador,buffer,tamanio_buffer,logger);
+		free(buffer);
+		return bytes_enviados;
 	}
 }
 
@@ -165,13 +171,13 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		estructura_clave* entrada_encontrada;
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor) + 1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave) + 1;
-		list_iterate(tabla_entradas, sumar_operacion);
-		entrada_encontrada->cantidad_operaciones = 0;
+		//list_iterate(tabla_entradas, sumar_operacion);
 
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
 
 		if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){ //En el caso de que se haga set de una clave que ya se habia hecho set
+			log_info(logger,"Ya se hizo SET de esta clave");
 			entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 
 			if(cantidad_entradas_ocupa(tamanio_valor) < entrada_encontrada->cantidad_entradas){
@@ -182,30 +188,61 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 					free(clave_buscada);
 					log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 			} else {
-//DEBERIA IR ALGO ASI PERO TIRA SEGMENTATION FAULT
-//				cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
-//				log_info(logger, "tiene %d entradas ", cantidad_entradas);
-//				entrada_encontrada->cantidad_entradas = cantidad_entradas;
-//				entrada_encontrada->tamanio_valor = tamanio_valor;
-//				entrada_encontrada->cantidad_operaciones = 0;
-//
-//				int resultado = asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
-//				if(resultado < 0){asignar_memoria(entrada_encontrada, cantidad_entradas, valor);}
-//
-//				entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
-//				log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
-//				log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
-//				memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
-//				entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
-//				log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
-//				log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
-//				list_add_in_index(tabla_entradas, entrada_encontrada->numero_pagina, entrada_encontrada);
-//				enviar_exito(socket_coordinador);
+				log_info(logger, "El nuevo valor se pasa del tamanio que habia reservado");
+//Cambie que se borra la entrada anterior y agrego una nueva como si fuese la primera vez que se hace el set
+				for(int i = 0; i < entrada_encontrada->cantidad_entradas; i++){
+					acceso_tabla[i + entrada_encontrada->numero_pagina] = 0;
+				}
+
+				list_remove_and_destroy_by_condition(tabla_entradas, condicion_clave_entrada, borrar_entrada);
+
+				entrada_encontrada = malloc(sizeof(estructura_clave));
+				entrada_encontrada->clave = malloc(tamanio_clave);
+				memcpy(entrada_encontrada->clave, instruccion.argumentos.SET.clave, tamanio_clave);
+
+				cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+				log_info(logger, "tiene %d entradas ", cantidad_entradas);
+				entrada_encontrada->cantidad_entradas = cantidad_entradas;
+				entrada_encontrada->tamanio_valor = tamanio_valor;
+				entrada_encontrada->cantidad_operaciones = 0;
+
+				int resultado = asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
+				if(resultado < 0){asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
+
+				entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
+				log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
+				log_info(logger, "mi direccion es: %d", entrada_encontrada->valor);
+				memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
+				entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
+				log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
+				log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
+				list_add_in_index(tabla_entradas, entrada_encontrada->numero_pagina, entrada_encontrada);
+
+				list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
+							puntero_entrada++; //Se agrega suma la entrada que se agrega
+
+							if(cantidad_entradas > 1){
+								for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
+									puntero_pagina += i;
+									if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){ //se cambia cuando es igual porque este todavia no se uso
+										puntero_pagina = 0; // el ultimo usado es cantidad entradas - 1
+									}
+								}
+
+
+							} else{
+								puntero_pagina++;
+								if(puntero_pagina == (configuracion_coordi.cantidad_entradas)){
+									puntero_pagina = 0;
+								}
+							}
+
+				enviar_exito(socket_coordinador);
 
 				}
 
 		} else {
-			log_info(logger,"Entra en el else");
+			log_info(logger,"Es la primera vez que se hace SET de esta clave");
 			entrada_encontrada = malloc(sizeof(estructura_clave));
 			entrada_encontrada->clave = malloc(tamanio_clave);
 			memcpy(entrada_encontrada->clave, instruccion.argumentos.SET.clave, tamanio_clave);
@@ -217,7 +254,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_encontrada->cantidad_operaciones = 0;
 
 			int resultado = asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);
-			if(resultado < 0){asignar_memoria(entrada_encontrada, cantidad_entradas, valor);}
+			if(resultado < 0){asignar_memoria(entrada_encontrada, cantidad_entradas, instruccion.argumentos.SET.valor);}
 
 			entrada_encontrada->valor = (puntero_pagina - cantidad_entradas)* configuracion_coordi.tamano_entrada + inicio_memoria;
 			log_info(logger, "La direccion deberia ser %d", inicio_memoria + (4 * configuracion_coordi.tamano_entrada));
@@ -249,13 +286,20 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		}
 			enviar_exito(socket_coordinador);
 
-		log_info(logger, "*********************");
+		/*log_info(logger, "*********************");
 			for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
 					log_info(logger, "El nuevo bitmap en %d en %d", h, acceso_tabla[h]);
 
 			}
 		log_info(logger, "El tamanio de la lista es: %d", list_size(tabla_entradas));
-		log_info(logger, "*********************");
+		log_info(logger, "*********************");*/
+
+		log_info(logger, "------------------------------------------------------------");
+		for(int i = 0; i < list_size(tabla_entradas); i++){
+			estructura_clave* nodo = list_get(tabla_entradas, i);
+			log_info(logger, "En la posicion %d esta la clave %s con el valor %s", i, nodo->clave, nodo->valor);
+		}
+		log_info(logger, "------------------------------------------------------------");
 
 		log_info(logger, "Termine el set");
 		break;
@@ -506,7 +550,8 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 		if (victima->cantidad_entradas == 1) {
 			log_info(logger, "Antes de eliminar tengo %d entradas", list_size(tabla_entradas));
 			acceso_tabla[victima->numero_pagina] = 0;
-			list_remove_and_destroy_element(tabla_entradas, victima->numero_pagina, borrar_entrada);
+			//list_remove_and_destroy_element(tabla_entradas, victima->numero_pagina, borrar_entrada);//Eliminamos el nuemro de pagina, pero deberia ser el numero de indice
+			list_remove_and_destroy_element(tabla_entradas, puntero_circular, borrar_entrada);
 			puntero_circular++;
 			atomicas_borradas++;
 			log_info(logger, "Las entradas borradas son %d", atomicas_borradas);
@@ -620,11 +665,11 @@ void compactar(){
 		nuevo_acceso_tabla[h] = 0;
 	}
 
-	log_info(logger, "*********************");
+	/*log_info(logger, "*********************");
 	for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
 			log_info(logger, "El nuevo bitmap en %d en %d", h, nuevo_acceso_tabla[h]);
 		}
-	log_info(logger, "*********************");
+	log_info(logger, "*********************");*/
 
 	//Si tengo algo en la lista entonces esta ocupado, lo paso a la memoria nueva
 	for(int i = 0; i < list_size(tabla_entradas); i++){
@@ -842,8 +887,6 @@ void dump(){
 	while(activa){
 		sleep(mi_configuracion.intervaloDump);
 		pthread_mutex_lock(&m_tabla);
-		log_info(logger, "El tamanio de la lista es: %d", list_size(tabla_entradas));
-		log_info(logger, "--------------------------------------");
 		list_iterate(tabla_entradas, dumpear);
 		log_info(logger, "Hice el dump");
 		pthread_mutex_unlock(&m_tabla);
