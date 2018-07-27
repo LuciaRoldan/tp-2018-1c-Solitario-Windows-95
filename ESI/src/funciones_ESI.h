@@ -15,6 +15,8 @@ int idEsi;
 t_config* configuracion_esi;
 t_log * logger_esi;
 t_esi_operacion ultima_instruccion;
+int me_bloquearon;
+int ultimo_read;
 
 // Configuracion ESI
 sockets_conexiones leer_arch_configuracion();
@@ -34,9 +36,9 @@ t_esi_operacion parsear_linea(FILE* archivo);
 void mostrar_instruccion(t_esi_operacion instruccion);
 void informar_fin_de_programa(sockets_conexiones conexiones, int flag);
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador);
+//bool excede_tamanio_clave(t_esi_operacion op);
 void error_clave_larga(sockets_conexiones las_conexiones);
 int enviar_instruccion(t_esi_operacion operacion, int socket_destino);
-int ejecutar_ultima_instruccion(int socket_destino);
 void liberar_instruccion(t_esi_operacion instruccion);
 void procesar_confirmacion(int confirmacion, int socket_destino);
 int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_esi);

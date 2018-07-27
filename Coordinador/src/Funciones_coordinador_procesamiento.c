@@ -205,7 +205,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	if(strlen(clave) > 40){
+	/*if(strlen(clave) > 40){
 		log_info(logger, "Fallo por clave muy larga, ID ESI: %d", esi_ejecutando->id);
 		rta_esi = 86;
 		void* buffer_int = malloc(sizeof(int));
@@ -215,7 +215,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		sem_post(&s_cerrar_hilo);
 		free(buffer_int);
 		return -1;
-	} else {
+	} else {*/ // YA NO HACE FALTA PORQUE LO EVALÚA EL ESI
 		if(!clave_accesible(clave)) {
 				log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
 				rta_esi = 88;
@@ -244,7 +244,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 			operacion_ejecutando = instruccion;
 			enviar_operacion(socket_planificador, instruccion);
 		}
-	}
+	//}
 	return 1;
 	free(clave);
 }

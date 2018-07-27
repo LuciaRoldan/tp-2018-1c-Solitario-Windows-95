@@ -112,6 +112,22 @@ void mostrar_instruccion(t_esi_operacion instruccion){
 		}
 }
 
+bool excede_tamanio_clave(t_esi_operacion op){
+	switch(op.keyword){
+	case GET:
+		return strlen(op.argumentos.GET.clave) > 40;
+		break;
+	case SET:
+		return strlen(op.argumentos.SET.clave) > 40;
+		break;
+	case STORE:
+		return strlen(op.argumentos.STORE.clave) > 40;
+		break;
+	default:
+		return false;
+	}
+}
+
 void error_clave_larga(sockets_conexiones las_conexiones){
 	void *protocolo = malloc(sizeof(int));
 	serializar_id(protocolo, 86);
@@ -120,8 +136,8 @@ void error_clave_larga(sockets_conexiones las_conexiones){
 	free(protocolo);
 }
 
-void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
-	if(flag == 0){
+void informar_fin_de_programa(sockets_conexiones conexiones, int aborto){
+	if(aborto == 0){
 		int envio;
 		serializar_id(&envio, 81);
 		log_info(logger_esi, "Fin de script.\n");
@@ -136,34 +152,20 @@ void informar_fin_de_programa(sockets_conexiones conexiones, int flag){
 }
 
 int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
-	//if(me_bloquearon == 1){
-	//	ejecutar_ultima_instruccion(socket_Coordinador);
-	//	me_bloquearon = 0;
-	//	return 1;
-	//} else {
 	t_esi_operacion operacion = parsear_linea(archivo);
 	if(!operacion.valido) return -1;
 	log_info(logger_esi,"Parseado de instruccion completo");
+	/*if(excede_tamanio_clave(operacion)){
+		return -1;
+	}*/
 	mostrar_instruccion(operacion);
-	ultima_instruccion = operacion; //no anda
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
 		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
 		liberar_instruccion(operacion);
 		return 1;
 	} else {
-		log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
 		liberar_instruccion(operacion);
-		return -1;
-	}
-}
-
-int ejecutar_ultima_instruccion(int socket_destino){
-	if(enviar_instruccion(ultima_instruccion, socket_destino) > 0){
-		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
-		return 1;
-	} else {
-		log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
-		return -1;
+		return 0;
 	}
 }
 
@@ -213,10 +215,9 @@ int informar_confirmacion(int confirmacion, int socket_destino, t_log* logger_es
 			return 1;
 			break;
 	}
-	void* buffer_confirmacion = malloc(sizeof(int));
-	serializar_id(buffer_confirmacion, confirmacion);
-	enviar(socket_destino, buffer_confirmacion, sizeof(int), logger_esi);
-	free(buffer_confirmacion);
+	int buffer_confirmacion;
+	serializar_id(&buffer_confirmacion, confirmacion);
+	enviar(socket_destino, &buffer_confirmacion, sizeof(int), logger_esi);
 	return aborto;
 }
 

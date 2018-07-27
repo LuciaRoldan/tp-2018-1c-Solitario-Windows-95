@@ -37,41 +37,33 @@ int main(int argc, char* argv[]){
 	handshake_del_esi(conexiones.socket_coordi);
 	handshake_del_esi(conexiones.socket_plani);
 
-	int codigo_plani;
-	int codigo_coordi;
+	int codigo_plani, resultado;
 	int abortoESI = 0;
 	int flag_exit = 0;
+	me_bloquearon = 0;
+	ultimo_read = 0;
 	void* mensaje_coordi = malloc(sizeof(int));
 	resultado_esi confirmacion;
-	me_bloquearon = 0; //ro
-	ultimo_read = 0; //ro
 
 	while((!feof(script_prueba)) && abortoESI == 0 && flag_exit == 0) {
 		codigo_plani = recibir_int(conexiones.socket_plani, logger_esi);
 		log_info(logger_esi, "Plani me dijo: %d", codigo_plani);
 		//sleep(1);
 		switch(codigo_plani){
-			case 60: //desbloqueo ESI
-				ejecutar_ultima_instruccion(conexiones.socket_coordi);
-				log_info(logger_esi, "Instruccion enviada a COORDINADOR desde ESI %d", idEsi);
-				confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
-				log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
-				abortoESI = informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
-				if(abortoESI) informar_fin_de_programa(conexiones, abortoESI);
-				break;
 			case 61: //solicitud de ejecucion
-				if(ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi) > 0){
+				resultado = ejecutar_instruccion_sgte(script_prueba, conexiones.socket_coordi);
+				if(resultado > 0){
 					confirmacion = recibir_int(conexiones.socket_coordi, logger_esi);
 					log_info(logger_esi, "Recibi del coordinador: %d", confirmacion);
 					abortoESI = informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);
-					/*if((confirmacion > 84) && (confirmacion < 90)){
-						abortoESI = 1;
-						informar_fin_de_programa(conexiones, abortoESI);
-					} else informar_confirmacion(confirmacion, conexiones.socket_plani, logger_esi);*/
 					if(abortoESI) informar_fin_de_programa(conexiones, abortoESI);
 				} else {
-					log_info(logger_esi, "La clave no paso la prueba");
-					error_clave_larga(conexiones);
+					if(resultado < 0){
+						log_info(logger_esi, "La clave es demasiado larga.");
+						error_clave_larga(conexiones);
+					} else{
+						log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
+					}
 					flag_exit = 1;
 				}
 				break;
