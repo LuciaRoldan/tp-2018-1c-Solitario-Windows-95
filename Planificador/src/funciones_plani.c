@@ -150,7 +150,6 @@ void manejar_esis(){
 	while(pausar_planificador>=0){
 		if(list_size(esis_ready) > 0){
 		sleep(1);
-
 		sem_wait(&s_planificar);
 
 		if(list_size(esis_ready) > 0){
@@ -158,12 +157,6 @@ void manejar_esis(){
 		planificar();
 		log_info(logger, "Pase planificar()");
 
-
-//		log_info(logger, "Dentro manejar_esis (planificando)");
-//		if(hay_que_ordenar > 0){
-//			log_info(logger, "Hay que ordenar en manejar_esis");
-//			planificar();
-//		}
 		void* esi_a_ejecutar = list_get(esis_ready, 0);
 		pcb* pcb_esi;
 		pcb_esi = esi_a_ejecutar;
@@ -209,7 +202,6 @@ void recibir_esis(void* socket_esis){
 	while(terminar_todo == 1){
 		log_info(logger, "Esperando un ESI adentro de recibir_esis");
 
-		//sleep(1);
 		socket_esi_nuevo = aceptar_conexion(int_socket_esis);
 
 		if (socket_esi_nuevo > 0){
@@ -253,8 +245,6 @@ void manejar_esi(void* la_pcb){
 	while(chau > 0){
 		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
-		//sleep(1);
-
 		void* buffer_resultado = malloc(sizeof(int));
 		recibir(pcb_esi.socket, buffer_resultado, sizeof(int), logger);
 		int resultado = deserializar_id(buffer_resultado);
@@ -265,9 +255,6 @@ void manejar_esi(void* la_pcb){
 		if (resultado >= 0){
 			switch (resultado){
 				case (84):
-					//pthread_mutex_lock(&m_lista_pcbs);
-					//registrar_exito_en_pcb(pcb_esi.id);
-					//pthread_mutex_unlock(&m_lista_pcbs);
 					sem_post(&s_planificar);
 				break;
 				case (90):
@@ -376,15 +363,14 @@ void procesar_pedido(t_esi_operacion instruccion){
 			//No existe el elemento clave_bloqueada para esa clave en mi lista de claves bloqueadas, la creo
 			clave_bloqueada* clave_nueva = malloc(sizeof(clave_bloqueada));
 
-			clave_buscada = instruccion.argumentos.GET.clave; //deberia memcpy
+			clave_buscada = instruccion.argumentos.GET.clave;
 			//memcpy(clave_buscada, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
 
 			clave_nueva->esi_que_la_usa = pcb_pedido_esi->id;
 
 			char* clave_esi_nueva = malloc(strlen(instruccion.argumentos.GET.clave)+1);
 			memcpy(clave_esi_nueva, instruccion.argumentos.GET.clave, strlen(instruccion.argumentos.GET.clave)+1);
-			clave_nueva->clave = clave_esi_nueva; //deberia memcpy
-
+			clave_nueva->clave = clave_esi_nueva;
 			clave_nueva->esis_en_espera = list_create();
 
 			pthread_mutex_lock(&m_lista_claves_bloqueadas);
@@ -555,23 +541,11 @@ pcb* crear_pcb_esi(int socket_esi_nuevo, int id_esi, pthread_t hilo_esi){
 	return pcb_esi;
 }
 
-//--Registrar exito ESIS--//
-//void registrar_exito_en_pcb(int id_esi){
-//	sumar_ultima_rafaga(id_esi);
-//}
-
 //--Planificar--//
 void planificar(){
 	log_info(logger, "Dentro de planificar");
 	if(list_size(esis_ready) > 0){
 		ordenar_pcbs();
-//	sumar_retardo_otros_ready();
-//	void* buffer = malloc(sizeof(int));
-//	serializar_id(buffer, 61);
-//	log_info(logger, "Voy a enviar al ESI de id %d y socket %d", pcb_esi->id, pcb_esi->socket); //BORRAR
-//	enviar(pcb_esi->socket, buffer, sizeof(int), logger);
-//	log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
-//	free(buffer);
 	}
 }
 
@@ -582,18 +556,6 @@ bool ids_iguales_pcb(void* pcbb){
 	pcb* pcb_esi = pcbb;
 	return pcb_esi->id == id_buscado;
 }
-
-//--Sumar 1 a la ultima rafaga del ESI--//
-//void sumar_ultima_rafaga(int id_esi){
-//	void* pcbb;
-//	pthread_mutex_lock(&m_id_buscado);
-//	id_buscado = id_esi;
-//	pcbb = list_find(pcbs, ids_iguales_pcb);
-//	pthread_mutex_unlock(&m_id_buscado);
-//	pcb* esi_que_ejecuto = pcbb;
-//	esi_que_ejecuto->ultimaRafaga+=1;
-//	//log_info(logger, "La ultima rafaga del ESI: %d que acaba de intentar ejecutar es: %d", esi_que_ejecuto->id, esi_que_ejecuto->ultimaRafaga);
-//}
 
 //--Sumar 1 al retardo de los demas ESIs ready--//
 void sumar_retardo_otros_ready(){
@@ -627,6 +589,7 @@ bool no_es_el_primer_esi_ready(void *pcbb){
 }
 
 
+//--FUNCIONES PLANIFICACION--//
 void calcular_estimacion(pcb* una_pcb){
 	if(strcmp(algoritmo, "SJF_CD") == 0){
 		calcular_estimacion_SJF(una_pcb);
@@ -681,31 +644,17 @@ void planificacionHRRN(){
 	}
 }
 
-//void actualizar_ultima_estimacion_SJF(){
-//	pthread_mutex_lock(&m_lista_pcbs);
-//	list_iterate(esis_ready, calcular_estimacion_SJF);
-//	pthread_mutex_unlock(&m_lista_pcbs);
-//}
-
 void calcular_estimacion_SJF(pcb* pcb_esi){
 	float proxima_rafaga =  (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
-	//log_info(logger, "Alpha es: %f", alpha);
 	log_info(logger, "La ultimaRafaga del esi %d es: %d", pcb_esi->id, pcb_esi->ultimaRafaga);
 	log_info(logger, "La ultima estimacion del esi %d es: %f", pcb_esi->id, pcb_esi->ultimaEstimacion);
 	pcb_esi->ultimaEstimacion = proxima_rafaga;
 	log_info(logger, "La estimacion del ESI %d es: %f", pcb_esi->id, proxima_rafaga);
 }
 
-//void actualizar_ultima_estimacion_HRRN(){
-//	pthread_mutex_lock(&m_lista_pcbs);
-//	list_iterate(esis_ready, calcular_estimacion_HRRN);
-//	pthread_mutex_unlock(&m_lista_pcbs);
-//}
-
 void calcular_estimacion_HRRN(pcb* pcb_esi){
 	float estimacion = (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
 	float tiempo_de_respuesta = (pcb_esi->retardo + estimacion) / estimacion;
-	//log_info(logger, "Vine a calcular ultimasEstimaciones");
 	pcb_esi->ultimaEstimacion = tiempo_de_respuesta;
 	log_info(logger, "La estimacion del ESI %d es: %f", pcb_esi->id, tiempo_de_respuesta);
 }
@@ -847,7 +796,6 @@ void mover_esi_a_finalizados(int id_esi){
 	//list_remove_by_condition(pcbs, ids_iguales_pcb);
 
 	pthread_mutex_unlock(&m_id_buscado);
-	//free(esi_finalizado); //NO ME DEJA HACER FREE
 
 	id_buscado = id_esi_finalizado;
 	int* id = malloc(sizeof(int));
@@ -864,7 +812,6 @@ void quitar_esi_de_cola_bloqueados(void* clave_bloq){
 	clave_bloqueada* clave = clave_bloq;
 	if(!list_is_empty(clave->esis_en_espera)){
 		if(list_find(clave->esis_en_espera, ids_iguales_cola_de_esis) != NULL){
-			//log_info(logger, "Voy a remover de esis_en_espera");
 			list_remove_by_condition(clave->esis_en_espera, ids_iguales_cola_de_esis);
 		}
 	}
@@ -963,28 +910,6 @@ void mostrar_status_clave(status_clave status){
 	list_iterate(clave->esis_en_espera, imprimir_id_esi);
 }
 
-//FUNCIONES AUXILIARES CONSOLA//
-
-//--Recibir status del Coordinador--//
-void recibir_status_clave(){
-	status_clave status;
-	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
-	log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
-	void* buffer = malloc(tamanio);
-	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
-	status = deserializar_status_clave(buffer);
-	log_info(logger, "Recibido el status_clave de la clave: %s", status.clave);
-	mostrar_status_clave(status);
-	free(buffer);
-}
-
-void imprimir_id_esi(void* esi){
-	int id_esi;
-	memcpy(&id_esi, esi, sizeof(int));
-	printf("%d  ", id_esi);
-}
-
-
 //--Cerrar cosas--//
 
 void desencadenar_cerrar_planificador(){
@@ -1079,11 +1004,34 @@ void cerrar_cosas_de_un_esi(void* esi){
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }
-//MUTEX
 
-//pthread_mutex_lock(&un_mutex); //WAIT
-//pthread_mutex_unlock(&un_mutex); //SIGNAL
+/////-----FUNCIONES QUE NO SIRVEN?-----/////
+//--Registrar exito ESIS--//
+//void registrar_exito_en_pcb(int id_esi){
+//	sumar_ultima_rafaga(id_esi);
+//}
 
-//SEM
-//sem_wait(&un_semaforo); //WAIT
-//sem_post(&un_semaforo); //SIGNAL
+//--Sumar 1 a la ultima rafaga del ESI--//
+//void sumar_ultima_rafaga(int id_esi){
+//	void* pcbb;
+//	pthread_mutex_lock(&m_id_buscado);
+//	id_buscado = id_esi;
+//	pcbb = list_find(pcbs, ids_iguales_pcb);
+//	pthread_mutex_unlock(&m_id_buscado);
+//	pcb* esi_que_ejecuto = pcbb;
+//	esi_que_ejecuto->ultimaRafaga+=1;
+//	//log_info(logger, "La ultima rafaga del ESI: %d que acaba de intentar ejecutar es: %d", esi_que_ejecuto->id, esi_que_ejecuto->ultimaRafaga);
+//}
+
+//void actualizar_ultima_estimacion_SJF(){
+//	pthread_mutex_lock(&m_lista_pcbs);
+//	list_iterate(esis_ready, calcular_estimacion_SJF);
+//	pthread_mutex_unlock(&m_lista_pcbs);
+//}
+
+//void actualizar_ultima_estimacion_HRRN(){
+//	pthread_mutex_lock(&m_lista_pcbs);
+//	list_iterate(esis_ready, calcular_estimacion_HRRN);
+//	pthread_mutex_unlock(&m_lista_pcbs);
+//}
+

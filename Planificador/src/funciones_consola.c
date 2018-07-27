@@ -179,7 +179,8 @@ char**  string_to_array(char* text, char* separator) {
     return array_values;
 }
 
-// COMPLETAR SUBRUTINAS QUE VIENEN DE CONSOLA:
+
+//FUNCIONES AUXILIARES CONSOLA//
 void pausar_planificacion(){
 	pausar_planificador = -1;
 }
@@ -325,4 +326,23 @@ bool el_esi_espera_la_clave(int esi_que_la_usa, clave_bloqueada* nodo_clave){
 		pthread_mutex_unlock(&m_id_buscado);
 		return false;
 	}
+}
+
+//--Recibir status del Coordinador--//
+void recibir_status_clave(){
+	status_clave status;
+	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
+	log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
+	void* buffer = malloc(tamanio);
+	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
+	status = deserializar_status_clave(buffer);
+	log_info(logger, "Recibido el status_clave de la clave: %s", status.clave);
+	mostrar_status_clave(status);
+	free(buffer);
+}
+
+void imprimir_id_esi(void* esi){
+	int id_esi;
+	memcpy(&id_esi, esi, sizeof(int));
+	printf("%d  ", id_esi);
 }
