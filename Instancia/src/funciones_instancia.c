@@ -199,7 +199,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 				entrada_encontrada->clave = malloc(tamanio_clave);
 				memcpy(entrada_encontrada->clave, instruccion.argumentos.SET.clave, tamanio_clave);
 
-				cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+				cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor -1);
 				log_info(logger, "tiene %d entradas ", cantidad_entradas);
 				entrada_encontrada->cantidad_entradas = cantidad_entradas;
 				entrada_encontrada->tamanio_valor = tamanio_valor;
@@ -247,7 +247,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_encontrada->clave = malloc(tamanio_clave);
 			memcpy(entrada_encontrada->clave, instruccion.argumentos.SET.clave, tamanio_clave);
 
-			cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+			cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor -1);
 			log_info(logger, "tiene %d entradas ", cantidad_entradas);
 			entrada_encontrada->cantidad_entradas = cantidad_entradas;
 			entrada_encontrada->tamanio_valor = tamanio_valor;
