@@ -72,7 +72,7 @@ nodo* buscar_instancia(char* clave){
 	clave_buscada = malloc(strlen(clave)+1);
 	memcpy(clave_buscada, clave, strlen(clave)+1);
 	if(list_any_satisfy(lista_claves, condicion_clave)){
-		nodito = list_find(lista_claves, condicion_clave); //Esto no deberia funcionar?????
+		nodito = list_find(lista_claves, condicion_clave);
 		id_instancia_buscado = nodito->nodo_instancia.id;
 		nodo_instancia = list_find(lista_instancias, condicion_id_instancia);
 		log_info(logger, "El id de la instancia es: %d, ", nodito->nodo_instancia.id);
@@ -168,10 +168,13 @@ void cerrar_instancias(){
 void compactar_intancias(){
 	int mensaje = 3;
 	void* buffer = malloc(sizeof(int));
+
 	memcpy(buffer, &mensaje, sizeof(int));
+	log_info(logger, "El tamanio de la lista es %d", list_size(lista_instancias));
 	for(int i = 0; i < list_size(lista_instancias); i++){
 		nodo* nodito = list_get(lista_instancias, i);
 		enviar(nodito->socket, buffer, sizeof(int), logger);
+		log_info(logger, "Le dije a la instancia %d de socket %d", nodito->id, nodito->socket);
 	}
 }
 

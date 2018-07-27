@@ -24,7 +24,7 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 21 char* (clave)
 22 NULL pedido compactacion
 23 NULL desconexion instancia
-24 
+24 NULL fallo instancia
 25 NULL exito instancia
 
 

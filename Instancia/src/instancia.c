@@ -13,6 +13,7 @@ int main(int argc, char* argv[]){
 	puntero_circular = 0;
 	lugar_de_memoria = 0;
 	puntero_pagina = 0;
+	puntero_entrada = 0;
 	char log[10] = "INSTANCIA";
 	memcpy(&log[9], argv[2], 1);
 	leer_configuracion_propia(argv[1], &mi_configuracion);
@@ -76,7 +77,6 @@ int main(int argc, char* argv[]){
 	}
 
 	//free(espacio_para_memoria);
-	sleep(5);
 	pthread_join(&hilo_dump, NULL);
 	free(acceso_tabla);
 	close(socket_coordinador);
