@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
 					} else{
 						log_info(logger_esi, "No se pudo enviar la instruccion al Coordinador \n");
 					}
-					flag_exit = 1;
+					abortoESI = 1;
 				}
 				break;
 			case 62: //abortar ESI
@@ -86,10 +86,10 @@ int main(int argc, char* argv[]){
 				} else{
 					_exit_with_error(conexiones.socket_coordi, "Error al recibir mensaje del Coordinador", NULL, logger_esi);
 				}
-				void* buffer_int = malloc(sizeof(int));
+				/*void* buffer_int = malloc(sizeof(int));
 				serializar_id(buffer_int, 81);
 				enviar(conexiones.socket_coordi, buffer_int, sizeof(int), logger_esi);
-				free(buffer_int);
+				free(buffer_int);*/
 				abortoESI = 1;
 				break;
 			default:
@@ -105,12 +105,11 @@ int main(int argc, char* argv[]){
 	fclose(script_prueba);
 	free(mensaje_coordi);
 	free(configuracion_esi);
-	liberar_instruccion(ultima_instruccion);
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
 	log_info(logger_esi, "Termine wacho :7");
-	free(logger_esi);
+	log_destroy(logger_esi);
 
 	return 0;
 }
