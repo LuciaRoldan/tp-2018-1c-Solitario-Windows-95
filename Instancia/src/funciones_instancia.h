@@ -20,6 +20,7 @@ int id_instancia;
 int puntero_circular;
 int lugar_de_memoria;
 int puntero_pagina;
+int puntero_entrada;
 //t_bitarray* precencia;
 
 
@@ -99,7 +100,8 @@ int recibir_orden_compactacion();
 int usar_algoritmo(estructura_clave* entrada_nueva);
 int cantidad_entradas_atomicas();
 int entradas_atomicas_vacias_contiguas(int necesarias);
-
+void obtener_puntero_entrada();
+bool condicion_tiene_puntero_entrada(void* datos);
 
 
 // AGREGO LAS QUE FALTABAN
