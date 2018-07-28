@@ -126,14 +126,19 @@ int enviar_status_clave(char* clave){
 	}
 }
 
-void reincorporarInstancia(){
+void reincorporar_instancia(){
 	int tamanio_clave;
+	int id;
 	char* clave;
 	estructura_clave* entrada;
+	recibir(socket_coordinador, &id, sizeof(int), logger);
+	log_info(logger, "recibio %d", id);
 	recibir(socket_coordinador, &tamanio_clave, sizeof(int),logger);
+	log_info(logger, "recibio %d", tamanio_clave);
 	void* buffer = malloc(tamanio_clave);
 	int bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
 	deserializar_string(buffer,clave);
+	log_info(logger, "despues de deserializar");
 
 	while(bytes_recibidos != 0){
 	entrada = malloc(sizeof(estructura_clave));
@@ -142,6 +147,18 @@ void reincorporarInstancia(){
 	list_add(tabla_entradas, entrada);
 	bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
 	}
+}
+
+void obtener_valor_archivo(char* clave, int tamanio_clave){
+
+	char* path;
+	char* valor;
+	int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
+	path = malloc(tamanio_path + tamanio_clave + sizeof(char)*5);
+	strcpy(path, mi_configuracion.puntoDeMontaje);
+	strcat(path + tamanio_path -1, clave);
+	strcat(path + tamanio_path + tamanio_clave -2, ".txt\0");
+//	BUSCAR COMO SI ABRIR COMO FICHERO POR EL NOMBRE O ATRAVES DEL PATH
 }
 
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {

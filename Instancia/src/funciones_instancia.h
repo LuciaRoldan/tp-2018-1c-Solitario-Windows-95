@@ -72,7 +72,7 @@ void recibir_configuracion(int socket_coordinador, t_log* logger);
 void deserializar_configuracion(void* buffer);
 void leer_configuracion_propia(char* path, configuracion_propia* configuracion);
 void inicializar_instancia();
-void reincorporarInstancia();
+void reincorporar_instancia();
 
 //---Procesamiento---///
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger);

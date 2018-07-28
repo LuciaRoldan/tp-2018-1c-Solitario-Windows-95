@@ -71,13 +71,16 @@ int main(int argc, char* argv[]){
 	log_info(logger,"Guardo la memoria para los valores");
 
 	int reincorporacion = recibir_int(socket_coordinador,logger);
+	log_info(logger,"recibo un int \n %d", reincorporacion);
 
-	while(reincorporacion != 04){
+	while(reincorporacion != 04 && reincorporacion != 05){
+		log_info(logger, "volvi al while");
 //		siempre va a recibir la reinco aunque sea vacio
 		reincorporacion = recibir_int(socket_coordinador,logger);
 	}
-	reincorporarInstancia();
-
+	if (reincorporacion == 04) {
+		reincorporar_instancia();
+	}
 //
 	pthread_t hilo_dump;
 	pthread_create(&hilo_dump, 0, dump, NULL);
