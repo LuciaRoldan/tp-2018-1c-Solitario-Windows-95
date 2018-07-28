@@ -126,6 +126,23 @@ int enviar_status_clave(char* clave){
 	}
 }
 
+void reincorporarInstancia(){
+	int tamanio_clave;
+	char* clave;
+	estructura_clave* entrada;
+	recibir(socket_coordinador, &tamanio_clave, sizeof(int),logger);
+	void* buffer = malloc(tamanio_clave);
+	int bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
+	deserializar_string(buffer,clave);
+
+	while(bytes_recibidos != 0){
+	entrada = malloc(sizeof(estructura_clave));
+	entrada->clave = malloc(tamanio_clave);
+	memcpy(entrada->clave, clave, tamanio_clave);
+	list_add(tabla_entradas, entrada);
+	bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
+	}
+}
 
 t_esi_operacion recibir_instruccion(int socket_coordinador, t_log* logger) {
 	int tamanio_operacion = recibir_int(socket_coordinador, logger);

@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
 		id = recibir_int(socket_coordinador,logger);
 	}
 
-	//recibir_configuracion(socket_coordinador,logger);
+//	recibir_configuracion(socket_coordinador,logger);
 	configuracion_coordi.tamano_entrada = recibir_int(socket_coordinador,logger) + 1;
 	configuracion_coordi.cantidad_entradas = recibir_int(socket_coordinador,logger);
 
@@ -46,6 +46,7 @@ int main(int argc, char* argv[]){
 	cantidad_entradas = configuracion_coordi.cantidad_entradas;
 	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
 	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion_coordi.tamano_entrada);
+
 
 	/*char* espacio_bitmap = malloc(cantidad_entradas);
 	precencia = bitarray_create_with_mode(espacio_bitmap, cantidad_entradas, MSB_FIRST);*/ //Lo de bitarray
@@ -68,6 +69,15 @@ int main(int argc, char* argv[]){
 	memoria_total = configuracion_coordi.cantidad_entradas * configuracion_coordi.tamano_entrada;
 	inicio_memoria = malloc(memoria_total);
 	log_info(logger,"Guardo la memoria para los valores");
+
+	int reincorporacion = recibir_int(socket_coordinador,logger);
+
+	while(reincorporacion != 04){
+//		siempre va a recibir la reinco aunque sea vacio
+		reincorporacion = recibir_int(socket_coordinador,logger);
+	}
+	reincorporarInstancia();
+
 //
 	pthread_t hilo_dump;
 	pthread_create(&hilo_dump, 0, dump, NULL);
