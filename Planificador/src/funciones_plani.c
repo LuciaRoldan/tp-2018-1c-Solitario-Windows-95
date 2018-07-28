@@ -149,7 +149,7 @@ void manejar_esis(){
 
 	while(terminar_todo){
 	while(pausar_planificador>=0){
-		sleep(1);
+		usleep(500000);
 		if(list_size(esis_ready) > 0){
 		
 		sem_wait(&s_planificar);
