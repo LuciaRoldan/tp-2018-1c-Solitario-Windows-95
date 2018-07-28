@@ -18,6 +18,9 @@ Si tiene NULL es porque con el protoccolo basta, no se debe recibir nada mas.
 00 datos_configuracion
 01 char* pide_status
 03 orden_compactacion
+04 reincorporacion
+05 no hay reincorporacion
+06 clave
 
 ///////////////// COORDINADOR /////////////////
 20 NULL Exit de planificador y confirmacion instnacia yesi
