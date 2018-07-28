@@ -21,9 +21,14 @@ int main(int argc, char* argv[]) {
 		fin_de_programa = -1;
 		rafaga_actual = 0;
 		id_esi_ejecutando = -1;
+		se_fue_uno = 1;
 
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(argv[1]); //leyendo archivo configuracion
+
+	if(strcmp(algoritmo, "SJF_CD") == 0){
+		desalojo = 1;
+	}
 
 	pthread_t hilo_escucha_esis;
 	pthread_t hilo_coordinador;

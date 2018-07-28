@@ -81,6 +81,8 @@ int pausar_planificador;
 int terminar_todo;
 int fin_de_programa;
 int rafaga_actual;
+int se_fue_uno;
+int desalojo;
 
 
 ///---SEMAFOROS---///
@@ -94,6 +96,7 @@ pthread_mutex_t m_lista_claves_bloqueadas;
 pthread_mutex_t m_id_buscado;
 pthread_mutex_t m_clave_buscada;
 pthread_mutex_t m_id_esi_ejecutando;
+pthread_mutex_t m_estoy_mandando_a_ejecutar;
 
 sem_t s_cerrar_un_hilo;
 sem_t s_hilo_cerrado;
@@ -210,6 +213,8 @@ void liberar_instruccion(t_esi_operacion instruccion);
 void sumar_retardo_menos_primero(void* pcbb);
 void desencadenar_cerrar_planificador();
 void cerrar_cosas_de_un_esi(void* esi);
+void mostrar_ultima_estimacion(void* pcbb);
+void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar);
 
 
 //////////-----HABLAR CON COORDINADOR-----//////////
