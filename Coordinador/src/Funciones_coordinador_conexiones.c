@@ -110,16 +110,24 @@ void atender_instancia(void* datos_instancia){
 }
 
 void enviar_claves(hilo_proceso mis_datos){ //AGREGO IVI
+	void* buffer = malloc(sizeof(int));
+	if(list_size(lista_claves)>0){
 	id_instancia_buscado = mis_datos.id;
+	serializar_id(buffer, 04);
+	enviar(mis_datos.socket, buffer, sizeof(int), logger);
 	t_list* claves_instacia = list_filter(lista_claves, id_instancia_buscado);
 	list_iterate(claves_instacia, enviar_clave);
+	} else {
+		serializar_id(buffer, 05);
+		enviar(mis_datos.socket,buffer,sizeof(int),logger);
+	}
 }
 
 void enviar_clave(void* datos){ //AGREGO IVI
 	nodo_clave* nodo_clave = datos;
 	int tamanio_clave = (strlen(nodo_clave->clave)+1)*sizeof(char);
 	void* buffer = malloc(sizeof(int)+tamanio_clave);
-	serializar_string(buffer,nodo_clave->clave, 04);
+	serializar_string(buffer,nodo_clave->clave, 06);
 	enviar(nodo_clave->nodo_instancia.socket, buffer, sizeof(int)+tamanio_clave, logger);
 	free(buffer);
 }
