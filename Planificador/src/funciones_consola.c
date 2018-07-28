@@ -222,7 +222,10 @@ void quitar_primer_esi_de_cola_bloqueados(char* clave){
 
 				pcb* el_nuevo_esi_ready = un_esi;
 				//agrego al esi a ready
+				if(desalojo == 1){
 				calcular_estimacion(el_nuevo_esi_ready);
+				log_info(logger, "La nueva estimacion del esi %d es: %f", el_nuevo_esi_ready->id, el_nuevo_esi_ready->ultimaEstimacion);
+				}
 				list_add(esis_ready, el_nuevo_esi_ready);
 				log_info(logger, "Agregue al esi %d a ready", *primer_esi_en_espera);
 				nodo_clave->esi_que_la_usa = *primer_esi_en_espera;
