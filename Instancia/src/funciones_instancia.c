@@ -132,21 +132,24 @@ void reincorporar_instancia(){
 	char* clave;
 	estructura_clave* entrada;
 	recibir(socket_coordinador, &id, sizeof(int), logger);
-	log_info(logger, "recibio %d", id);
-	recibir(socket_coordinador, &tamanio_clave, sizeof(int),logger);
-	log_info(logger, "recibio %d", tamanio_clave);
-	void* buffer = malloc(tamanio_clave);
-	int bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
-	deserializar_string(buffer,clave);
-	log_info(logger, "despues de deserializar");
+	if(id == 6){
+		log_info(logger, "recibio %d", id);
+		recibir(socket_coordinador, &tamanio_clave, sizeof(int),logger);
+		log_info(logger, "recibio %d", tamanio_clave);
+		void* buffer = malloc(tamanio_clave);
+		int bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
+		deserializar_string(buffer,clave);
+		log_info(logger, "despues de deserializar");
 
-	while(bytes_recibidos != 0){
-	entrada = malloc(sizeof(estructura_clave));
-	entrada->clave = malloc(tamanio_clave);
-	memcpy(entrada->clave, clave, tamanio_clave);
-	list_add(tabla_entradas, entrada);
-	bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
+		while(bytes_recibidos != 0){
+		entrada = malloc(sizeof(estructura_clave));
+		entrada->clave = malloc(tamanio_clave);
+		memcpy(entrada->clave, clave, tamanio_clave);
+		list_add(tabla_entradas, entrada);
+		bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
+		}
 	}
+
 }
 
 void obtener_valor_archivo(char* clave, int tamanio_clave){
