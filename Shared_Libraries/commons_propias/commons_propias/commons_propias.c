@@ -118,9 +118,7 @@ int inicializar_servidor(int puerto, t_log * logger){
 //Funciones para enviar y recibir cosas serializadas
 
 int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
-	log_info(logger, "Entre a enviar");
 	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
-	log_info(logger, "Quise enviar a %d", socket_destino);
  	if(bytes_enviados <= 0){
  		log_info(logger, "Quise enviar a %d", socket_destino);
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
