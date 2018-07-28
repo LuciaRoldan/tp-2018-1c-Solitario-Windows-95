@@ -97,6 +97,7 @@ void atender_instancia(void* datos_instancia){
 	free(datos_instancia);
 	log_info(logger, "Hilo de la Instancia %d creado", mis_datos.id);
 	enviar_configuracion_instancia(mis_datos.socket);
+	enviar_claves(mis_datos);//LO AGREGO IVI
 	int resultado = 1;
 	while(resultado > 0 && !terminar_programa){
 		resultado = procesar_mensaje(mis_datos.socket);
@@ -106,6 +107,21 @@ void atender_instancia(void* datos_instancia){
 	log_info(logger, "RIP instancia");
 	desconectar_instancia(mis_datos.socket);
 	//pthread_exit(NULL);
+}
+
+void enviar_claves(hilo_proceso mis_datos){ //AGREGO IVI
+	id_instancia_buscado = mis_datos.id;
+	t_list* claves_instacia = list_filter(lista_claves, id_instancia_buscado);
+	list_iterate(claves_instacia, enviar_clave);
+}
+
+void enviar_clave(void* datos){ //AGREGO IVI
+	nodo_clave* nodo_clave = datos;
+	int tamanio_clave = (strlen(nodo_clave->clave)+1)*sizeof(char);
+	void* buffer = malloc(sizeof(int)+tamanio_clave);
+	serializar_string(buffer,nodo_clave->clave, 04);
+	enviar(nodo_clave->nodo_instancia.socket, buffer, sizeof(int)+tamanio_clave, logger);
+	free(buffer);
 }
 
 void desconectar_instancia(int socket){
