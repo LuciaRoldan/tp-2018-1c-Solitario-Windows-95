@@ -265,11 +265,11 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_encontrada->numero_pagina = puntero_pagina - cantidad_entradas;
 			log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 			log_info(logger, "Voy a guardar en %d", entrada_encontrada->numero_pagina);
-			log_info(logger, "EL PUNTERO AHORA ESTA EN %d:", puntero_entrada);
 
-			//list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
-			list_add(tabla_entradas, entrada_encontrada);
-			puntero_entrada++; //Se agrega suma la entrada que se agrega
+			list_add_in_index(tabla_entradas, puntero_entrada, entrada_encontrada);
+//			list_add(tabla_entradas, entrada_encontrada);
+			puntero_entrada++; //Se suma la entrada que se agrega
+			log_info(logger, "EL PUNTERO AHORA ESTA EN %d:", puntero_entrada);
 
 			if(cantidad_entradas > 1){
 				for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
@@ -358,6 +358,7 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 
 	while(contador != entradas_contiguas_necesarias && puntero_pagina <= configuracion_coordi.cantidad_entradas -1){ //Muevo el puntero hasta que encuentre las entradas contiguas o me pase
 //		log_info(logger, "El bit map de en %d es %d", puntero_pagina, acceso_tabla[puntero_pagina]);
+//		siempre va a pasar por esta parte ya sea de una o despues de aplicar compactacion y/o algoritmo por eso esta bien que el puntero de pagina se mantenga en 0
 		if(acceso_tabla[puntero_pagina] == 0){
 			espacios_libres += 1;
 			puntero_pagina += 1;
@@ -371,7 +372,7 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 
 	if(contador == entradas_contiguas_necesarias){ //Si tengo las necesarias
 		//salio todo bien, hay que poner los bitmap en 1
-		clave->numero_pagina = puntero_pagina - entradas_contiguas_necesarias;
+		clave->numero_pagina = puntero_pagina - entradas_contiguas_necesarias; // el puntero_pagina queda en el siguiente a rellenar
 		log_info(logger, "Voy a actualizar el bitmap");
 		for(int i = 0; i < entradas_contiguas_necesarias; i++){
 			acceso_tabla[puntero_pagina - 1 - i] = 1;
@@ -382,7 +383,7 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
 			puntero_pagina = 0;
 			log_info(logger,"Termine de compactar");
-			return -1; //solo caso positivo
+			return -1; //para que vuelva a entrar a la funcion
 		} else { //Si tengo que reemplazar
 			log_info(logger,"Entra a buscar el algoritmo");
 			resultado = implementar_algoritmo(clave, entradas_contiguas_necesarias); //Los algoritmos tienen que dejar el puntero_pagina al final del espacio que va a usar
@@ -399,7 +400,7 @@ void sumar_operacion(void* entradas){
 }
 
 
-void almacenar_valor(char* valor, int tamanio_valor){
+void almacenar_valor(char* valor, int tamanio_valor){ //creo que no la estamos usando
 //	si alcanza la memoria lo guarda
 	if((puntero_pagina + tamanio_valor) <= memoria_total){
 		memcpy((inicio_memoria + puntero_pagina), valor,tamanio_valor);
@@ -575,13 +576,14 @@ int aplicar_algoritmo_circular(estructura_clave* entrada_nueva) {
 	}
 	log_info(logger, "Las entradas borradas son %d", atomicas_borradas);
 	puntero_entrada = puntero_circular - entradas_necesarias;
-	/*log_info(logger, "*********************");
+	log_info(logger, "********BITMAP EN EL CIRCULAR*************");
 				for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
 						log_info(logger, "El nuevo bitmap en %d en %d", h, acceso_tabla[h]);
 
 	}
-	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));*/
-	return resultado;
+	log_info(logger, "******************************************");
+	log_info(logger, "Saliendo del algoritmo y la tabla tiene %d entradas", list_size(tabla_entradas));
+	return resultado; // si habia entradas contiguas me lo devuelve en el puntero a donde empezo a borrar sino en -1
 }
 
 
