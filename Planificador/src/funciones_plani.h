@@ -215,7 +215,7 @@ void desencadenar_cerrar_planificador();
 void cerrar_cosas_de_un_esi(void* esi);
 void mostrar_ultima_estimacion(void* pcbb);
 void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar);
-
+void mostrar_estimacion(void* pcbb);
 
 //////////-----HABLAR CON COORDINADOR-----//////////
 
