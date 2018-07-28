@@ -14,6 +14,10 @@ int main(int argc, char* argv[]){
 	log_info(logger,"Loggers creados");
 
 	leer_archivo_configuracion(argv[1]);
+	log_info(logger, "Voy");
+	aplicar_retardo();
+	log_info(logger, "Estoy");
+
 	inicializar_coordinador();
 	conectar_planificador();
 	log_info(logger,"Inicializacion completa");

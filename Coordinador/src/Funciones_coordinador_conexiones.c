@@ -110,7 +110,7 @@ void atender_instancia(void* datos_instancia){
 	//pthread_exit(NULL);
 }
 
-void enviar_claves(hilo_proceso mis_datos){ //AGREGO IVI
+void enviar_claves(hilo_proceso mis_datos){
 	t_list* claves_instancia;
 	nodo_clave* nodo;
 	void* buffer = malloc(sizeof(int));
@@ -118,15 +118,11 @@ void enviar_claves(hilo_proceso mis_datos){ //AGREGO IVI
 		id_instancia_buscado = mis_datos.id;
 		serializar_id(buffer, 04);
 		enviar(mis_datos.socket, buffer, sizeof(int), logger);
-		//free(buffer);
-		log_info(logger, "la lista de claves tiene %d", list_size(lista_claves));
+		free(buffer);
 		claves_instancia = list_filter(lista_claves, condicion_id_instancia);
-		log_info(logger, "el tamanio es %d", list_size(claves_instancia));
 		for(int i = 0; i < list_size(claves_instancia); i++){
-			log_info(logger, "entra al for");
 			nodo = list_get(claves_instancia, i);
 			enviar_clave(nodo->clave,mis_datos.socket);
-			log_info(logger, "envio %s en %d", nodo->clave, i);
 		}
 		serializar_id(buffer, 05);
 		enviar(mis_datos.socket,buffer,sizeof(int),logger);
@@ -135,24 +131,6 @@ void enviar_claves(hilo_proceso mis_datos){ //AGREGO IVI
 		enviar(mis_datos.socket,buffer,sizeof(int),logger);
 	}
 
-}
-
-void enviar_clave(char* clave, int socket){ //AGREGO IVI
-	log_info(logger, "llega a castear el nodo");
-	int tamanio_buffer = tamanio_buffer_string(clave);
-	void* buffer = malloc(tamanio_buffer);
-	log_info(logger,"serialice el tamanio %d",tamanio_buffer);
-	serializar_string_log(buffer,clave, 06,logger);
-	log_info(logger,"serialice");
-	int bytes = enviar(socket, buffer, tamanio_buffer, logger);
-	log_info(logger, "pude enviar %d bytes", bytes);
-//	free(buffer);
-	/*	int tamanio = tamanio_buffer_string(clave);
-	void* buffer = malloc(tamanio);
-	serializar_string(buffer, clave, id);
-	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
-	free(buffer);
-	return bytes_enviados;*/
 }
 
 void desconectar_instancia(int socket){

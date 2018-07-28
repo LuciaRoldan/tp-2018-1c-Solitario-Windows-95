@@ -83,7 +83,7 @@ int recibir_confirmacion(int socket);
 char* recibir_pedido_clave(int socket);
 status_clave recibir_status(int socket);
 t_esi_operacion recibir_instruccion(int socket);
-
+void enviar_clave(char* clave, int socket);
 
 //CONEXION
 int handshake(int socket);
@@ -92,13 +92,13 @@ void atender_planificador();
 void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
 void desconectar_instancia(int socket);
-void liberar_instruccion();
-void enviar_clave(char* clave, int socket);//AGREGO IVI
-void enviar_claves(hilo_proceso mis_datos);//AGREGO IVI
+void enviar_claves(hilo_proceso mis_datos);
 
 //PRROCESAMIENTO
 int procesar_mensaje(int socket);
 int procesar_instruccion(t_esi_operacion instruccion, int socket);
+void liberar_instruccion();
+void aplicar_retardo();
 
 //DE LISTAS
 nodo* seleccionar_instancia(char* clave);

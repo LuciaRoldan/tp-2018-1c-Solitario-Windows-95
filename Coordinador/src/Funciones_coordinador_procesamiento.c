@@ -16,6 +16,7 @@ int procesar_mensaje(int socket){
 	//log_info(logger, "Protocolo recibido: %d", id);
 	free(buffer_int);
 	int rta_esi;
+	aplicar_retardo();
 
 	switch(id){
 		case 20://Exit
@@ -270,4 +271,9 @@ void liberar_instruccion(){
 		free(operacion_ejecutando.argumentos.STORE.clave);
 		break;
 	}
+}
+
+void aplicar_retardo(){
+	div_t retardo = div(info_coordinador.retardo, 1000);
+	sleep(retardo.quot);
 }
