@@ -274,6 +274,6 @@ void liberar_instruccion(){
 }
 
 void aplicar_retardo(){
-	div_t retardo = div(info_coordinador.retardo, 1000);
-	sleep(retardo.quot);
+	float retardo = info_coordinador.retardo/ 1000;
+	sleep(retardo);
 }
