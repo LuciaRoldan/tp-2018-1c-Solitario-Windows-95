@@ -21,6 +21,7 @@ int puntero_circular;
 int lugar_de_memoria;
 int puntero_pagina;
 int puntero_entrada;
+int puntero_pagina_buscado;
 //t_bitarray* precencia;
 
 
@@ -119,5 +120,6 @@ void dumpear(void* datos);
 int any_entrada_bitmap_libre();
 int buscar_siguiente_entrada_ocupada(int inicio_indice);
 void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva);
+bool entradas_libres_contiguas(int necesarias);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
