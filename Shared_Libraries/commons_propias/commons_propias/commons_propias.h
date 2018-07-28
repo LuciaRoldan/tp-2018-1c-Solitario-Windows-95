@@ -64,7 +64,7 @@ typedef struct {
 	int id;
 	estado estado;
 	pthread_t hilo;
-	int retardo;
+	float retardo;
 	int ultimaRafaga;
 	float ultimaEstimacion;
 	int socket;
