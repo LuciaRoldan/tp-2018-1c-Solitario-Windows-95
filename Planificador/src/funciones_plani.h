@@ -14,13 +14,7 @@
 #include <string.h>
 
 
-//STRUCTS
-
-typedef struct{
-	int id_esi;
-	int* sgte;
-} cola_de_esis; //esto es una cola o un esi ??? */
-
+//--ESTRUCTURAS--//
 
 typedef struct{ //estructura que va a contener todas las claves y el estado de cada una
 	char* clave;
@@ -28,36 +22,12 @@ typedef struct{ //estructura que va a contener todas las claves y el estado de c
 	t_list* esis_en_espera; //ESIS bloqueados esperando a que se desbloquee la clave.
 } clave_bloqueada;
 
-//typedef struct{
-//	clave_bloqueada clave;
-//	claves_bloqueadas* sgte;
-//} claves_bloqueadas;
-
 typedef struct{
 	int socket_coordinador;
 	int socket_esis;
 } sockets;
 
-
-
-//////////-----VARIABLES GLOBALES-----//////////
-
-sockets sockets_planificador;
-t_conexion conexion_planificador;
-t_conexion conexion_coordinador;
-t_log * logger;
-char* algoritmo;
-int estimacion_inicial;
-float alpha;
-//char* claves_inicialmente_bloqueadas; //es una lista
-
-t_list* pcbs;
-t_list* esis_ready;
-t_list* esis_bloqueados;
-t_list* esis_finalizados;
-t_list* claves_bloqueadas;
-
-// Tipo operaciones de consola
+//Tipo operaciones de consola
 typedef enum {
 	BLOQUEAR,
 	DESBLOQUEAR,
@@ -69,6 +39,22 @@ typedef enum {
 	DEADLOCK,
 	INVALIDO
 } op_consola;
+
+//////////-----VARIABLES GLOBALES-----//////////
+
+sockets sockets_planificador;
+t_conexion conexion_planificador;
+t_conexion conexion_coordinador;
+t_log * logger;
+char* algoritmo;
+int estimacion_inicial;
+float alpha;
+
+t_list* pcbs;
+t_list* esis_ready;
+t_list* esis_bloqueados;
+t_list* esis_finalizados;
+t_list* claves_bloqueadas;
 
 ///---Variables Globales Auxiliares---///
 int id_buscado;
@@ -82,8 +68,8 @@ int terminar_todo;
 int fin_de_programa;
 int rafaga_actual;
 int se_fue_uno;
+int vino_uno;
 int desalojo;
-
 
 ///---SEMAFOROS---///
 pthread_mutex_t m_recibir_resultado_esi;
@@ -106,35 +92,16 @@ sem_t s_podes_procesar_un_pedido;
 sem_t s_podes_procesar_una_respuesta;
 sem_t s_planificar;
 
-
-
-sem_t un_semaforo;
-
-//FUNCIONES
-
-
-//testing
-
-//////////-----INICIALIZACION-----//////////
-int handshake_esi(int socket_esi);
-void handshake_coordinador(int socket_coordinador);
-pcb* crear_pcb_esi(int socket_cliente, int id_esi, pthread_t hilo_esi);
-sockets inicializar_planificador(char* path);
-void leer_archivo_configuracion(char* path);
-void conectarse_al_coordinador(int socket_coordinador);
-void inicializar_semaforos();
-
+//////////----------FUNCIONES----------//////////
 
 
 /////-----CONSOLA-----/////
 void ejecutar_consola();
-
-// Operaciones internas de consola
 op_consola analizar_linea(char* linea);
 char**  string_to_array(char* text, char* separator);
-void enviar_esi_kill(int socket_esi);
 
-// Comandos de consola
+
+/////-----FUNCIONES CONSOLA-----/////
 void pausar_planificacion();
 void continuar_planificacion();
 void bloquear(char * clave, int id);
@@ -144,97 +111,110 @@ void kill_esi(int id);
 void pedir_status(char* clave);
 void deadlock();
 
-//MANEJAR ESIS
-void recibir_esis(void* socket_esis);
-void manejar_esis();
-void manejar_esi(void* pcb_esi);
-
-//Planificar
-void planificar();
-void ordenar_pcbs();
-void calcular_estimacion(pcb* una_pcb);
-void planificacionSJF_CD();
-void planificacionSJF_SD();
-void planificacionHRRN();
-
-bool algoritmo_SJF_SD(void* pcb1, void* pcb2);
-bool algoritmo_SJF_CD(void* pcb_1, void* pcb_2);
-bool algoritmo_HRRN(void* pcb1, void* pcb2);
-
-void actualizar_ultima_estimacion_SJF();
-void actualizar_ultima_estimacion_HRRN();
-
-void calcular_estimacion_SJF(pcb* una_pcb);
-void calcular_estimacion_HRRN(pcb* una_pcb);
-
-//Operaciones sobre PCBs
-void registrar_exito_en_pcb(int id_esi);
-void mover_esi_a_bloqueados(char* clave_buscada, int esi_id);
-void abortar_esi(int id_esi);
-void mover_esi_a_finalizados(int id_esi);
-
-//Operaciones sobre claves_bloqueadas
-void liberar_clave(char* clave);
-
-///---RUTINAS DE CIERRE DE PLANI---///
-void cerrar_planificador();
-void cerrar_sockets();
-void cerrar_hilos();
-
-///---FUNCIONES AUXILIARES---///
-//ids_iguales
-bool ids_iguales_pcb(void* pcbb);
-bool ids_iguales_cola_de_esis(void* id);
-bool es_el_primer_esi_ready(void *pcbb);
-bool no_es_el_primer_esi_ready(void *pcbb);
-
-bool claves_iguales_nodo_clave(void* nodo_clave);
-void quitar_esi_de_cola_bloqueados(void* clave_bloq);
+//--Funciones auxiliares consola--//
+void enviar_esi_kill(int socket_esi);
+void recibir_status_clave();
+void mostrar_status_clave(status_clave status);
 void imprimir_id_esi(void* esi);
-void sumar_ultima_rafaga(int id_esi);
-void sumar_retardo(void* pcbb);
-void sumar_retardo_otros_ready();
-void procesar_motivo_aborto(int protocolo);
-void cerrar_cosas_de_un_esi(void* pcb_esi);
-void destruir_pcb(void* pcb);
-void eliminar_esi_en_espera(void* pcbb);
-void borrar_nodo_clave(void* clave);
-void eliminar_esi_en_espera(void* esi);
-void free_esi_finalizado(void* id);
-void cerrar_planificador();
-void despedir_esi(void* pcb);
-void quitar_primer_esi_de_cola_bloqueados(char* clave);
+//para deadlock
 bool el_esi_espera_la_clave(int esi_que_la_usa, clave_bloqueada* nodo_clave);
 bool ids_iguales_ints(void* id1);
 bool el_esi_la_esta_esperando(void* clave);
 bool el_esi_la_espera(void* clave);
 bool el_duenio_esta_en_deadlock(clave_bloqueada* nodo_clave);
-void liberar_instruccion(t_esi_operacion instruccion);
-void sumar_retardo_menos_primero(void* pcbb);
-void desencadenar_cerrar_planificador();
-void cerrar_cosas_de_un_esi(void* esi);
+
+
+
+/////-----FUNCIONES ALGORITMOS-----/////
+void ordenar_pcbs();
+void calcular_estimacion(pcb* una_pcb);
+
+void planificacionSJF_CD();
+void planificacionSJF_SD();
+void planificacionHRRN();
+
+void calcular_estimacion_SJF(pcb* una_pcb);
+void calcular_estimacion_HRRN(pcb* una_pcb);
+
+bool algoritmo_SJF_SD(void* pcb1, void* pcb2);
+bool algoritmo_SJF_CD(void* pcb_1, void* pcb_2);
+bool algoritmo_HRRN(void* pcb1, void* pcb2);
+
+
+/////-----FUNCIONES AUXILIARES LISTAS-----/////
+void sumar_retardo(void* pcbb);
+void sumar_retardo_otros_ready();
 void mostrar_ultima_estimacion(void* pcbb);
-void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar);
 void mostrar_estimacion(void* pcbb);
+void sumar_retardo_menos_primero(void* pcbb);
 
-//////////-----HABLAR CON COORDINADOR-----//////////
+bool ids_iguales_pcb(void* pcbb);
+bool es_el_primer_esi_ready(void *pcbb);
+bool no_es_el_primer_esi_ready(void *pcbb);
+bool claves_iguales_nodo_clave(void* nodo_clave);
+bool ids_iguales_cola_de_esis(void* id);
 
-void manejar_coordinador();
+//para liberar memoria
+void free_esi_finalizado(void* id);
+void despedir_esi(void* pcb);
+void eliminar_esi_en_espera(void* pcbb);
+void borrar_nodo_clave(void* clave);
+void destruir_pcb(void* pcb);
+
+
+/////-----FUNCIONES AUXILIARES-----/////
+void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar);
+void planificar_si_corresponde();
 void procesar_pedido(t_esi_operacion instruccion);
-void mostrar_status_clave(status_clave status);
-void recibir_status_clave();
-void informar_coordi_kill(int id_Esi);
+void actualizar_rafaga_y_estimar(pcb* pcbb);
+void procesar_motivo_aborto(int protocolo);
+void liberar_instruccion(t_esi_operacion instruccion);
 
-//////////MENSAJES CON COORDINADOR//////////
 
-//ENVIAR COORDINADOR
+/////-----FUNCIONES ENVIO MENSAJES-----/////
+//enviar
+void enviar_solicitud_ejecucion(pcb* pcbb);
 void informar_aborto_coordinador_clave_no_id();
 void informar_aborto_coordinador_clave_no_b();
 void informar_exito_coordinador();
 void informar_bloqueo_coordinador();
+void informar_coordi_kill(int id_Esi);
+//recibir
+int recibir_un_int(int socket);
+
+
+/////-----FUNCIONES ESIS-----/////
+pcb* crear_pcb_esi(int socket_cliente, int id_esi, pthread_t hilo_esi);
+void mover_esi_a_bloqueados(char* clave_buscada, int esi_id);
+void abortar_esi(int id_esi);
+void mover_esi_a_finalizados(int id_esi);
+void liberar_clave(char* clave);
+void quitar_esi_de_cola_bloqueados(void* clave_bloq);
+
+
+/////-----FUNCIONES INICIALIZAR Y CERRAR COSAS-----/////
+//inicializar
+int handshake_esi(int socket_esi);
+void handshake_coordinador(int socket_coordinador);
+sockets inicializar_planificador(char* path);
+void leer_archivo_configuracion(char* path);
+void conectarse_al_coordinador(int socket_coordinador);
+void inicializar_semaforos();
+//cerrar
+void desencadenar_cerrar_planificador();
+void cerrar_cosas_de_un_esi(void* pcb_esi);
+void cerrar_planificador();
+
+
+/////-----FUNCIONES PRINCIPALES-----/////
+void recibir_esis(void* socket_esis);
+void manejar_esis();
+void manejar_esi(void* pcb_esi);
+void manejar_coordinador();
 
 
 
-//////////MENSAJES CON ESIS//////////
+
+void quitar_primer_esi_de_cola_bloqueados(char* clave);
 
 #endif /* PLANIFICADOR_FUNCIONES_H_ */
