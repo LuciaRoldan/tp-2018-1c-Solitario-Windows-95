@@ -149,15 +149,24 @@ void manejar_esis(){
 
 	while(terminar_todo){
 	while(pausar_planificador>=0){
-		sleep(1);
+		usleep(500000);
 		if(list_size(esis_ready) > 0){
 		
 		sem_wait(&s_planificar);
 
-		if(list_size(esis_ready) > 0){
+		if(desalojo == 0){ //PARA SIN DESALOJO
+		void* aux_esi_a_ejecutar = list_get(esis_ready, 0);
+		pcb* aux_pcb_esi;
+		aux_pcb_esi = aux_esi_a_ejecutar;
 
+		if(aux_pcb_esi->id != id_esi_ejecutando){
 		planificar();
-		log_info(logger, "Pase planificar()");
+		}
+		}
+
+		if(desalojo == 1){
+			planificar();
+		}
 
 		void* esi_a_ejecutar = list_get(esis_ready, 0);
 		pcb* pcb_esi;
@@ -183,7 +192,6 @@ void manejar_esis(){
 		}
 		}
 	}
-	}
 }
 
 void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar){
@@ -196,13 +204,13 @@ void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar){
 		if (list_any_satisfy(esis_ready, ids_iguales_pcb)){ //hubo desalojo pq sigue en ready
 			void* esii = list_find(esis_ready, ids_iguales_pcb);
 			pcb* esi_desalojado = esii;
-			esi_desalojado->ultimaRafaga = rafaga_actual;
+			esi_desalojado->ultimaRafaga += rafaga_actual;
 			rafaga_actual = 0;
 			log_info(logger, "Actualice la ultimaRafaga del Esi %d a: %d", esi_desalojado->id, esi_desalojado->ultimaRafaga);
-			if(desalojo == 1){
-			calcular_estimacion(esi_desalojado);
-			log_info(logger, "La nueva estimacion del esi desalojado %d es: %f", esi_desalojado->id, esi_desalojado->ultimaEstimacion);
-			}
+			//if(desalojo == 1){
+			//calcular_estimacion(esi_desalojado);
+			//log_info(logger, "La nueva estimacion del esi desalojado %d es: %f", esi_desalojado->id, esi_desalojado->ultimaEstimacion);
+			//}
 		}
 	}
 	pthread_mutex_unlock(&m_id_buscado);
@@ -237,6 +245,7 @@ void recibir_esis(void* socket_esis){
 				if(desalojo == 1){
 				calcular_estimacion(pcb_esi_nuevo);
 				log_info(logger, "La nueva estimacion del esi nuevo %d es: %f", pcb_esi_nuevo->id, pcb_esi_nuevo->ultimaEstimacion);
+				pcb_esi_nuevo->ultimaRafaga = 0;
 				}
 				list_add(esis_ready, pcb_esi_nuevo); //agrego PCB ESI a cola ready
 				pthread_mutex_unlock(&m_lista_esis_ready);
@@ -649,8 +658,14 @@ void ordenar_pcbs(){
 void planificacionSJF_CD(){
 	log_info(logger, "Estoy en SJF_CD. La cantidad de esis ready es %d", list_size(esis_ready));
 	if(list_size(esis_ready) > 1){
+		list_iterate(esis_ready, mostrar_estimacion);
 		list_sort(esis_ready, algoritmo_SJF_CD);
 	}
+}
+
+void mostrar_estimacion(void* pcbb){
+	pcb* esi = pcbb;
+	log_info(logger, "La estimacion del esi %d es: %f", esi->id, esi->ultimaEstimacion);
 }
 
 void planificacionSJF_SD(){
@@ -760,8 +775,10 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 
 	void* one_pcb = list_remove_by_condition(esis_ready, ids_iguales_cola_de_esis);
 	pcb* esi_bloqueado = one_pcb;
-	esi_bloqueado->ultimaRafaga = rafaga_actual;
+	esi_bloqueado->ultimaRafaga += rafaga_actual;
 	log_info(logger, "Actualice la ultimaRafaga del Esi %d a: %d", esi_bloqueado->id, esi_bloqueado->ultimaRafaga);
+	calcular_estimacion(esi_bloqueado);
+
 	rafaga_actual = 0;
 
 	se_fue_uno = 1; //para planificar sin desalojo
@@ -906,8 +923,9 @@ void liberar_clave(char* clave){
 		void* un_esi = list_find(pcbs, ids_iguales_pcb);
 		pcb* el_nuevo_esi_ready = un_esi;
 		if(desalojo == 1){
-		calcular_estimacion(el_nuevo_esi_ready);
-		log_info(logger, "La nueva estimacion del esi %d es: %f", el_nuevo_esi_ready->id, el_nuevo_esi_ready->ultimaEstimacion);
+		//calcular_estimacion(el_nuevo_esi_ready);
+		//log_info(logger, "La nueva estimacion del esi %d es: %f", el_nuevo_esi_ready->id, el_nuevo_esi_ready->ultimaEstimacion);
+		el_nuevo_esi_ready->ultimaRafaga = 0; //apa
 		}
 		list_add(esis_ready, el_nuevo_esi_ready);
 		//if(list_size(esis_ready) == 1){
