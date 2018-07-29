@@ -1,4 +1,4 @@
-#include "funciones_plani.h"
+#include "planificador_punto_hache.h"
 
 //--Encontrar el ID de un ESI en las PCBs--//
 bool ids_iguales_pcb(void* pcbb){

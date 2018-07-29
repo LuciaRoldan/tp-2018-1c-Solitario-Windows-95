@@ -1,4 +1,4 @@
-#include "funciones_plani.h"
+#include "planificador_punto_hache.h"
 
 //--Funciones consola--//
 void pausar_planificacion(){

@@ -1,8 +1,9 @@
 #ifndef PLANIFICADOR_FUNCIONES_H_
 #define PLANIFICADOR_FUNCIONES_H_
 
+#include "planificador_punto_hache.h"
+
 #include "commons_propias/commons_propias.h"
-#include "funciones_plani.h"
 #include <commons/string.h>
 #include <commons/config.h>
 #include <readline/readline.h>

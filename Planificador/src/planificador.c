@@ -1,5 +1,6 @@
-#include "funciones_plani.h"
 #include <pthread.h>
+
+#include "planificador_punto_hache.h"
 
 /* COSAS POR HACER
  *
