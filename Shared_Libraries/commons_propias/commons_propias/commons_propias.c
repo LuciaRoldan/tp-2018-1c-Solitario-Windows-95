@@ -118,7 +118,9 @@ int inicializar_servidor(int puerto, t_log * logger){
 //Funciones para enviar y recibir cosas serializadas
 
 int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger){
+	log_info(logger, "Entre a enviar");
 	int bytes_enviados = send(socket_destino, envio, tamanio_del_envio, 0);
+	log_info(logger, "Quise enviar a %d", socket_destino);
  	if(bytes_enviados <= 0){
  		log_info(logger, "Quise enviar a %d", socket_destino);
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
@@ -340,10 +342,21 @@ int tamanio_buffer_status(status_clave status){
 void serializar_string(void* buffer, char* cadena, int protocolo){//Se guarda dos veces el tamaño para recibirlo afuera de deserializar y poder declarar el buffer y para poder recibirlo dentro de deserializacion y saber de que tamaño hacer el memcpy
 	int tamanio = (strlen(cadena)+1) * sizeof(char) + sizeof(int); 				// recibe el protocolo porque la mismma funcion se puede usar muchas veces
 	int tamanio2 = (strlen(cadena)+1) * sizeof(char);
+	printf("entra en los memcpy");
 	memcpy(buffer, &protocolo, sizeof(int));
 	memcpy(buffer + sizeof(int), &tamanio, sizeof(int)*2);
 	memcpy(buffer + sizeof(int)*2, &tamanio2, sizeof(int));
 	memcpy(buffer + sizeof(int)*3, cadena, tamanio);
+	printf("Salgo de los memcpy");
+}
+
+void serializar_string_log(void* buffer, char* cadena, int protocolo, t_log* logger){//Se guarda dos veces el tamaño para recibirlo afuera de deserializar y poder declarar el buffer y para poder recibirlo dentro de deserializacion y saber de que tamaño hacer el memcpy
+	int tamanio = (strlen(cadena)+1) * sizeof(char) + sizeof(int); 				// recibe el protocolo porque la mismma funcion se puede usar muchas veces
+	int tamanio2 = (strlen(cadena)+1) * sizeof(char);
+	memcpy(buffer, &protocolo, sizeof(int));
+	memcpy(buffer + sizeof(int), &tamanio, sizeof(int));
+	memcpy(buffer + sizeof(int)*2, &tamanio2, sizeof(int));
+	memcpy(buffer + sizeof(int)*3, cadena, tamanio2);
 }
 
 void deserializar_string(void* buffer, char* mensaje){

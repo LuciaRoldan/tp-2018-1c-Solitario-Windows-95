@@ -141,6 +141,7 @@ void serializar_instruccion(void* buffer, t_esi_operacion la_instruccion);
 void serializar_configuracion_inicial_instancia(void* buffer, datos_configuracion configuracion);
 void serializar_status_clave(void* buffer, status_clave status);
 void serializar_string(void* buffer, char* cadena, int protocolo);
+void serializar_string_log(void* buffer, char* cadena, int protocolo, t_log* logger); ///////////////////////////////////////
 
 //deserealizar
 int deserializar_id(void* buffer_mensaje);

@@ -128,39 +128,100 @@ int enviar_status_clave(char* clave){
 
 void reincorporar_instancia(){
 	int tamanio_clave;
+	void* tamanio_buffer = malloc(sizeof(int));
 	int id;
 	char* clave;
-	estructura_clave* entrada;
-	recibir(socket_coordinador, &id, sizeof(int), logger);
-	if(id == 6){
-		log_info(logger, "recibio %d", id);
+	char* valor;
+//	recibir(socket_coordinador,tamanio_buffer,sizeof(int),logger);
+	id = recibir_int(socket_coordinador,logger);
+	log_info(logger, "Recibo el id %d", id);
+	while(id == 06){
+		estructura_clave* entrada;
+		log_info(logger, "entra al while");
 		recibir(socket_coordinador, &tamanio_clave, sizeof(int),logger);
+		clave = malloc(tamanio_clave - sizeof(int));
 		log_info(logger, "recibio %d", tamanio_clave);
 		void* buffer = malloc(tamanio_clave);
-		int bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
+		recibir(socket_coordinador, buffer, tamanio_clave, logger);
 		deserializar_string(buffer,clave);
+		log_info(logger, "Recibio: %s", clave);
 		log_info(logger, "despues de deserializar");
 
-		while(bytes_recibidos != 0){
-		entrada = malloc(sizeof(estructura_clave));
-		entrada->clave = malloc(tamanio_clave);
-		memcpy(entrada->clave, clave, tamanio_clave);
-		list_add(tabla_entradas, entrada);
-		bytes_recibidos = recibir(socket_coordinador, buffer, tamanio_clave, logger);
-		}
-	}
+		valor = obtener_valor_archivo(clave,tamanio_clave  - sizeof(int));
+		int tamanio_valor = strlen(valor)+1;
 
+		if (valor != NULL) {
+			entrada = (estructura_clave*) malloc(sizeof(estructura_clave));
+			entrada->clave = malloc(tamanio_clave - sizeof(int));
+			log_info(logger, "hace los dos malloc");
+			memcpy(entrada->clave, clave, (tamanio_clave - sizeof(int)));
+			log_info(logger, "la guardo");
+			log_info(logger, "Recibo el id %d", id);
+
+			cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+			log_info(logger, "tiene %d entradas ", cantidad_entradas);
+			entrada->cantidad_entradas = cantidad_entradas;
+			entrada->tamanio_valor = tamanio_valor;
+			entrada->cantidad_operaciones = 0;
+
+			int resultado = asignar_memoria(entrada, cantidad_entradas, valor);
+			if (resultado < 0) {
+				asignar_memoria(entrada, cantidad_entradas, valor);
+			}
+
+			entrada->valor = (puntero_pagina - cantidad_entradas)
+					* configuracion_coordi.tamano_entrada + inicio_memoria;
+			log_info(logger, "mi direccion es: %d", entrada->valor);
+			memcpy(entrada->valor, valor, tamanio_valor);
+			entrada->numero_pagina = puntero_pagina - cantidad_entradas;
+			log_info(logger, "Quedo guardado: %s", valor);
+			log_info(logger, "Quedo guardado: %s", entrada->valor);
+			log_info(logger, "Voy a guardar en %d", entrada->numero_pagina);
+
+			list_add(tabla_entradas, entrada);
+			/*log_info(logger, "------------------------------------------------------------");
+			log_info(logger, "---------------------- TABLA ENTRADAS ----------------------");
+			for(int i = 0; i < list_size(tabla_entradas); i++){
+				estructura_clave* nodo = list_get(tabla_entradas, i);
+				log_info(logger, "En la posicion %d esta la clave %s con el valor %s", i, nodo->clave, nodo->valor);
+				log_info(logger, "El segmento ocupa %d paginas", nodo->cantidad_entradas);
+			}
+			log_info(logger, "-------------------------- BITMAP --------------------------");
+			for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
+				log_info(logger, "En la posicion %d el bitmap es %d", i, acceso_tabla[i]);
+			}
+			log_info(logger, "------------------------------------------------------");*/
+			id = recibir_int(socket_coordinador, logger);
+		}
+		free(clave);
+		free(buffer);
+		}
 }
 
-void obtener_valor_archivo(char* clave, int tamanio_clave){
-
+char* obtener_valor_archivo(char* clave, int tamanio_clave){
+	log_info(logger, "entra a obtener valor");
 	char* path;
-	char* valor;
+	char* valor = NULL;
 	int tamanio_path = strlen(mi_configuracion.puntoDeMontaje)+1;
 	path = malloc(tamanio_path + tamanio_clave + sizeof(char)*5);
+	log_info(logger, "hace malloc del path");
 	strcpy(path, mi_configuracion.puntoDeMontaje);
 	strcat(path + tamanio_path -1, clave);
 	strcat(path + tamanio_path + tamanio_clave -2, ".txt\0");
+	log_info(logger, "crea el path: %s", path);
+
+	FILE* archivo = fopen(path,"r");
+	log_info(logger, "el archivo esta %d", archivo);
+	if(archivo != NULL){
+		size_t len = 0;
+		getline(&valor, &len, archivo);
+			fclose(archivo);
+	log_info(logger, "el valor que hay es %s", valor);
+	} else {
+		log_info(logger, "no pude abrir el archivo");
+	}
+	return valor;
+
 //	BUSCAR COMO SI ABRIR COMO FICHERO POR EL NOMBRE O ATRAVES DEL PATH
 }
 
@@ -419,7 +480,6 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 	} else {
 		if(entradas_contiguas_necesarias <= espacios_libres){ //Si hay suficientes pero no estan juntas
 			compactar(); //Cuando termine tiene que volver a llamar a esta funcion
-			puntero_pagina = 0;
 			log_info(logger,"Termine de compactar");
 			return -1; //para que vuelva a entrar a la funcion
 		} else { //Si tengo que reemplazar

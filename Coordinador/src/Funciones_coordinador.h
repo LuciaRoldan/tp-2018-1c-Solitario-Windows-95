@@ -93,7 +93,7 @@ void atender_esi(void* datos_esi);
 void atender_instancia(void* datos_instancia);
 void desconectar_instancia(int socket);
 void liberar_instruccion();
-void enviar_clave(void* datos);//AGREGO IVI
+void enviar_clave(char* clave, int socket);//AGREGO IVI
 void enviar_claves(hilo_proceso mis_datos);//AGREGO IVI
 
 //PRROCESAMIENTO
