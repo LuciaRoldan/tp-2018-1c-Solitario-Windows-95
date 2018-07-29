@@ -34,6 +34,7 @@ int handshake(int socket_cliente){
 	case INSTANCIA:
 		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
+		log_info(logger, "El socket de la instancia es: %d", socket_cliente);
 		return 1;
 		break;
 
@@ -109,27 +110,27 @@ void atender_instancia(void* datos_instancia){
 	//pthread_exit(NULL);
 }
 
-void enviar_claves(hilo_proceso mis_datos){ //AGREGO IVI
+void enviar_claves(hilo_proceso mis_datos){
+	t_list* claves_instancia;
+	nodo_clave* nodo;
 	void* buffer = malloc(sizeof(int));
 	if(list_size(lista_claves)>0){
-	id_instancia_buscado = mis_datos.id;
-	serializar_id(buffer, 04);
-	enviar(mis_datos.socket, buffer, sizeof(int), logger);
-	t_list* claves_instacia = list_filter(lista_claves, id_instancia_buscado);
-	list_iterate(claves_instacia, enviar_clave);
+		id_instancia_buscado = mis_datos.id;
+		serializar_id(buffer, 04);
+		enviar(mis_datos.socket, buffer, sizeof(int), logger);
+		free(buffer);
+		claves_instancia = list_filter(lista_claves, condicion_id_instancia);
+		for(int i = 0; i < list_size(claves_instancia); i++){
+			nodo = list_get(claves_instancia, i);
+			enviar_clave(nodo->clave,mis_datos.socket);
+		}
+		serializar_id(buffer, 05);
+		enviar(mis_datos.socket,buffer,sizeof(int),logger);
 	} else {
 		serializar_id(buffer, 05);
 		enviar(mis_datos.socket,buffer,sizeof(int),logger);
 	}
-}
 
-void enviar_clave(void* datos){ //AGREGO IVI
-	nodo_clave* nodo_clave = datos;
-	int tamanio_clave = (strlen(nodo_clave->clave)+1)*sizeof(char);
-	void* buffer = malloc(sizeof(int)+tamanio_clave);
-	serializar_string(buffer,nodo_clave->clave, 06);
-	enviar(nodo_clave->nodo_instancia.socket, buffer, sizeof(int)+tamanio_clave, logger);
-	free(buffer);
 }
 
 void desconectar_instancia(int socket){

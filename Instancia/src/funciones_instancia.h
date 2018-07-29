@@ -3,6 +3,8 @@
 
 #include "commons_propias/commons_propias.h"
 #include <semaphore.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 
 ///////////////////////// VARIABLES GLOBALES /////////////////////////
@@ -122,5 +124,6 @@ int any_entrada_bitmap_libre();
 int buscar_siguiente_entrada_ocupada(int inicio_indice);
 void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva);
 bool entradas_libres_contiguas(int necesarias);
+char* obtener_valor_archivo(char* clave, int tamanio_clave);
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

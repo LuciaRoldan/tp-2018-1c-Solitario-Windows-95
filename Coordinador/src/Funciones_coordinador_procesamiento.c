@@ -16,6 +16,7 @@ int procesar_mensaje(int socket){
 	//log_info(logger, "Protocolo recibido: %d", id);
 	free(buffer_int);
 	int rta_esi;
+	aplicar_retardo();
 
 	switch(id){
 		case 20://Exit
@@ -231,11 +232,16 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 			log_info(logger, "El pedido es valido");
 			instancia_seleccionada = buscar_instancia(clave);
 			if(instruccion.keyword == GET){
-				nodo_clave* nodito = malloc(sizeof(nodo_clave));
+				nodo_clave* nodito = malloc(sizeof(nodo_clave) + 1);
 				nodito->clave = malloc(strlen(clave));
 				memcpy(nodito->clave, clave, strlen(clave));
 				nodito->nodo_instancia = *instancia_seleccionada;
-				list_add(lista_claves, nodito);
+//				list_add(lista_claves, nodito);
+				log_info(logger, "tamanio lista es %d", list_size(lista_claves));
+				for(int i = 0; i < list_size(lista_claves); i++){
+					nodo_clave* prueba = list_get(lista_claves, i);
+					log_info(logger, "la clave en %d es %s y el nodo instancia %d, el socket es %d ", i, prueba->clave, prueba->nodo_instancia.id, prueba->nodo_instancia.socket);
+				}
 			}
 			if(instruccion.keyword == STORE){
 				clave_buscada = malloc(strlen(instruccion.argumentos.STORE.clave)+1);
@@ -265,4 +271,9 @@ void liberar_instruccion(){
 		free(operacion_ejecutando.argumentos.STORE.clave);
 		break;
 	}
+}
+
+void aplicar_retardo(){
+	float retardo = info_coordinador.retardo/ 1000;
+	sleep(retardo);
 }

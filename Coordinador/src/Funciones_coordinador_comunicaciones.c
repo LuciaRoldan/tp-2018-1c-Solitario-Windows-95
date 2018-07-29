@@ -93,4 +93,12 @@ int enviar_operacion(int socket, t_esi_operacion instruccion){
 	return resultado;
 }
 
+void enviar_clave(char* clave, int socket){
+	int tamanio_buffer = tamanio_buffer_string(clave);
+	void* buffer = malloc(tamanio_buffer);
+	serializar_string_log(buffer,clave, 06,logger);
+	int bytes = enviar(socket, buffer, tamanio_buffer, logger);
+	free(buffer);
+}
+
 
