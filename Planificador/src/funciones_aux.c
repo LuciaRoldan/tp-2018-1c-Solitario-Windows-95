@@ -1,28 +1,8 @@
 #include "planificador_punto_hache.h"
 
-////--Planificar--//
-//void planificar(){
-//	log_info(logger, "Dentro de planificar");
-//	if(list_size(esis_ready) > 0){
-//		ordenar_pcbs();
-//	}
-//}
-
 ///---PLANIFICAR---///
 void planificar_si_corresponde(){
-	//if(desalojo == 0){
-		//void* aux_esi_a_ejecutar = list_get(esis_ready, 0);
-		//pcb* aux_pcb_esi;
-		//aux_pcb_esi = aux_esi_a_ejecutar;
-
-		//if(aux_pcb_esi->id != id_esi_ejecutando){
-			ordenar_pcbs();
-		//}
-	//}
-
-	//if(desalojo == 1){
-		ordenar_pcbs();
-	//}
+	ordenar_pcbs();
 }
 
 void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar){

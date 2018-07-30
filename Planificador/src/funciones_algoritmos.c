@@ -4,7 +4,7 @@
 
 //--ORDENAR PCBS--//
 void ordenar_pcbs(){
-	pthread_mutex_lock(&m_lista_esis_ready);
+	//pthread_mutex_lock(&m_lista_esis_ready);
 	if(strcmp(algoritmo, "SJF_CD") == 0){
 	planificacionSJF_CD();
 	}
@@ -17,7 +17,7 @@ void ordenar_pcbs(){
 	else{
 	log_info(logger, "Algoritmo invalido en ordenar_pcbs");
 	}
-	pthread_mutex_unlock(&m_lista_esis_ready);
+	//pthread_mutex_unlock(&m_lista_esis_ready);
 }
 
 

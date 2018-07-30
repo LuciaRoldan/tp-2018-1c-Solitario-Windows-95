@@ -17,13 +17,14 @@ int main(int argc, char* argv[]) {
 		claves_bloqueadas = list_create();
 		clave_buscada = malloc(40);
 		hay_hilos_por_cerrar = 0;
-		pausar_planificador = 0;
+		pausar_planificador = 1;
 		terminar_todo = 1;
 		fin_de_programa = -1;
 		rafaga_actual = 0;
 		id_esi_ejecutando = -1;
 		se_fue_uno = 0;
 		vino_uno = 0;
+		se_cerro_todo = -1;
 
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(argv[1]); //leyendo archivo configuracion
@@ -47,7 +48,7 @@ int main(int argc, char* argv[]) {
 	pthread_create(&hilo_consola, 0, ejecutar_consola, (void*) 0);
 
 	//CIERRO HILOS
-			while(hay_hilos_por_cerrar>0 || fin_de_programa<0){
+			while(hay_hilos_por_cerrar>0 || fin_de_programa < 0 || se_cerro_todo < 0){
 				sem_wait(&s_cerrar_un_hilo);
 				log_info(logger, "Vine a cerrar el hilo");
 				hay_hilos_por_cerrar = 0;

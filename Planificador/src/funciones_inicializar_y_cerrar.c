@@ -68,6 +68,7 @@ void inicializar_semaforos(){
 	sem_init(&s_podes_procesar_una_respuesta, 0, 0);
 	sem_init(&s_podes_procesar_un_pedido, 0, 0);
 	sem_init(&s_planificar, 0, 0);
+	sem_init(&s_podes_cerrar_dice_el_esi, 0, 0);
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -152,57 +153,59 @@ void desencadenar_cerrar_planificador(){
 
 void cerrar_planificador(){ //arreglar
 
-	list_iterate(pcbs, mostrar_ultima_estimacion);
-
 	terminar_todo = -1;
 	fin_de_programa = 1;
 
+	//sem_wait(&s_podes_cerrar_dice_el_esi);
+
 	log_info(logger, "Pase la parte del exit que no puede fallar");
+
+	list_iterate(pcbs, mostrar_ultima_estimacion);
 
 	log_info(logger, "LA CANTIDAD DE PCBS ES %d", list_size(pcbs));
 
-	pcb* lolol = list_get(pcbs, 0);
-	log_info(logger, "EL SOCKET DEL PRIMER ESI ES %d", lolol->socket);
-	//list_iterate(pcbs, despedir_esi); No anda porque ya los despedi a menos que termine abruptamente
-	//log_info(logger, "Despedi esis");
+	list_iterate(pcbs, despedir_esi_vivo);
+	log_info(logger, "Despedi esis vivos");
 
 	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
+	log_info(logger, "Borre las claves_bloqueadas");
 	log_info(logger, "el tam de claves_bloqueadas es %d", list_size(claves_bloqueadas));
+	free(claves_bloqueadas);
 
-	//free(claves_bloqueadas);
 	free(conexion_planificador.ip);
 	free(conexion_planificador.puerto);
 	free(conexion_coordinador.ip);
 	free(conexion_coordinador.puerto);
 	free(algoritmo);
 	free(clave_buscada);
-	//free(esi_abortado);
-
 	free(esis_ready);
-	list_iterate(pcbs, cerrar_cosas_de_un_esi);
+
 	list_clean_and_destroy_elements(esis_finalizados, free_esi_finalizado);
 	log_info(logger, "el tam de esis_finalizados es %d", list_size(esis_finalizados));
+	free(esis_finalizados);
 
 	list_clean_and_destroy_elements(pcbs, destruir_pcb);
-	//log_info(logger, "el tam de pcbs es %d", list_size(pcbs));
-	free(hilo_a_cerrar);
+	log_info(logger, "el tam de pcbs es %d", list_size(pcbs));
+	free(pcbs);
 
+	se_cerro_todo = 1;
 }
 
 //--Cuando termina un ESI--//
 void cerrar_cosas_de_un_esi(void* esi){
 	pcb* esi_a_cerrar = esi;
+
 	close(esi_a_cerrar->socket);
 	log_info(logger, "Entre en cerrar_cosas");
-	//pthread_mutex_lock(&m_hilo_a_cerrar);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	log_info(logger, "hola");
 	hay_hilos_por_cerrar = 1;
 
+	if(terminar_todo == 1){
 	sem_post(&s_planificar);
 	log_info(logger, "Post a planificar desde cerrar cosas");
-
-	if(list_size(esis_ready) == 0){ //no se por que pero hacen falta 2
+	}
+	if(list_size(esis_ready) == 0 && terminar_todo == 1){ //no se por que pero hacen falta 2
 		sem_post(&s_planificar);
 		log_info(logger, "Post a planificar desde cerrar cosas");
 	}

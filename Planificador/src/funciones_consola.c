@@ -3,6 +3,9 @@
 //--Funciones consola--//
 void pausar_planificacion(){
 	pausar_planificador = -1;
+	if(list_size(esis_ready) > 0){
+		sem_post(&s_planificar); //o sea pausaron en el medio de la ejec
+	}
 }
 void continuar_planificacion(){
 	pausar_planificador = 1;
@@ -12,54 +15,6 @@ void bloquear(char* clave, int id){
 }
 void desbloquear(char * clave){
 	liberar_clave(clave);
-}
-
-void quitar_primer_esi_de_cola_bloqueados(char* clave){ //vuela ?
-	clave_bloqueada* nodo_clave;
-
-	//si HAY claves bloqueadas
-	if(!list_is_empty(claves_bloqueadas)){
-		log_info(logger, "pase el primer if");
-		clave_buscada = clave;
-		pthread_mutex_lock(&m_lista_claves_bloqueadas);
-		if(list_any_satisfy(claves_bloqueadas, claves_iguales_nodo_clave)){
-			void* aux = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-			nodo_clave = aux;
-			if(list_size(nodo_clave->esis_en_espera) > 0){
-				pthread_mutex_unlock(&m_lista_claves_bloqueadas);
-				log_info(logger, "pase el list find");
-
-				//SACO al primer esi de la lista de bloqueados de esa clave
-				void* primero = list_remove(nodo_clave->esis_en_espera, 0);
-				int* primer_esi_en_espera = primero;
-				log_info(logger, "el id del que removi es: %d", *primer_esi_en_espera);
-				pthread_mutex_lock(&m_id_buscado);
-				id_buscado = *primer_esi_en_espera;
-				void* un_esi = list_find(pcbs, ids_iguales_pcb);
-				pthread_mutex_unlock(&m_id_buscado);
-
-				pcb* el_nuevo_esi_ready = un_esi;
-				//agrego al esi a ready
-				if(desalojo == 1){
-				//calcular_estimacion(el_nuevo_esi_ready);
-				//log_info(logger, "La nueva estimacion del esi %d es: %f", el_nuevo_esi_ready->id, el_nuevo_esi_ready->ultimaEstimacion);
-				el_nuevo_esi_ready->ultimaRafaga = 0; //apa
-				}
-				list_add(esis_ready, el_nuevo_esi_ready);
-				log_info(logger, "Agregue al esi %d a ready", *primer_esi_en_espera);
-				nodo_clave->esi_que_la_usa = *primer_esi_en_espera;
-				log_info(logger, "Ahora el esi %d tiene la clave %s", *primer_esi_en_espera, nodo_clave->clave);
-
-				if(list_size(esis_ready) == 1){
-					sem_post(&s_planificar);
-				}
-
-			} else {
-					liberar_clave(clave);
-					}
-		}
-	} else { pthread_mutex_unlock(&m_lista_claves_bloqueadas);
-	}
 }
 
 void pedir_status(char* clave){
@@ -112,13 +67,19 @@ void kill_esi(int id){
 	pcb* pcb_esi = list_find(pcbs, ids_iguales_pcb);
 	log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", pcb_esi->id);
 	informar_coordi_kill(pcb_esi->id);
-	enviar_esi_kill(pcb_esi->socket);
+	//enviar_esi_kill(pcb_esi->socket);
 	abortar_esi(pcb_esi->id);
 }
 
 void enviar_esi_kill(int socket_esi){
 	int protocolo;
 	serializar_id(&protocolo, 91);
+	enviar(socket_esi, &protocolo, sizeof(int), logger);
+}
+
+void enviar_esi_exit(int socket_esi){
+	int protocolo;
+	serializar_id(&protocolo, 85);
 	enviar(socket_esi, &protocolo, sizeof(int), logger);
 }
 

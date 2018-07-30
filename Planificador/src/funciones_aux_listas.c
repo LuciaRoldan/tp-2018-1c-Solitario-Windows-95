@@ -8,9 +8,9 @@ bool ids_iguales_pcb(void* pcbb){
 
 //--Sumar 1 al retardo de los demas ESIs ready--//
 void sumar_retardo_otros_ready(){
-	pthread_mutex_lock(&m_lista_esis_ready);
+	//pthread_mutex_lock(&m_lista_esis_ready);
 	list_iterate(esis_ready, sumar_retardo_menos_primero);
-	pthread_mutex_unlock(&m_lista_esis_ready);
+	//pthread_mutex_unlock(&m_lista_esis_ready);
 
 }
 void sumar_retardo_menos_primero(void* pcbb){
@@ -102,4 +102,15 @@ void eliminar_esi_en_espera(void* esi){
 void destruir_pcb(void* pcbb){
 	pcb* pcb_esi = pcbb;
 	free(pcb_esi);
+}
+
+void despedir_esi_vivo(void* pcbb){
+	pcb* pcb_esi = pcbb;
+	//pthread_mutex_lock(&m_id_buscado);
+	id_buscado = pcb_esi->id;
+	if(!list_any_satisfy(esis_finalizados, ids_iguales_pcb)){
+		enviar_esi_exit(pcb_esi->socket);
+		abortar_esi(pcb_esi->id);
+	}
+	//pthread_mutex_unlock(&m_id_buscado);
 }

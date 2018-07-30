@@ -57,7 +57,6 @@ void abortar_esi(int id_esi){
 
 	log_info(logger, "ESI abortado: %d", esi_abortado->id);
 
-	//list_remove_by_condition(pcbs, ids_iguales_pcb);
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
 
 	actualizar_rafaga_y_estimar(esi_abortado);
@@ -66,8 +65,12 @@ void abortar_esi(int id_esi){
 
 	int* id = malloc(sizeof(int));
 	memcpy(id, &id_esi_abortado, sizeof(int));
-	list_add(esis_finalizados, id); //va o no?
+	list_add(esis_finalizados, id);
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_abortado);
+
+	if(fin_de_programa != 1){
+	enviar_esi_kill(esi_abortado->socket); //va?
+	}
 
 	cerrar_cosas_de_un_esi(esi_abortado);
 }
@@ -136,17 +139,17 @@ void liberar_clave(char* clave){
 				void* un_esi = list_find(pcbs, ids_iguales_pcb);
 				pcb* el_nuevo_esi_ready = un_esi;
 
-				//if(desalojo == 1){
-					el_nuevo_esi_ready->ultimaRafaga = 0; //apa
-				//}
+				el_nuevo_esi_ready->ultimaRafaga = 0; //apa
+
 				list_add(esis_ready, el_nuevo_esi_ready);
 
 				vino_uno = 1;
 
-		//if(list_size(esis_ready) == 1){
-		//	sem_post(&s_planificar);
-		//}
+				if(list_size(esis_ready) == 1){
+					sem_post(&s_planificar);
+				}
 			}
+
 		} else {
 			pthread_mutex_lock(&m_lista_claves_bloqueadas);
 			pthread_mutex_lock(&m_clave_buscada);

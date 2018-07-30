@@ -8,7 +8,7 @@ void enviar_solicitud_ejecucion(pcb* pcb_esi){
 	log_info(logger, "Por enviar solicitud de ejecucion al ESI de id %d y socket %d", pcb_esi->id, pcb_esi->socket);
 	rafaga_actual += 1;
 	enviar(pcb_esi->socket, buffer, sizeof(int), logger);
-	//log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
+	log_info(logger, "Solicitud de ejecucion enviada al ESI: %d", pcb_esi->id);
 	free(buffer);
 }
 
