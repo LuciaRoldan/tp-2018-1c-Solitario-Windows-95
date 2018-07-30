@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
 		se_fue_uno = 0;
 		vino_uno = 0;
 		se_cerro_todo = -1;
+		esi_a_abortar = -1;
 
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(argv[1]); //leyendo archivo configuracion

@@ -64,11 +64,15 @@ void listar_procesos_encolados(char* recurso){
 
 void kill_esi(int id){
 	id_buscado = id;
-	pcb* pcb_esi = list_find(pcbs, ids_iguales_pcb);
-	log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", pcb_esi->id);
-	informar_coordi_kill(pcb_esi->id);
-	//enviar_esi_kill(pcb_esi->socket);
-	abortar_esi(pcb_esi->id);
+	if (list_any_satisfy(pcbs, ids_iguales_pcb)){
+		log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", id);
+		esi_a_abortar = id;
+		if(list_size(esis_ready) == 0){
+			abortar_esi(id);
+		}
+	} else {
+		log_info(logger, "No conozco a ese ESI");
+	}
 }
 
 void enviar_esi_kill(int socket_esi){

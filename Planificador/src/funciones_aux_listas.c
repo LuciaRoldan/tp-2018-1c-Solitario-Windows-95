@@ -114,3 +114,10 @@ void despedir_esi_vivo(void* pcbb){
 	}
 	//pthread_mutex_unlock(&m_id_buscado);
 }
+
+void liberar_claves_tomadas_por_abortado(void* clave){
+	clave_bloqueada* clave_bloq = clave;
+	if(clave_bloq->esi_que_la_usa == id_buscado){
+		liberar_clave(clave_bloq->clave);
+	}
+}

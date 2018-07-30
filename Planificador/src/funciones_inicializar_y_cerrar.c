@@ -205,10 +205,10 @@ void cerrar_cosas_de_un_esi(void* esi){
 	sem_post(&s_planificar);
 	log_info(logger, "Post a planificar desde cerrar cosas");
 	}
-	if(list_size(esis_ready) == 0 && terminar_todo == 1){ //no se por que pero hacen falta 2
-		sem_post(&s_planificar);
-		log_info(logger, "Post a planificar desde cerrar cosas");
-	}
+	//if(list_size(esis_ready) == 0 && terminar_todo == 1 && esi_a_abortar == -1){ //no se por que pero hacen falta 2
+	//	sem_post(&s_planificar);
+	//	log_info(logger, "Post a planificar desde cerrar cosas");
+	//}
 
 	log_info(logger, "Post a cerrar_un_hilo");
 	sem_post(&s_cerrar_un_hilo);

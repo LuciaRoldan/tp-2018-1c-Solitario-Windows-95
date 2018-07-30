@@ -51,8 +51,13 @@ void abortar_esi(int id_esi){
 	esi_abortado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_abortado = esi_abortado->id;
 
+	if(esi_a_abortar != -1){
+		informar_coordi_kill(id_esi_abortado);
+	}
+
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
+	list_iterate(claves_bloqueadas, liberar_claves_tomadas_por_abortado); //va?
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 
 	log_info(logger, "ESI abortado: %d", esi_abortado->id);
@@ -71,6 +76,8 @@ void abortar_esi(int id_esi){
 	if(fin_de_programa != 1){
 	enviar_esi_kill(esi_abortado->socket); //va?
 	}
+
+	//sem_post(&s_planificar);
 
 	cerrar_cosas_de_un_esi(esi_abortado);
 }
@@ -113,13 +120,13 @@ void liberar_clave(char* clave){
 
 	if(!list_is_empty(claves_bloqueadas)){
 		log_info(logger, "pase el primer if");
-		pthread_mutex_lock(&m_lista_claves_bloqueadas);
+		//pthread_mutex_lock(&m_lista_claves_bloqueadas);
 		pthread_mutex_lock(&m_clave_buscada);
 		clave_buscada = clave;
 		if(list_any_satisfy(claves_bloqueadas, claves_iguales_nodo_clave)){
 
 			clave_bloqueada* nodo_clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-			pthread_mutex_unlock(&m_lista_claves_bloqueadas);
+			//pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 			pthread_mutex_unlock(&m_clave_buscada);
 
 			log_info(logger, "El ESI que ocupaba la clave era: %d", nodo_clave->esi_que_la_usa);
@@ -151,7 +158,7 @@ void liberar_clave(char* clave){
 			}
 
 		} else {
-			pthread_mutex_lock(&m_lista_claves_bloqueadas);
+			//pthread_mutex_lock(&m_lista_claves_bloqueadas);
 			pthread_mutex_lock(&m_clave_buscada);
 		}
 	}

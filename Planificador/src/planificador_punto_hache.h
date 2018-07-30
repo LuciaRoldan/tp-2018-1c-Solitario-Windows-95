@@ -72,6 +72,7 @@ int se_fue_uno;
 int vino_uno;
 int desalojo;
 int se_cerro_todo;
+int esi_a_abortar;
 
 ///---SEMAFOROS---///
 pthread_mutex_t m_recibir_resultado_esi;
@@ -155,6 +156,7 @@ void mostrar_ultima_estimacion(void* pcbb);
 void mostrar_estimacion(void* pcbb);
 void sumar_retardo_menos_primero(void* pcbb);
 void despedir_esi_vivo(void* pcbb);
+void liberar_claves_tomadas_por_abortado(void* clave_bloqueada);
 
 bool ids_iguales_pcb(void* pcbb);
 bool es_el_primer_esi_ready(void *pcbb);

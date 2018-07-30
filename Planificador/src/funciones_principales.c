@@ -12,7 +12,7 @@ void manejar_esis(){
 				sem_wait(&s_planificar);
 				log_info(logger, "Pase el semaforo de la muerte");
 
-				if (pausar_planificador == -1){
+				if (pausar_planificador == -1 || terminar_todo == -1){ //cambie
 					log_info(logger, "Voy a hacer un break porque me pausaron");
 					break;
 					log_info(logger, "No hice el break un carajo");
@@ -21,6 +21,8 @@ void manejar_esis(){
 				pthread_mutex_lock(&m_lista_esis_ready);
 
 				if(list_size(esis_ready) > 0){
+
+				//pthread_mutex_lock(&m_lista_esis_ready);
 
 				log_info(logger, "La cantidad de ESIs ready desde manejar_esis es: %d", list_size(esis_ready));
 
@@ -103,7 +105,7 @@ void manejar_esi(void* la_pcb){
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
 
-	while(chau > 0){
+	while(chau > 0 && esi_a_abortar != pcb_esi.id){
 		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
 		int resultado = recibir_un_int(pcb_esi.socket);
@@ -112,12 +114,16 @@ void manejar_esi(void* la_pcb){
 		if (resultado >= 0){
 			switch (resultado){
 				case (84):
+					if (terminar_todo != -1){
 					sem_post(&s_planificar);
+					}
 				break;
 				case (90):
 					pthread_mutex_lock(&m_lista_esis_ready);
 					mover_esi_a_bloqueados(clave_buscada, id_esi_ejecutando);
+					if (terminar_todo != -1){
 					sem_post(&s_planificar);
+					}
 				break;
 				case (81):
 					mover_esi_a_finalizados(id_esi_ejecutando);
@@ -130,11 +136,15 @@ void manejar_esi(void* la_pcb){
 				break;
 			}
 		}
-		if (terminar_todo == -1){
+		if (terminar_todo == -1 && chau == 1){
 			sem_wait(&s_planificar); //shady
 			sem_post(&s_podes_cerrar_dice_el_esi);
 			chau = 0;
 		}
+	}
+	if(pcb_esi.id == esi_a_abortar){
+		esi_a_abortar = -1;
+		abortar_esi(pcb_esi.id);
 	}
 }
 
