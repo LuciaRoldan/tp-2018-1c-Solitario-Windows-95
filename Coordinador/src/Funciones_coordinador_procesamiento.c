@@ -207,55 +207,64 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		memcpy(clave, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
 		break;
 	}
-	if(strlen(clave) > 40){																																		//Metete en tu propio codigo
-		log_info(logger, "Fallo por clave muy larga, ID ESI: %d", esi_ejecutando->id);
-		rta_esi = 86;
-		void* buffer_int = malloc(sizeof(int));
-		serializar_id(buffer_int, rta_esi);
-		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-		hilo_a_cerrar = &esi_ejecutando->hilo;
-		sem_post(&s_cerrar_hilo);
-		free(buffer_int);
-		return -1;
-	} else {
-		if(!clave_accesible(clave)) {
-				log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
-				rta_esi = 88;
+	if(list_size(lista_instancias) != 0){
+		if(strlen(clave) > 40){																																		//Metete en tu propio codigo
+				log_info(logger, "Fallo por clave muy larga, ID ESI: %d", esi_ejecutando->id);
+				rta_esi = 86;
 				void* buffer_int = malloc(sizeof(int));
 				serializar_id(buffer_int, rta_esi);
 				enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
-				free(buffer_int);
 				hilo_a_cerrar = &esi_ejecutando->hilo;
 				sem_post(&s_cerrar_hilo);
+				free(buffer_int);
+				free(clave);
 				return -1;
-		} else {
-			log_info(logger, "El pedido es valido");
-			instancia_seleccionada = buscar_instancia(clave);
-			if(instruccion.keyword == GET){
-				nodo_clave* nodito = malloc(sizeof(nodo_clave) + 1);
-				nodito->clave = malloc(strlen(clave));
-				memcpy(nodito->clave, clave, strlen(clave));
-				nodito->nodo_instancia = *instancia_seleccionada;
-//				list_add(lista_claves, nodito);
-				log_info(logger, "tamanio lista es %d", list_size(lista_claves));
-				for(int i = 0; i < list_size(lista_claves); i++){
-					nodo_clave* prueba = list_get(lista_claves, i);
-					log_info(logger, "la clave en %d es %s y el nodo instancia %d, el socket es %d ", i, prueba->clave, prueba->nodo_instancia.id, prueba->nodo_instancia.socket);
+			} else {
+				if(!clave_accesible(clave)) {
+						log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
+						rta_esi = 88;
+						void* buffer_int = malloc(sizeof(int));
+						serializar_id(buffer_int, rta_esi);
+						enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+						free(buffer_int);
+						hilo_a_cerrar = &esi_ejecutando->hilo;
+						sem_post(&s_cerrar_hilo);
+						free(clave);
+						return -1;
+				} else {
+					log_info(logger, "El pedido es valido");
+					instancia_seleccionada = buscar_instancia(clave);
+					if(instruccion.keyword == GET){
+						nodo_clave* nodito = malloc(sizeof(nodo_clave) + 1);
+						nodito->clave = malloc(strlen(clave));
+						memcpy(nodito->clave, clave, strlen(clave));
+						nodito->nodo_instancia = *instancia_seleccionada;
+					}
+					if(instruccion.keyword == STORE){
+						clave_buscada = malloc(strlen(instruccion.argumentos.STORE.clave)+1);
+						memcpy(clave_buscada, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
+						nodo_clave* nodito = list_remove_by_condition(lista_claves, condicion_clave);
+						free(nodito->clave);
+						free(clave_buscada);
+					}
+					operacion_ejecutando = instruccion;
+					enviar_operacion(socket_planificador, instruccion);
 				}
 			}
-			if(instruccion.keyword == STORE){
-				clave_buscada = malloc(strlen(instruccion.argumentos.STORE.clave)+1);
-				memcpy(clave_buscada, instruccion.argumentos.STORE.clave, strlen(instruccion.argumentos.STORE.clave)+1);
-				nodo_clave* nodito = list_remove_by_condition(lista_claves, condicion_clave);
-				free(nodito->clave);
-				free(clave_buscada);
-			}
-			operacion_ejecutando = instruccion;
-			enviar_operacion(socket_planificador, instruccion);
-		}
+	} else {
+		log_info(logger, "Fallo por clave inaccesible, ID ESI: %d", esi_ejecutando->id);
+		rta_esi = 88;
+		void* buffer_int = malloc(sizeof(int));
+		serializar_id(buffer_int, rta_esi);
+		enviar(esi_ejecutando->socket, buffer_int, sizeof(int), logger);
+		free(buffer_int);
+		hilo_a_cerrar = &esi_ejecutando->hilo;
+		sem_post(&s_cerrar_hilo);
+		free(clave);
+		return -1;
 	}
-	return 1;
 	free(clave);
+	return 1;
 }
 
 void liberar_instruccion(){
@@ -274,6 +283,5 @@ void liberar_instruccion(){
 }
 
 void aplicar_retardo(){
-	float retardo = info_coordinador.retardo/ 1000;
-	sleep(retardo);
+	usleep(info_coordinador.retardo*1000);
 }
