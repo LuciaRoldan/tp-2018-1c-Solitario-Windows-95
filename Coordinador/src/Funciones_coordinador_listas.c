@@ -25,7 +25,6 @@ bool condicion_socket_instancia(void* datos){
 
 bool condicion_clave(void* datos){
 	nodo_clave un_nodo = *((nodo_clave*) datos);
-	//log_info(logger, "La clave buscada es: %s, la clave encontrada es: %s", clave_buscada, un_nodo.clave);
 	return (strcmp(un_nodo.clave, clave_buscada) == 0);
 }
 
@@ -75,7 +74,6 @@ nodo* buscar_instancia(char* clave){
 		nodito = list_find(lista_claves, condicion_clave);
 		id_instancia_buscado = nodito->nodo_instancia.id;
 		nodo_instancia = list_find(lista_instancias, condicion_id_instancia);
-		log_info(logger, "El id de la instancia es: %d, ", nodito->nodo_instancia.id);
 	} else {
 		nodo_instancia = seleccionar_instancia(clave);
 		nodo_clave* nodo_ = malloc(sizeof(nodo_clave));
@@ -125,7 +123,7 @@ nodo* seleccionar_instancia(char* clave){
 		}
 
 		if((*char_KE - 97) % cantidad_letras_KE == 0){
-			id_instancia = cantidad_letras_KE / *char_KE;
+			id_instancia = cantidad_letras_KE / (*char_KE - 97);
 		} else {
 			resultado_KE = div((*char_KE - 97), cantidad_letras_KE); //(int)'a' = 97
 			id_instancia = resultado_KE.quot+1;
@@ -134,6 +132,7 @@ nodo* seleccionar_instancia(char* clave){
 		instancia_seleccionada = list_find(lista_instancias, condicion_id_instancia);
 		break;
 	}
+	log_info(logger, "La instancia seleccionada por el algoritmo es la %d", id_instancia);
 	return instancia_seleccionada;
 	free(char_KE);
 }
@@ -170,11 +169,9 @@ void compactar_intancias(){
 	void* buffer = malloc(sizeof(int));
 
 	memcpy(buffer, &mensaje, sizeof(int));
-	log_info(logger, "El tamanio de la lista es %d", list_size(lista_instancias));
 	for(int i = 0; i < list_size(lista_instancias); i++){
 		nodo* nodito = list_get(lista_instancias, i);
 		enviar(nodito->socket, buffer, sizeof(int), logger);
-		log_info(logger, "Le dije a la instancia %d de socket %d", nodito->id, nodito->socket);
 	}
 }
 

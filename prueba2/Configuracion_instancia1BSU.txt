@@ -1,1 +1,0 @@
-127.0.0.1 8001 2 /home/utnso/inst1/ Inst1 10

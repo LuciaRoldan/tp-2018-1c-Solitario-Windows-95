@@ -34,7 +34,6 @@ int handshake(int socket_cliente){
 	case INSTANCIA:
 		log_info(logger, "Se establecio la conexion con la Instancia %d", proceso_recibido.id);
 		agregar_nueva_instancia(socket_cliente, proceso_recibido.id);
-		log_info(logger, "El socket de la instancia es: %d", socket_cliente);
 		return 1;
 		break;
 
