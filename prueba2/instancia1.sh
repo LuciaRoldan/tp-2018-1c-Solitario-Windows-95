@@ -9,4 +9,4 @@ make all
 
 export LD_LIBRARY_PATH=$PWD/../../Shared_Libraries/commons_propias/Debug
 
-./instancia "../../prueba2/Configuracion_instancia1BSU.txt" 1
+./instancia "../../prueba2/Configuracion_instancia1.txt" 1
