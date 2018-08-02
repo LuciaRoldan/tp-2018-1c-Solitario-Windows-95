@@ -72,7 +72,7 @@ int se_fue_uno;
 int vino_uno;
 int desalojo;
 int se_cerro_todo;
-int esi_a_abortar;
+int esi_a_finalizar;
 
 ///---SEMAFOROS---///
 pthread_mutex_t m_recibir_resultado_esi;
@@ -156,7 +156,7 @@ void mostrar_ultima_estimacion(void* pcbb);
 void mostrar_estimacion(void* pcbb);
 void sumar_retardo_menos_primero(void* pcbb);
 void despedir_esi_vivo(void* pcbb);
-void liberar_claves_tomadas_por_abortado(void* clave_bloqueada);
+void liberar_claves_tomadas_por_finalizado(void* clave_bloqueada);
 
 bool ids_iguales_pcb(void* pcbb);
 bool es_el_primer_esi_ready(void *pcbb);
@@ -176,7 +176,7 @@ void destruir_pcb(void* pcb);
 void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar);
 void planificar_si_corresponde();
 void procesar_pedido(t_esi_operacion instruccion);
-void actualizar_rafaga_y_estimar(pcb* pcbb);
+void actualizar_rafaga_y_estimar(pcb* pcb_esi);
 void procesar_motivo_aborto(int protocolo);
 void liberar_instruccion(t_esi_operacion instruccion);
 

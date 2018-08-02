@@ -176,7 +176,7 @@ void procesar_pedido(t_esi_operacion instruccion){
 	}
 }
 
-actualizar_rafaga_y_estimar(pcb* pcb_esi){
+void actualizar_rafaga_y_estimar(pcb* pcb_esi){
 	pcb_esi->ultimaRafaga += rafaga_actual;
 	log_info(logger, "Actualice la ultimaRafaga del Esi %d a: %d", pcb_esi->id, pcb_esi->ultimaRafaga);
 	calcular_estimacion(pcb_esi);

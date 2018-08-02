@@ -51,13 +51,8 @@ void abortar_esi(int id_esi){
 	esi_abortado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_abortado = esi_abortado->id;
 
-	if(esi_a_abortar != -1){
-		informar_coordi_kill(id_esi_abortado);
-	}
-
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
-	list_iterate(claves_bloqueadas, liberar_claves_tomadas_por_abortado); //va?
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 
 	log_info(logger, "ESI abortado: %d", esi_abortado->id);
@@ -91,8 +86,13 @@ void mover_esi_a_finalizados(int id_esi){
 	esi_finalizado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_finalizado = esi_finalizado->id;
 
+	if(esi_a_finalizar != -1){
+		informar_coordi_kill(id_esi_finalizado);
+	}
+
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
 	list_iterate(claves_bloqueadas, quitar_esi_de_cola_bloqueados);
+	list_iterate(claves_bloqueadas, liberar_claves_tomadas_por_finalizado);
 	pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 
 	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);

@@ -105,7 +105,7 @@ void manejar_esi(void* la_pcb){
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
 
-	while(chau > 0 && esi_a_abortar != pcb_esi.id){
+	while(chau > 0 && esi_a_finalizar != pcb_esi.id){
 		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
 		int resultado = recibir_un_int(pcb_esi.socket);
@@ -142,9 +142,9 @@ void manejar_esi(void* la_pcb){
 			chau = 0;
 		}
 	}
-	if(pcb_esi.id == esi_a_abortar){
-		esi_a_abortar = -1;
-		abortar_esi(pcb_esi.id);
+	if(pcb_esi.id == esi_a_finalizar){
+		esi_a_finalizar = -1;
+		mover_esi_a_finalizados(pcb_esi.id);
 	}
 }
 

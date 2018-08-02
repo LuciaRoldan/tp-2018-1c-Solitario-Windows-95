@@ -65,8 +65,8 @@ void listar_procesos_encolados(char* recurso){
 void kill_esi(int id){
 	id_buscado = id;
 	if (list_any_satisfy(pcbs, ids_iguales_pcb)){
-		log_info(logger, "ESI %d sera abortado por funcion 'kill' de consola.", id);
-		esi_a_abortar = id;
+		log_info(logger, "ESI %d sera finalizado por funcion 'kill' de consola.", id);
+		esi_a_finalizar = id;
 		if(list_size(esis_ready) == 0){
 			abortar_esi(id);
 		}
