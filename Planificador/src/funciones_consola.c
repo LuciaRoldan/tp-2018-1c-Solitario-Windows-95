@@ -20,7 +20,7 @@ void desbloquear(char * clave){
 void pedir_status(char* clave){
 	int tamanio_buffer = tamanio_buffer_string(clave);
 	void* buffer_pedido_clave = malloc(tamanio_buffer);
-	serializar_string(buffer_pedido_clave, clave, 21);
+	serializar_string_log(buffer_pedido_clave, clave, 21, logger);
 	enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
 }
 

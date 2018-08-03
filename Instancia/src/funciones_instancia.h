@@ -84,7 +84,7 @@ void serializar_pedido_desbloqueo(void* buffer, char* clave);
 void guardar_archivo(char* clave,int tamanio_clave, t_log* logger);
 
 //---Pedido status_clave---//
-char* recibe_pedido_status();
+char* recibe_pedido_status(char* la_clave);
 int enviar_status_clave(char* clave);
 
 //---Enviar---//
