@@ -108,7 +108,6 @@ int main(int argc, char* argv[]){
 	close(conexiones.socket_plani);
 	close(conexiones.socket_coordi);
 	log_info(logger_esi, "Fin de ejecucion de ESI %d\n", idEsi);
-	log_info(logger_esi, "Termine wacho :7");
 	log_destroy(logger_esi);
 
 	return 0;
