@@ -27,8 +27,9 @@ int procesar_mensaje(int socket){
 			return -99;
 
 		case 21: //Recibo una clave
+			log_info(logger, "Recibi un pedido de status del Planificador");
 			clave = recibir_pedido_clave(socket);
-			log_info(logger, "Me llego el pedido de la clave: %d", clave);
+			log_info(logger, "Me llego el pedido de la clave: %s", clave);
 			nodo_instancia = buscar_instancia(clave);
 			log_info(logger, "Le voy a pedir a la instancia: %d", nodo_instancia->id);
 			protocolo_extra = 83;

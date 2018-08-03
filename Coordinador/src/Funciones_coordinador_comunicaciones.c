@@ -24,8 +24,9 @@ int enviar_status_clave(int socket, status_clave status){
 
 int enviar_pedido_valor(int socket, char* clave, int id){
 	int tamanio = tamanio_buffer_string(clave);
+	log_info(logger, "El tamaio de lo que manod es: %d", tamanio);
 	void* buffer = malloc(tamanio);
-	serializar_string(buffer, clave, id);
+	serializar_string_log(buffer, clave, id, logger);
 	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
 	free(buffer);
 	return bytes_enviados;
@@ -53,6 +54,8 @@ char* recibir_pedido_clave(int socket){
 	int tamanio;
 	recibir(socket, &tamanio, sizeof(int), logger);
 	void* buffer = malloc(tamanio);
+	clave = malloc(tamanio - sizeof(int));
+	log_info(logger, "El tamanio es %d", tamanio);
 	recibir(socket, buffer, tamanio, logger);
 	deserializar_string(buffer,clave);
 	free(buffer);

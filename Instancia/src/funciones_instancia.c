@@ -71,8 +71,11 @@ void procesarID(int socket_coordinador, t_log* logger) {
 		recibir(socket_coordinador, buffer, sizeof(int), logger);
 		tamanio_clave = deserializar_id(buffer);
 		free(buffer);
-		clave =	malloc(tamanio_clave);
-		clave = recibe_pedido_status();
+		void* buffer = malloc(tamanio_clave);
+		clave =	malloc(tamanio_clave - sizeof(int));
+		recibir(socket_coordinador, buffer, tamanio_clave, logger);
+		deserializar_string(buffer,clave);
+		//clave = recibe_pedido_status(clave);
 		enviar_status_clave(clave); //declarar
 		free(clave);
 		break;
@@ -84,16 +87,15 @@ void procesarID(int socket_coordinador, t_log* logger) {
 	pthread_mutex_unlock(&m_tabla);
 }
 
-char* recibe_pedido_status() {
-	char* la_clave;
+char* recibe_pedido_status(char* la_clave) {
+	//char* la_clave;
 	int tamanio;
 	void* buffer_tamanio = malloc(sizeof(int));
-	int num = recibir(socket_coordinador,buffer_tamanio,sizeof(int),logger);
-	printf("me llegaron %d bytes \n", num);
+	recibir(socket_coordinador, buffer_tamanio, sizeof(int), logger);
 	tamanio = deserializar_id(buffer_tamanio);
 	void* buffer = malloc(tamanio);
-	int bytes_recibidos = recibir(socket_coordinador,buffer, tamanio,logger);
-	printf("me llegaron %d bytes \n", bytes_recibidos);
+	log_info(logger, "El tamanio es: %d", tamanio);
+	int bytes_recibidos = recibir(socket_coordinador, buffer, tamanio, logger);
 	log_info(logger,"recibi %d bytes", bytes_recibidos);
 	deserializar_string(buffer, la_clave);
 	log_info(logger,"recibi la clave %s: ", la_clave);
@@ -108,7 +110,7 @@ int enviar_status_clave(char* clave){
 	log_info(logger, "llegue hasta enviar status");
 	if(list_any_satisfy(tabla_entradas, condicion_clave_entrada)){
 		estructura_clave* entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
-		status_clave status = {clave,idInstancia, 0, entrada_encontrada->valor};
+		status_clave status = {clave, id_instancia, 0, entrada_encontrada->valor};
 		int tamanio_buffer = tamanio_buffer_status(status);
 		void* buffer = malloc(tamanio_buffer);
 		serializar_status_clave(buffer,status);
@@ -116,7 +118,7 @@ int enviar_status_clave(char* clave){
 		free(buffer);
 		return bytes_enviados;
 	} else {
-		status_clave status = {clave,idInstancia, 0, ""};
+		status_clave status = {clave,id_instancia, 0, ""};
 		int tamanio_buffer = tamanio_buffer_status(status);
 		void* buffer = malloc(tamanio_buffer);
 		serializar_status_clave(buffer,status);
