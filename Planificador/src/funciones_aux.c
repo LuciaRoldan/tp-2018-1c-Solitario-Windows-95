@@ -17,7 +17,7 @@ void actualizar_rafaga_si_hubo_desalojo(pcb* esi_a_ejecutar){
 			pcb* esi_desalojado = esii;
 			esi_desalojado->ultimaRafaga += rafaga_actual;
 			rafaga_actual = 0;
-			log_info(logger, "Actualice la ultimaRafaga del Esi %d a: %d", esi_desalojado->id, esi_desalojado->ultimaRafaga);
+			log_info(logger, "Actualice la ultimaRafaga del ESI %d a: %d", esi_desalojado->id, esi_desalojado->ultimaRafaga);
 			//if(desalojo == 1){
 			//calcular_estimacion(esi_desalojado);
 			//log_info(logger, "La nueva estimacion del esi desalojado %d es: %f", esi_desalojado->id, esi_desalojado->ultimaEstimacion);

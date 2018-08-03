@@ -61,7 +61,6 @@ t_list* claves_bloqueadas;
 int id_buscado;
 int id_esi_ejecutando;
 char* clave_buscada;
-pcb* esi_abortado;
 pthread_t* hilo_a_cerrar;
 int hay_hilos_por_cerrar;
 int pausar_planificador;
@@ -85,18 +84,11 @@ pthread_mutex_t m_lista_claves_bloqueadas;
 pthread_mutex_t m_id_buscado;
 pthread_mutex_t m_clave_buscada;
 pthread_mutex_t m_id_esi_ejecutando;
-pthread_mutex_t m_estoy_mandando_a_ejecutar;
-
 
 sem_t s_cerrar_un_hilo;
 sem_t s_hilo_cerrado;
 sem_t s_eliminar_pcb;
-sem_t s_pausar_plani;
-sem_t s_manejar_esis;
 sem_t s_podes_cerrar_dice_el_esi;
-
-sem_t s_podes_procesar_un_pedido;
-sem_t s_podes_procesar_una_respuesta;
 sem_t s_planificar;
 
 //////////----------FUNCIONES----------//////////
@@ -116,11 +108,12 @@ void desbloquear(char * clave);
 void listar_procesos_encolados(char* recurso);
 void kill_esi(int id);
 void pedir_status(char* clave);
-void deadlock();
+int deadlock();
 
 //--Funciones auxiliares consola--//
 void enviar_esi_kill(int socket_esi);
 void enviar_esi_exit(int socket_esi);
+void enviar_esi_aborto(int socket_esi);
 void recibir_status_clave();
 void mostrar_status_clave(status_clave status);
 void imprimir_id_esi(void* esi);

@@ -26,13 +26,12 @@ void leer_archivo_configuracion(char* path){
 		conexion_coordinador.puerto = strdup(config_get_string_value(configuracion,"PUERTO_COORDINADOR"));
 		algoritmo = strdup(config_get_string_value(configuracion, "ALGORITMO_PLANIFICACION"));
 		estimacion_inicial = atoi(strdup(config_get_string_value(configuracion, "ESTIMACION_INICIAL")));
-		log_info(logger, "Estimacion inicial es: %d", estimacion_inicial);
+		//log_info(logger, "Estimacion inicial es: %d", estimacion_inicial);
 		alpha = strtof(strdup(config_get_string_value(configuracion, "ALPHA")),NULL);
-		log_info(logger, "Alpha es: %f", alpha);
+		//log_info(logger, "Alpha es: %f", alpha);
 		char** las_claves_bloqueadas = config_get_array_value(configuracion, "CLAVES_BLOQUEADAS");
-		log_info(logger, "Obtuve las claves bloqueadas");
+		//log_info(logger, "Obtuve las claves bloqueadas");
 		int indice_bloq = 0;
-		//int tam_lista;
 		while(las_claves_bloqueadas[indice_bloq] != NULL){
 			clave_bloqueada* clave = malloc(sizeof(clave_bloqueada));
 			clave->esi_que_la_usa = -1;
@@ -41,7 +40,7 @@ void leer_archivo_configuracion(char* path){
 			memcpy(clave->clave, las_claves_bloqueadas[indice_bloq], strlen(las_claves_bloqueadas[indice_bloq])+1);
 			list_add(claves_bloqueadas, clave);
 			indice_bloq += 1;
-			log_info(logger, "Agregue clave: %s", clave->clave);
+			//log_info(logger, "Agregue a las claves_bloqueadas la clave: %s", clave->clave);
 		}
 		free(las_claves_bloqueadas);
 
@@ -60,13 +59,10 @@ void inicializar_semaforos(){
 	if (pthread_mutex_init(&m_lista_claves_bloqueadas, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_clave_buscada, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
 	if (pthread_mutex_init(&m_id_esi_ejecutando, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
-	if (pthread_mutex_init(&m_estoy_mandando_a_ejecutar, NULL) != 0){log_info(logger,"Fallo al inicializar mutex\n");}
 
 	sem_init(&s_cerrar_un_hilo, 0, 0); //el segundo numerito es el valor inicial. el primero es 0.
 	sem_init(&s_hilo_cerrado, 0, 0);
 	sem_init(&s_eliminar_pcb, 0, 0);
-	sem_init(&s_podes_procesar_una_respuesta, 0, 0);
-	sem_init(&s_podes_procesar_un_pedido, 0, 0);
 	sem_init(&s_planificar, 0, 0);
 	sem_init(&s_podes_cerrar_dice_el_esi, 0, 0);
 }
@@ -81,7 +77,7 @@ void handshake_coordinador(int socket_coordinador){
 	//log_info(logger, "Serialice el Handshake del Coordinador");
 
 	enviar(socket_coordinador, buffer, sizeof(int)*3, logger);
-	log_info(logger, "Envie Handshake al Coordinador");
+	//log_info(logger, "Envie Handshake al Coordinador");
 	free(buffer);
 
 	int id_protocolo;
@@ -124,7 +120,7 @@ int handshake_esi(int socket_esi){
 		proceso_recibido = deserializar_handshake(buffer2);
 		if (proceso_recibido.proceso !=  0){ //validar que no tenía ya al ESI en otra PCB
 			enviar(socket_esi, buffer1, sizeof(int)*3, logger);
-			log_info(logger, "---------Se establecio la conexion con el Esi de id %d \n\n\n", proceso_recibido.id);
+			log_info(logger, "\n\n Se establecio la conexion con el Esi de id %d \n\n", proceso_recibido.id);
 			free(buffer1);
 			free(buffer2);
 			return proceso_recibido.id;
@@ -158,18 +154,23 @@ void cerrar_planificador(){ //arreglar
 
 	//sem_wait(&s_podes_cerrar_dice_el_esi);
 
-	log_info(logger, "Pase la parte del exit que no puede fallar");
+	//log_info(logger, "Pase la parte del exit que no puede fallar");
 
-	list_iterate(pcbs, mostrar_ultima_estimacion);
+	//list_iterate(pcbs, mostrar_estimacion);
 
-	log_info(logger, "LA CANTIDAD DE PCBS ES %d", list_size(pcbs));
+	//log_info(logger, "LA CANTIDAD DE PCBS ES %d", list_size(pcbs));
+
+	//if (deadlock() == 1){
+	//	pthread_mutex_unlock(&m_lista_esis_ready);
+	//}
+
 
 	list_iterate(pcbs, despedir_esi_vivo);
-	log_info(logger, "Despedi esis vivos");
+	log_info(logger, "Despedi ESIS vivos");
 
 	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
 	log_info(logger, "Borre las claves_bloqueadas");
-	log_info(logger, "el tam de claves_bloqueadas es %d", list_size(claves_bloqueadas));
+	log_info(logger, "El tamanio de la lista de claves_bloqueadas es %d", list_size(claves_bloqueadas));
 	free(claves_bloqueadas);
 
 	free(conexion_planificador.ip);
@@ -177,15 +178,15 @@ void cerrar_planificador(){ //arreglar
 	free(conexion_coordinador.ip);
 	free(conexion_coordinador.puerto);
 	free(algoritmo);
-	free(clave_buscada);
+	//free(clave_buscada);
 	free(esis_ready);
 
 	list_clean_and_destroy_elements(esis_finalizados, free_esi_finalizado);
-	log_info(logger, "el tam de esis_finalizados es %d", list_size(esis_finalizados));
+	log_info(logger, "El tamanio de la lista de esis_finalizados es %d", list_size(esis_finalizados));
 	free(esis_finalizados);
 
 	list_clean_and_destroy_elements(pcbs, destruir_pcb);
-	log_info(logger, "el tam de pcbs es %d", list_size(pcbs));
+	log_info(logger, "El tamanio de la lista de PCBs es %d", list_size(pcbs));
 	free(pcbs);
 
 	se_cerro_todo = 1;
@@ -194,23 +195,22 @@ void cerrar_planificador(){ //arreglar
 //--Cuando termina un ESI--//
 void cerrar_cosas_de_un_esi(void* esi){
 	pcb* esi_a_cerrar = esi;
+	log_info(logger, "Entre en cerrar_cosas");
 
 	close(esi_a_cerrar->socket);
-	log_info(logger, "Entre en cerrar_cosas");
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
-	log_info(logger, "hola");
 	hay_hilos_por_cerrar = 1;
 
 	if(terminar_todo == 1){
 	sem_post(&s_planificar);
-	log_info(logger, "Post a planificar desde cerrar cosas");
+	//log_info(logger, "Post a planificar desde cerrar cosas");
 	}
 	//if(list_size(esis_ready) == 0 && terminar_todo == 1 && esi_a_abortar == -1){ //no se por que pero hacen falta 2
 	//	sem_post(&s_planificar);
 	//	log_info(logger, "Post a planificar desde cerrar cosas");
 	//}
 
-	log_info(logger, "Post a cerrar_un_hilo");
+	//log_info(logger, "Post a cerrar_un_hilo");
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }

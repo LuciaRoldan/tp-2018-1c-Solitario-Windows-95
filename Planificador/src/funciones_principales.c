@@ -24,7 +24,7 @@ void manejar_esis(){
 
 				//pthread_mutex_lock(&m_lista_esis_ready);
 
-				log_info(logger, "La cantidad de ESIs ready desde manejar_esis es: %d", list_size(esis_ready));
+				//log_info(logger, "La cantidad de ESIs ready desde manejar_esis es: %d", list_size(esis_ready));
 
 
 				planificar_si_corresponde();
@@ -32,7 +32,7 @@ void manejar_esis(){
 				void* esi_a_ejecutar = list_get(esis_ready, 0);
 				pcb* pcb_esi;
 				pcb_esi = esi_a_ejecutar;
-				log_info(logger, "El Esi que va a ejecutar es: %d", pcb_esi->id);
+				//log_info(logger, "El Esi que va a ejecutar es: %d", pcb_esi->id);
 
 				actualizar_rafaga_si_hubo_desalojo(pcb_esi);
 
@@ -58,7 +58,7 @@ void recibir_esis(void* socket_esis){
 
 	int socket_esi_nuevo;
 	while(terminar_todo == 1){
-		log_info(logger, "Esperando un ESI adentro de recibir_esis");
+		//log_info(logger, "Esperando un ESI adentro de recibir_esis");
 
 		socket_esi_nuevo = aceptar_conexion(int_socket_esis);
 
@@ -78,7 +78,7 @@ void recibir_esis(void* socket_esis){
 				pthread_mutex_lock(&m_lista_esis_ready);
 				if(desalojo == 1 || desalojo == 0){
 				calcular_estimacion(pcb_esi_nuevo);
-				log_info(logger, "La nueva estimacion del esi nuevo %d es: %f", pcb_esi_nuevo->id, pcb_esi_nuevo->ultimaEstimacion);
+				//log_info(logger, "La nueva estimacion del esi nuevo %d es: %f", pcb_esi_nuevo->id, pcb_esi_nuevo->ultimaEstimacion);
 				pcb_esi_nuevo->ultimaRafaga = 0;
 				}
 
@@ -101,17 +101,17 @@ void manejar_esi(void* la_pcb){
 		sem_post(&s_planificar);
 	}
 
-	log_info(logger, "Entre a manejar_esi");
+	//log_info(logger, "Entre a manejar_esi");
 	pcb pcb_esi = *((pcb*) la_pcb);
 	int chau = 1;
 
 	while(chau > 0 && esi_a_finalizar != pcb_esi.id){
-		log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
+		//log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
 		int resultado = recibir_un_int(pcb_esi.socket);
 		log_info(logger, "El ESI %d me envio el resultado_esi %d:", pcb_esi.id, resultado);
 
-		if (resultado >= 0){
+		if (resultado >= 0 && terminar_todo != -1){
 			switch (resultado){
 				case (84):
 					if (terminar_todo != -1){
@@ -143,7 +143,6 @@ void manejar_esi(void* la_pcb){
 		}
 	}
 	if(pcb_esi.id == esi_a_finalizar){
-		esi_a_finalizar = -1;
 		mover_esi_a_finalizados(pcb_esi.id);
 	}
 }
@@ -151,11 +150,11 @@ void manejar_esi(void* la_pcb){
 //--MANEJAR COORDINADOR--//
 void manejar_coordinador(void* socket){
 	int socket_coordinador = *((int*) socket);
-	log_info(logger, "Entre al hilo manejar_coordinador");
+	//log_info(logger, "Entre al hilo manejar_coordinador");
 	int conexion_valida = 1;
 	while(conexion_valida > 0){
 
-		int id = recibir_un_int(socket_coordinador);
+		int id = recibir_un_int(sockets_planificador.socket_coordinador);
 		log_info(logger, "Id recibido del Coordinador: %d", id);
 
 		int tamanio;
@@ -191,10 +190,11 @@ void manejar_coordinador(void* socket){
 	if(conexion_valida == -99){
 		log_info(logger, "El Coordinador termino de ejecutar");
 	} else {
-	log_error(logger, "Se rompio todo");
+		log_error(logger, "Se rompio todo");
 	}
 
-
-	cerrar_planificador();
+	if(terminar_todo != -1){
+		cerrar_planificador();
+	}
 	pthread_exit(NULL);
 }

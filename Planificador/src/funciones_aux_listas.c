@@ -39,11 +39,11 @@ void mostrar_estimacion(void* pcbb){
 	pcb* esi = pcbb;
 	if(strcmp(algoritmo, "HRRN") == 0){
 		float tiempo_de_respuesta = (esi->retardo + esi->ultimaEstimacion) / esi->ultimaEstimacion;
-		log_info(logger, "El W del ESI %d es: %f", esi->id, esi->retardo);
-		log_info(logger, "El S del ESI %d es: %f", esi->id, esi->ultimaEstimacion);
-		log_info(logger, "El tiempo de respuesta del esi %d es: %f", esi->id, tiempo_de_respuesta);
+		printf("\t El W del ESI %d es: %f\n", esi->id, esi->retardo);
+		printf("\t El S del ESI %d es: %f\n", esi->id, esi->ultimaEstimacion);
+		printf("\t El tiempo de respuesta del ESI %d es: %f\n", esi->id, tiempo_de_respuesta);
 	} else {
-		log_info(logger, "La estimacion del esi %d es: %f", esi->id, esi->ultimaEstimacion);
+		printf("\t La estimacion del ESI %d es: %f\n", esi->id, esi->ultimaEstimacion);
 	}
 }
 
@@ -62,13 +62,6 @@ bool claves_iguales_nodo_clave(void* nodo_clave){
 bool ids_iguales_cola_de_esis(void* id){
 	int* id_esi = (int*) id;
 	return *id_esi == id_buscado;
-}
-
-//--Mostrar la ultima estimacion de los esis--// //puede q vuele
-void mostrar_ultima_estimacion(void* pcbb){
-	pcb* pcb_esi = pcbb;
-	calcular_estimacion(pcb_esi);
-	log_info(logger, "La ultima estimacion de ESI %d es: %d", pcb_esi->id, pcb_esi->ultimaEstimacion);
 }
 
 //--Funcioncitas para liberar memoria etc cuando se cierran cosas--//
@@ -110,7 +103,7 @@ void despedir_esi_vivo(void* pcbb){
 	id_buscado = pcb_esi->id;
 	if(!list_any_satisfy(esis_finalizados, ids_iguales_pcb)){
 		enviar_esi_exit(pcb_esi->socket);
-		abortar_esi(pcb_esi->id);
+		mover_esi_a_finalizados(pcb_esi->id);
 	}
 	//pthread_mutex_unlock(&m_id_buscado);
 }

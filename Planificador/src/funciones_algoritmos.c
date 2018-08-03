@@ -41,8 +41,8 @@ void calcular_estimacion(pcb* una_pcb){
 
 //-Con desalojo-//
 void planificacionSJF_CD(){
-	log_info(logger, "Estoy en SJF_CD. La cantidad de esis ready es %d", list_size(esis_ready));
 	if(list_size(esis_ready) > 1){
+		log_info(logger, "Voy a ordenar. La cantidad de esis ready es %d", list_size(esis_ready));
 		list_iterate(esis_ready, mostrar_estimacion);
 		list_sort(esis_ready, algoritmo_SJF_CD);
 	}
@@ -76,14 +76,16 @@ void planificacionHRRN(){
 //--Calcular estimaciones--//
 
 void calcular_estimacion_SJF(pcb* pcb_esi){
+	log_info(logger, "Calculando la estimacion del ESI %d", pcb_esi->id);
 	float proxima_rafaga =  (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
-	log_info(logger, "La ultimaRafaga del esi %d es: %d", pcb_esi->id, pcb_esi->ultimaRafaga);
-	log_info(logger, "La ultima estimacion del esi %d es: %f", pcb_esi->id, pcb_esi->ultimaEstimacion);
+	log_info(logger, "La ultimaRafaga del ESI %d es: %d", pcb_esi->id, pcb_esi->ultimaRafaga);
+	log_info(logger, "La ultima estimacion del ESI %d es: %f", pcb_esi->id, pcb_esi->ultimaEstimacion);
 	pcb_esi->ultimaEstimacion = proxima_rafaga;
 	log_info(logger, "La estimacion del ESI %d es: %f", pcb_esi->id, proxima_rafaga);
 }
 
 void calcular_estimacion_HRRN(pcb* pcb_esi){
+	log_info(logger, "Calculando la estimacion del ESI %d", pcb_esi->id);
 	float estimacion = (alpha/100) * (pcb_esi->ultimaRafaga) + (1 - alpha/100)* (pcb_esi->ultimaEstimacion);
 	float tiempo_de_respuesta = (pcb_esi->retardo + estimacion) / estimacion;
 	log_info(logger, "El W del ESI %d es: %f", pcb_esi->id, pcb_esi->retardo);

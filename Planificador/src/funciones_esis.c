@@ -36,7 +36,7 @@ void mover_esi_a_bloqueados(char* clave, int esi_id){
 	actualizar_rafaga_y_estimar(esi_bloqueado);
 
 	log_info(logger, "Esi %d colocado en cola de espera de la clave %s", esi_id, clave_buscada);
-	log_info(logger, "La cantidad de ESIs ready es: %d", list_size(esis_ready));
+	//log_info(logger, "La cantidad de ESIs ready es: %d", list_size(esis_ready));
 
 	pthread_mutex_unlock(&m_id_buscado);
 	pthread_mutex_unlock(&m_lista_esis_ready); //arranca en mover a bloqueados
@@ -69,7 +69,7 @@ void abortar_esi(int id_esi){
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_abortado);
 
 	if(fin_de_programa != 1){
-	enviar_esi_kill(esi_abortado->socket); //va?
+		enviar_esi_aborto(esi_abortado->socket);
 	}
 
 	//sem_post(&s_planificar);
@@ -79,6 +79,8 @@ void abortar_esi(int id_esi){
 
 //--Mover ESI a finalizados--//
 void mover_esi_a_finalizados(int id_esi){
+	pthread_mutex_lock(&m_lista_esis_ready);
+
 	pcb* esi_finalizado;
 
 	pthread_mutex_lock(&m_id_buscado);
@@ -88,6 +90,8 @@ void mover_esi_a_finalizados(int id_esi){
 
 	if(esi_a_finalizar != -1){
 		informar_coordi_kill(id_esi_finalizado);
+		enviar_esi_kill(esi_finalizado->socket);
+		esi_a_finalizar = -1;
 	}
 
 	pthread_mutex_lock(&m_lista_claves_bloqueadas);
@@ -97,13 +101,15 @@ void mover_esi_a_finalizados(int id_esi){
 
 	log_info(logger, "ESI finalizado: %d", esi_finalizado->id);
 
-	pthread_mutex_lock(&m_lista_esis_ready);
+	//pthread_mutex_lock(&m_lista_esis_ready);
 	list_remove_by_condition(esis_ready, ids_iguales_pcb);
-	pthread_mutex_unlock(&m_lista_esis_ready);
+	//pthread_mutex_unlock(&m_lista_esis_ready);
 
 	actualizar_rafaga_y_estimar(esi_finalizado);
 
 	pthread_mutex_unlock(&m_id_buscado);
+
+	pthread_mutex_unlock(&m_lista_esis_ready);
 
 	id_buscado = id_esi_finalizado;
 	int* id = malloc(sizeof(int));
@@ -119,7 +125,6 @@ void liberar_clave(char* clave){
 	//hacer el lock ANTES de llamar a esta funcion
 
 	if(!list_is_empty(claves_bloqueadas)){
-		log_info(logger, "pase el primer if");
 		//pthread_mutex_lock(&m_lista_claves_bloqueadas);
 		pthread_mutex_lock(&m_clave_buscada);
 		clave_buscada = clave;
@@ -129,7 +134,7 @@ void liberar_clave(char* clave){
 			//pthread_mutex_unlock(&m_lista_claves_bloqueadas);
 			pthread_mutex_unlock(&m_clave_buscada);
 
-			log_info(logger, "El ESI que ocupaba la clave era: %d", nodo_clave->esi_que_la_usa);
+			log_info(logger, "El ESI que ocupaba la clave %s era: %d", clave, nodo_clave->esi_que_la_usa);
 
 			nodo_clave->esi_que_la_usa = 0;
 			log_info(logger, "La clave %s se libero", clave);
@@ -139,9 +144,9 @@ void liberar_clave(char* clave){
 				int* id_esi_ahora_ready = el_esi;
 				nodo_clave->esi_que_la_usa = *id_esi_ahora_ready;
 
-				pthread_mutex_lock(&m_id_buscado);
+				//pthread_mutex_lock(&m_id_buscado);
 				id_buscado = *id_esi_ahora_ready;
-				pthread_mutex_unlock(&m_id_buscado);
+				//pthread_mutex_unlock(&m_id_buscado);
 				log_info(logger, "y es ahora ocupada por el ESI %d", nodo_clave->esi_que_la_usa);
 				void* un_esi = list_find(pcbs, ids_iguales_pcb);
 				pcb* el_nuevo_esi_ready = un_esi;

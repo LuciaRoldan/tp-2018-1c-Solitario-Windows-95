@@ -28,7 +28,7 @@ void pedir_status(char* clave){
 void recibir_status_clave(){
 	status_clave status;
 	int tamanio = recibir_int(sockets_planificador.socket_coordinador, logger);
-	log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
+	//log_info(logger, "Tamanio recibido del coordinador: %d", tamanio);
 	void* buffer = malloc(tamanio);
 	recibir(sockets_planificador.socket_coordinador, buffer, tamanio, logger);
 	status = deserializar_status_clave(buffer);
@@ -39,16 +39,16 @@ void recibir_status_clave(){
 
 void mostrar_status_clave(status_clave status){
 	if (strcmp(status.contenido, " ") != 0){
-		printf("\t *** El valor de la clave es: %s\n", status.contenido);
+		printf("\t El valor de la clave es: %s\n", status.contenido);
 	} else {
-		printf("\t *** La clave existe pero esta vacia.\n");
+		printf("\t La clave existe pero esta vacia.\n");
 	}
 	if (status.id_instancia_actual > 0){
-		printf("\t *** La clave se encuentra actualmente es la instancia: %d\n", status.id_instancia_actual);
+		printf("\t La clave se encuentra actualmente es la instancia: %d\n", status.id_instancia_actual);
 	} else {
-		printf("\t *** La clave no está actualmente asignada a ninguna instancia.\n");
+		printf("\t La clave no está actualmente asignada a ninguna instancia.\n");
 	}
-	printf("\t *** La clave se guardaria en la instancia: %d\n", status.id_instancia_nueva);
+	printf("\t La clave se guardaria en la instancia: %d\n", status.id_instancia_nueva);
 	listar_procesos_encolados(status.clave);
 }
 
@@ -56,10 +56,10 @@ void listar_procesos_encolados(char* recurso){
 	clave_buscada = recurso;
 	clave_bloqueada* clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 	if(list_size(clave->esis_en_espera) > 0){
-		printf("\t *** Los ESIs a la espera del recurso %s son:\n", recurso);
+		printf("\t Los ESIs a la espera del recurso %s son:\n", recurso);
 		list_iterate(clave->esis_en_espera, imprimir_id_esi);}
 	else {
-		printf("\t *** No hay ESIs a la espera del recurso %s\n", recurso);
+		printf("\t No hay ESIs a la espera del recurso %s\n", recurso);
 	}
 }
 
@@ -107,10 +107,10 @@ int deadlock(){
 	}
 	log_info(logger, "Termine de analizar deadlocks");
 	int cantidad_esis_en_deadlock = list_size(esis_en_deadlock);
-	log_info(logger, "La cantidad de ESIS en deadlock es: %d", cantidad_esis_en_deadlock);
+	printf("\t La cantidad de ESIS en deadlock es: %d \n", cantidad_esis_en_deadlock);
 	while(cantidad_esis_en_deadlock > 0){
 		int* esi = list_get(esis_en_deadlock, cantidad_esis_en_deadlock-1);
-		log_info(logger, "El esi de ID: %d se encuentra en deadlock", *esi);
+		printf("\t El esi de ID: %d se encuentra en deadlock \n", *esi);
 		cantidad_esis_en_deadlock--;
 	}
 	if (cantidad_esis_en_deadlock > 0){
@@ -135,7 +135,7 @@ bool el_duenio_esta_en_deadlock(clave_bloqueada* nodo_clave){
 			log_info(logger, "El esi que ocupa esa clave es: %d", bloqueada->esi_que_la_usa);
 			pthread_mutex_unlock(&m_id_buscado);
 			if(el_esi_espera_la_clave(bloqueada->esi_que_la_usa, nodo_clave)){
-				log_info(logger, "Voy a returnear que el ESI %d se encuentra en deadlock", bloqueada->esi_que_la_usa);
+				log_info(logger, "El ESI %d se encuentra en deadlock", bloqueada->esi_que_la_usa);
 				return true;
 			}
 		}
@@ -177,5 +177,5 @@ bool ids_iguales_ints(void* id1){
 void imprimir_id_esi(void* esi){
 	int id_esi;
 	memcpy(&id_esi, esi, sizeof(int));
-	printf("\t - Esi de ID: %d\n", id_esi);
+	printf("\t -ESI de ID: %d\n", id_esi);
 }

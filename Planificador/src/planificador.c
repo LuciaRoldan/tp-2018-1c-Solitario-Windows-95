@@ -15,7 +15,9 @@ int main(int argc, char* argv[]) {
 		esis_ready = list_create();
 		esis_finalizados = list_create();
 		claves_bloqueadas = list_create();
+
 		clave_buscada = malloc(40);
+
 		hay_hilos_por_cerrar = 0;
 		pausar_planificador = 1;
 		terminar_todo = 1;
@@ -42,14 +44,13 @@ int main(int argc, char* argv[]) {
 	void* puntero_socket_esis = &sockets_planificador.socket_esis;
 	void* puntero_socket_coordinador = &sockets_planificador.socket_coordinador;
 
-	log_info(logger, "Por entrar al hilo del Esi y el socket_esis es %d\n", sockets_planificador.socket_esis);
 	pthread_create(&hilo_escucha_esis, 0, recibir_esis, puntero_socket_esis);
 	pthread_create(&hilo_manejar_esis, 0, manejar_esis, NULL);
 	pthread_create(&hilo_coordinador, 0, manejar_coordinador, puntero_socket_coordinador);
 	pthread_create(&hilo_consola, 0, ejecutar_consola, (void*) 0);
 
 	//CIERRO HILOS
-			while(hay_hilos_por_cerrar>0 || fin_de_programa < 0 || se_cerro_todo < 0){
+			while(hay_hilos_por_cerrar > 0 || fin_de_programa < 0 || se_cerro_todo < 0){
 				sem_wait(&s_cerrar_un_hilo);
 				log_info(logger, "Vine a cerrar el hilo");
 				hay_hilos_por_cerrar = 0;
