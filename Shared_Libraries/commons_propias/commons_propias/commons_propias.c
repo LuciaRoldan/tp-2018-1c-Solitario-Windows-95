@@ -123,6 +123,7 @@ int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger
  		log_info(logger, "Quise enviar a %d", socket_destino);
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
  	}
+ 	log_info(logger, "Envie al socket %d", socket_destino);
  	return bytes_enviados;
  }
 
@@ -132,7 +133,7 @@ int recibir(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, 
 	/*if (bytes_recibidos <= 0) {
 			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}*/
-
+	log_info(logger, "Recibi %d bytes", bytes_recibidos);
 	return bytes_recibidos;
 }
 

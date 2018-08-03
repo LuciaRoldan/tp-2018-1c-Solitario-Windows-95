@@ -68,7 +68,7 @@ void kill_esi(int id){
 		log_info(logger, "ESI %d sera finalizado por funcion 'kill' de consola.", id);
 		esi_a_finalizar = id;
 		if(list_size(esis_ready) == 0){
-			abortar_esi(id);
+			mover_esi_a_finalizados(id);
 		}
 	} else {
 		log_info(logger, "No conozco a ese ESI");
@@ -81,6 +81,12 @@ void enviar_esi_kill(int socket_esi){
 	enviar(socket_esi, &protocolo, sizeof(int), logger);
 }
 
+void enviar_esi_aborto(int socket_esi){
+	int protocolo;
+	serializar_id(&protocolo, 62);
+	enviar(socket_esi, &protocolo, sizeof(int), logger);
+}
+
 void enviar_esi_exit(int socket_esi){
 	int protocolo;
 	serializar_id(&protocolo, 85);
@@ -88,7 +94,7 @@ void enviar_esi_exit(int socket_esi){
 }
 
 //--Deadlock--//
-void deadlock(){
+int deadlock(){
 	int cantidad_claves_bloqueadas = list_size(claves_bloqueadas);
 	t_list* esis_en_deadlock = list_create();
 	while(cantidad_claves_bloqueadas > 0){
@@ -105,6 +111,11 @@ void deadlock(){
 		int* esi = list_get(esis_en_deadlock, cantidad_esis_en_deadlock-1);
 		log_info(logger, "El esi de ID: %d se encuentra en deadlock", *esi);
 		cantidad_esis_en_deadlock--;
+	}
+	if (cantidad_esis_en_deadlock > 0){
+		return 1;
+	} else {
+		return 0;
 	}
 }
 
