@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 			case 62: //abortar ESI
 				abortoESI = 1;
 				log_info(logger_esi, "Abortando ESI %d", idEsi);
-				informar_fin_de_programa(conexiones, abortoESI);
+				//informar_fin_de_programa(conexiones, abortoESI);
 				break;
 			case 85: //exit por consola
 				log_info(logger_esi, "Cerrando ESI %d por 'exit' de consola", idEsi);

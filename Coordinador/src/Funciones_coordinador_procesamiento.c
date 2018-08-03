@@ -176,7 +176,7 @@ int procesar_mensaje(int socket){
 			free(buffer_int);
 			hilo_a_cerrar = &esi_ejecutando->hilo;
 			sem_post(&s_cerrar_hilo);
-			close(socket);
+			close(esi_ejecutando->socket);
 			pthread_exit(NULL);
 			return resultado;
 			break;
