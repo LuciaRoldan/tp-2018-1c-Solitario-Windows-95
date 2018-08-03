@@ -38,28 +38,29 @@ void recibir_status_clave(){
 }
 
 void mostrar_status_clave(status_clave status){
-	if (status.contenido != NULL){
+	if (strcmp(status.contenido, " ") != 0){
 		printf("\t *** El valor de la clave es: %s\n", status.contenido);
 	} else {
 		printf("\t *** La clave existe pero esta vacia.\n");
 	}
 	if (status.id_instancia_actual > 0){
-		printf("\t ***La clave se encuentra actualmente es la instancia: %d\n", status.id_instancia_actual);
+		printf("\t *** La clave se encuentra actualmente es la instancia: %d\n", status.id_instancia_actual);
 	} else {
 		printf("\t *** La clave no está actualmente asignada a ninguna instancia.\n");
 	}
 	printf("\t *** La clave se guardaria en la instancia: %d\n", status.id_instancia_nueva);
-	printf("\t *** Los ESIs a la espera de la clave son: ");
-	clave_buscada = status.clave;
-	clave_bloqueada* clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-	list_iterate(clave->esis_en_espera, imprimir_id_esi);
+	listar_procesos_encolados(status.clave);
 }
 
 void listar_procesos_encolados(char* recurso){
-	printf("---> Los ESIs a la espera del recurso %s son: ", recurso);
 	clave_buscada = recurso;
 	clave_bloqueada* clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
-	list_iterate(clave->esis_en_espera, imprimir_id_esi);
+	if(list_size(clave->esis_en_espera) > 0){
+		printf("\t *** Los ESIs a la espera del recurso %s son:\n", recurso);
+		list_iterate(clave->esis_en_espera, imprimir_id_esi);}
+	else {
+		printf("\t *** No hay ESIs a la espera del recurso %s\n", recurso);
+	}
 }
 
 void kill_esi(int id){
@@ -176,5 +177,5 @@ bool ids_iguales_ints(void* id1){
 void imprimir_id_esi(void* esi){
 	int id_esi;
 	memcpy(&id_esi, esi, sizeof(int));
-	printf("%d  ", id_esi);
+	printf("\t - Esi de ID: %d\n", id_esi);
 }
