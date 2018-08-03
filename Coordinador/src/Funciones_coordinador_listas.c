@@ -86,7 +86,7 @@ nodo* buscar_instancia(char* clave){
 }
 
 nodo* seleccionar_instancia(char* clave){
-	nodo* instancia_seleccionada;
+	nodo* instancia_seleccionada_;
 
 	nodo* nodo_auxiliar;
 	int minimo_LSU = 1000000;
@@ -98,7 +98,7 @@ nodo* seleccionar_instancia(char* clave){
 	switch(info_coordinador.algoritmo_distribucion){
 
 	case EL:
-		instancia_seleccionada = list_get(lista_instancias, ultima_instancia_EL);
+		instancia_seleccionada_ = list_get(lista_instancias, ultima_instancia_EL);
 		if(ultima_instancia_EL++ == list_size(lista_instancias)-1){ultima_instancia_EL = 0;}
 		break;
 
@@ -108,7 +108,7 @@ nodo* seleccionar_instancia(char* clave){
 			socket_instancia_buscado = nodo_auxiliar->socket;
 			if(list_count_satisfying(lista_claves, condicion_socket_clave) < minimo_LSU){
 				minimo_LSU = list_count_satisfying(lista_claves, condicion_socket_clave);
-				instancia_seleccionada = nodo_auxiliar;
+				instancia_seleccionada_ = nodo_auxiliar;
 			}
 		}
 		break;
@@ -128,12 +128,13 @@ nodo* seleccionar_instancia(char* clave){
 			resultado_KE = div((*char_KE - 97), cantidad_letras_KE); //(int)'a' = 97
 			id_instancia = resultado_KE.quot+1;
 		}
-		id_instancia_buscado = id_instancia;
-		instancia_seleccionada = list_find(lista_instancias, condicion_id_instancia);
+		//id_instancia_buscado = id_instancia;
+		//instancia_seleccionada = list_find(lista_instancias, condicion_id_instancia);
+		instancia_seleccionada_ = list_get(lista_instancias, id_instancia-1);
 		break;
 	}
-	log_info(logger, "La instancia seleccionada por el algoritmo es la %d", id_instancia);
-	return instancia_seleccionada;
+	log_info(logger, "La instancia seleccionada por el algoritmo es la %d", instancia_seleccionada_->id);
+	return instancia_seleccionada_;
 	free(char_KE);
 }
 

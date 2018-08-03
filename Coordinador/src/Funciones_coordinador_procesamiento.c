@@ -95,8 +95,9 @@ int procesar_mensaje(int socket){
 
 		case 84: //Exito Planificador
 			log_info(logger, "Recibi confirmacion del Planificador");
+			log_info(logger, "Le voy a mandar el pedido a la instancia %d", instancia_seleccionada->id);
 			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
-			liberar_instruccion();
+			//liberar_instruccion();
 			log_info(logger, "Envie la instruccion a la instancia %d", instancia_seleccionada->id);
 			return 1;
 
@@ -263,7 +264,7 @@ int procesar_instruccion(t_esi_operacion instruccion, int socket){
 		free(clave);
 		return -1;
 	}
-	free(clave);
+	//free(clave);
 	return 1;
 }
 
