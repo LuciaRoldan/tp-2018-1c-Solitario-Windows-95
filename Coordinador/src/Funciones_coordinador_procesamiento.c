@@ -34,6 +34,7 @@ int procesar_mensaje(int socket){
 			log_info(logger, "Le voy a pedir a la instancia: %d", nodo_instancia->id);
 			protocolo_extra = 83;
 			resultado = enviar_pedido_valor(nodo_instancia->socket, clave, protocolo_extra);
+			log_info(logger, "El resultado del enviar_pedido_valor es: %d",resultado);
 			return resultado;
 			break;
 
@@ -89,14 +90,17 @@ int procesar_mensaje(int socket){
 
 		case 83: //Status clave
 			status = recibir_status(socket);
+			log_info(logger, "EN CAse 83 recibi un status de la clave %s", status.clave);
 			status.id_instancia_nueva = buscar_instancia_ficticia(status.clave);
+			log_info(logger, "Busque la instancia ficticia y es: %d", status.id_instancia_nueva);
+			log_info(logger, "En el case 83, la clave del status es: %s", status.clave);
+			log_info(logger, "En el case 83, el contenido del status es: %s", status.contenido);
 			resultado = enviar_status_clave(socket_planificador, status);
 			return resultado;
 			break;
 
 		case 84: //Exito Planificador
 			log_info(logger, "Recibi confirmacion del Planificador");
-			log_info(logger, "Le voy a mandar el pedido a la instancia %d", instancia_seleccionada->id);
 			enviar_operacion(instancia_seleccionada->socket, operacion_ejecutando);
 			//liberar_instruccion();
 			log_info(logger, "Envie la instruccion a la instancia %d", instancia_seleccionada->id);

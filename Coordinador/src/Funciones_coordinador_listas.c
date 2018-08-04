@@ -141,7 +141,11 @@ nodo* seleccionar_instancia(char* clave){
 int buscar_instancia_ficticia(char* clave){
 	nodo* nodito = seleccionar_instancia(clave);
 	if(info_coordinador.algoritmo_distribucion == EL){
-		ultima_instancia_EL = ultima_instancia_EL - 1;
+		if(ultima_instancia_EL == 0){
+			ultima_instancia_EL = list_size(lista_instancias) - 1;
+		} else{
+			ultima_instancia_EL = ultima_instancia_EL - 1;
+		}
 	}
 	return nodito->id;
 }

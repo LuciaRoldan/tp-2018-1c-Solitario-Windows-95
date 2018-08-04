@@ -24,10 +24,11 @@ int enviar_status_clave(int socket, status_clave status){
 
 int enviar_pedido_valor(int socket, char* clave, int id){
 	int tamanio = tamanio_buffer_string(clave);
-	log_info(logger, "El tamaio de lo que manod es: %d", tamanio);
+	log_info(logger, "El tamanio de lo que mando es: %d", tamanio);
 	void* buffer = malloc(tamanio);
 	serializar_string_log(buffer, clave, id, logger);
 	int bytes_enviados = enviar(socket, buffer, tamanio, logger);
+	log_info(logger, "Pedido_valor enviado a la instancia");
 	free(buffer);
 	return bytes_enviados;
 }
@@ -63,12 +64,16 @@ char* recibir_pedido_clave(int socket){
 }
 
 status_clave recibir_status(int socket){
+	log_info(logger, "Adetro de recibir_status");
 	status_clave status;
 	int tamanio;
 	recibir(socket, &tamanio, sizeof(int), logger);
+	log_info(logger, "Recibi el tamanio %d",tamanio);
 	void* buffer = malloc(tamanio);
 	recibir(socket, buffer, tamanio, logger);
-	status = deserializar_status_clave(buffer);
+	log_info(logger, "Lo recibi");
+	status = deserializar_status_clave_log(buffer, logger);
+	log_info(logger, "Deserialice");
 	free(buffer);
 	return status;
 }
