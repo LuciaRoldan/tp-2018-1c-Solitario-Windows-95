@@ -281,10 +281,20 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			log_info(logger,"Ya se hizo SET de esta clave");
 			entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 			entrada_encontrada->cantidad_operaciones = 0;
+			int cantidad_entradas_nuevas = cantidad_entradas_ocupa(tamanio_valor);
 
-			if(cantidad_entradas_ocupa(tamanio_valor) <= entrada_encontrada->cantidad_entradas){
+
+			if(cantidad_entradas_nuevas <= entrada_encontrada->cantidad_entradas){
+					int diferencia_entradas = entrada_encontrada->cantidad_entradas - cantidad_entradas_nuevas;
 					memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
 					entrada_encontrada->tamanio_valor = tamanio_valor;
+					entrada_encontrada->cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+					log_info(logger,"LA CLAVE %s TIENE %d ENTRADAS", entrada_encontrada->clave, entrada_encontrada->cantidad_entradas);
+
+					for(int i = 0; i < diferencia_entradas; i++){
+						acceso_tabla[entrada_encontrada->numero_pagina + cantidad_entradas_nuevas] = 0;
+					}
+
 					free(clave_buscada);
 					log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
 
@@ -469,6 +479,7 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 			contador = 0;
 		}
 	}
+	log_info(logger,"TIENE %d PAGINAS LIBRES", espacios_libres);
 	log_info(logger, "El puntero de pagina quedo en: %d", puntero_pagina);
 
 	if(contador == entradas_contiguas_necesarias){ //Si tengo las necesarias
@@ -793,7 +804,7 @@ int usar_algoritmo(estructura_clave* entrada_nueva){
 void compactar(){
 	log_info(logger, "Compactareeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
 	log_info(logger, "Entre a compactar");
-
+	sleep(5);
 	//Declaro nuevas estructuras
 	char* memoria_nueva = malloc(configuracion_coordi.cantidad_entradas * configuracion_coordi.tamano_entrada);
 	int* nuevo_acceso_tabla = malloc(configuracion_coordi.cantidad_entradas * sizeof(int));
@@ -813,11 +824,8 @@ void compactar(){
 
 	//Si tengo algo en la lista entonces esta ocupado, lo paso a la memoria nueva
 	for(int i = 0; i < list_size(tabla_entradas); i++){
-		log_info(logger, "El tamanio dado por el coordi es: %d", configuracion_coordi.tamano_entrada);
-		log_info(logger, "El comienzo de la nueva memoria es: %d y la proxima pagins es: %d", memoria_nueva, proxima_pagina);
 		estructura_clave* nodo = list_get(tabla_entradas, i);
 		char* nueva_direccion = memoria_nueva + (proxima_pagina * configuracion_coordi.tamano_entrada);
-		log_info(logger, "La variable nueva direccion es: %d", nueva_direccion);
 		memcpy(nueva_direccion, nodo->valor, nodo->tamanio_valor);
 		nodo->valor = nueva_direccion;
 		log_info(logger, "La nueva direccion es: %d", (proxima_entrada * configuracion_coordi.tamano_entrada) + memoria_nueva);
@@ -827,16 +835,16 @@ void compactar(){
 		//Actualizo el nuevo bitmap
 		for(int j = 0; j < nodo->cantidad_entradas; j++){
 				nuevo_acceso_tabla[proxima_pagina + j] = 1;
+		log_info(logger, "*********************");
+		for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
+				log_info(logger, "El nuevo bitmap en %d es %d", h, nuevo_acceso_tabla[h]);
 			}
+		log_info(logger, "*********************");
+		}
 
 		proxima_pagina += nodo->cantidad_entradas;
 	}
 
-	log_info(logger, "*********************");
-	for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
-			log_info(logger, "El nuevo bitmap en %d es %d", h, nuevo_acceso_tabla[h]);
-		}
-	log_info(logger, "*********************");
 
 	//Libero espacio anterior e igualo al nuevo
 	free(inicio_memoria);

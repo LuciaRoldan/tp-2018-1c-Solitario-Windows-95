@@ -47,10 +47,6 @@ int main(int argc, char* argv[]){
 	log_info(logger,"Mi cantidad de entradas es: %d ", cantidad_entradas);
 	log_info(logger,"Mi tamanio de entrada es : %d ", configuracion_coordi.tamano_entrada);
 
-
-	/*char* espacio_bitmap = malloc(cantidad_entradas);
-	precencia = bitarray_create_with_mode(espacio_bitmap, cantidad_entradas, MSB_FIRST);*/ //Lo de bitarray
-
 	acceso_tabla = (int*) malloc(cantidad_entradas*sizeof(int));
 	for(int i = 0; i< cantidad_entradas; i++){
 		acceso_tabla[i]=0;
