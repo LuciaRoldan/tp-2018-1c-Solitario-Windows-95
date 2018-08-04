@@ -804,7 +804,7 @@ int usar_algoritmo(estructura_clave* entrada_nueva){
 void compactar(){
 	log_info(logger, "Compactareeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
 	log_info(logger, "Entre a compactar");
-	sleep(5);
+
 	//Declaro nuevas estructuras
 	char* memoria_nueva = malloc(configuracion_coordi.cantidad_entradas * configuracion_coordi.tamano_entrada);
 	int* nuevo_acceso_tabla = malloc(configuracion_coordi.cantidad_entradas * sizeof(int));
@@ -835,16 +835,16 @@ void compactar(){
 		//Actualizo el nuevo bitmap
 		for(int j = 0; j < nodo->cantidad_entradas; j++){
 				nuevo_acceso_tabla[proxima_pagina + j] = 1;
-		log_info(logger, "*********************");
-		for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
-				log_info(logger, "El nuevo bitmap en %d es %d", h, nuevo_acceso_tabla[h]);
 			}
-		log_info(logger, "*********************");
-		}
 
 		proxima_pagina += nodo->cantidad_entradas;
 	}
 
+	log_info(logger, "*********************");
+	for(int h = 0; h < configuracion_coordi.cantidad_entradas; h++){
+			log_info(logger, "El nuevo bitmap en %d es %d", h, nuevo_acceso_tabla[h]);
+		}
+	log_info(logger, "*********************");
 
 	//Libero espacio anterior e igualo al nuevo
 	free(inicio_memoria);
