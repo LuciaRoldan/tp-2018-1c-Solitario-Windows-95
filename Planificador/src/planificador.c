@@ -53,25 +53,14 @@ int main(int argc, char* argv[]) {
 	//CIERRO HILOS
 	//hay_hilos_por_cerrar > 0 || fin_de_programa < 0 || se_cerro_todo < 0
 			while(1){
-				//log_info(logger, "entre");
 				sem_wait(&s_cerrar_un_hilo);
-				log_info(logger, "Vine a cerrar el hilo");
 				hay_hilos_por_cerrar = 0;
 				log_info(logger, "Hilo cerrado");
 				sem_post(&s_esi_despedido);
-				sem_post(&s_hilo_cerrado);
 				sleep(1);
 				pthread_join(*hilo_a_cerrar, NULL);
 				if(se_cerro_todo == 1){
 					break;
-				}
-			}
-
-			while(1){
-				if(cerrar_hilos == 1){
-					log_info(logger, "Vine a cerrar hilos");
-					close(sockets_planificador.socket_coordinador);
-					close(sockets_planificador.socket_esis);
 				}
 			}
 

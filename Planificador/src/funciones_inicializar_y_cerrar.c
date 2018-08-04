@@ -148,23 +148,10 @@ void desencadenar_cerrar_planificador(){
 	cerrar_planificador();
 }
 
-void cerrar_planificador(){ //arreglar
+void cerrar_planificador(){
 
 	terminar_todo = -1;
 	fin_de_programa = 1;
-
-	//sem_wait(&s_podes_cerrar_dice_el_esi);
-
-	//log_info(logger, "Pase la parte del exit que no puede fallar");
-
-	//list_iterate(pcbs, mostrar_estimacion);
-
-	//log_info(logger, "LA CANTIDAD DE PCBS ES %d", list_size(pcbs));
-
-	//if (deadlock() == 1){
-	//	pthread_mutex_unlock(&m_lista_esis_ready);
-	//}
-
 
 	list_iterate(pcbs, despedir_esi_vivo);
 	log_info(logger, "Despedi ESIS vivos");
@@ -179,7 +166,6 @@ void cerrar_planificador(){ //arreglar
 	free(conexion_coordinador.ip);
 	free(conexion_coordinador.puerto);
 	free(algoritmo);
-	//free(clave_buscada);
 	free(esis_ready);
 
 	list_clean_and_destroy_elements(esis_finalizados, free_esi_finalizado);
@@ -189,13 +175,6 @@ void cerrar_planificador(){ //arreglar
 	list_clean_and_destroy_elements(pcbs, destruir_pcb);
 	log_info(logger, "El tamanio de la lista de PCBs es %d", list_size(pcbs));
 	free(pcbs);
-
-	cerrar_hilos = 1;
-
-//	sem_post(&s_cerrar_un_hilo);
-//	hilo_a_cerrar = &esi_a_cerrar->hilo;
-//	hay_hilos_por_cerrar = 1;
-//	sem_wait(&s_hilo_cerrado);
 
 	se_cerro_todo = 1;
 }
@@ -209,16 +188,14 @@ void cerrar_cosas_de_un_esi(void* esi){
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	hay_hilos_por_cerrar = 1;
 
-	log_info(logger, "holahola");
 	if(terminar_todo == 1){
-	sem_post(&s_planificar);
-	//log_info(logger, "Post a planificar desde cerrar cosas");
+		sem_post(&s_planificar);
 	}
+	sem_post(&s_cerrar_un_hilo);
+
+	//log_info(logger, "Post a planificar desde cerrar cosas");
 	//if(list_size(esis_ready) == 0 && terminar_todo == 1 && esi_a_abortar == -1){ //no se por que pero hacen falta 2
 	//	sem_post(&s_planificar);
 	//	log_info(logger, "Post a planificar desde cerrar cosas");
 	//}
-
-	sem_post(&s_cerrar_un_hilo);
-	sem_wait(&s_hilo_cerrado);
 }
