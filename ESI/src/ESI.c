@@ -83,7 +83,10 @@ int main(int argc, char* argv[]){
 			case 91: //kill de consola
 				codigo_coordi = recibir_int(conexiones.socket_coordi, logger_esi);
 				if(codigo_coordi == 91){
-					log_info(logger_esi, "ESI %d abortado por 'kill' de consola.", idEsi);
+					void* buffer_exit = malloc(sizeof(int));
+					serializar_id(buffer_exit, 20);
+					log_info(logger_esi, "ESI %d finalizado por 'kill' de consola.", idEsi);
+					enviar(conexiones.socket_plani, buffer_exit, sizeof(int), logger_esi);
 				} else{
 					_exit_with_error(conexiones.socket_coordi, "Error al recibir mensaje del Coordinador", NULL, logger_esi);
 				}
@@ -91,7 +94,7 @@ int main(int argc, char* argv[]){
 				serializar_id(buffer_int, 81);
 				enviar(conexiones.socket_coordi, buffer_int, sizeof(int), logger_esi);
 				free(buffer_int);*/
-				abortoESI = 1;
+				//abortoESI = 1;
 				break;
 			default:
 				log_info(logger_esi, "Mensaje fuera de protocolo: %d", codigo_plani);
