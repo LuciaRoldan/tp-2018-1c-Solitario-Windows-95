@@ -91,7 +91,6 @@ int enviar_instruccion(t_esi_operacion instruccion, int socket_Coordinador){
 	int tamanio_buffer = tamanio_buffer_instruccion(instruccion);
 	void* buffer_instruccion = malloc(tamanio_buffer);
 	serializar_instruccion(buffer_instruccion, instruccion);
-	log_info(logger_esi, "Fin de serializacion de instruccion");
 	int exito = enviar(socket_Coordinador, buffer_instruccion, tamanio_buffer, logger_esi);
 	log_info(logger_esi, "Instruccion enviada al COORDINADOR.");
 	free(buffer_instruccion);
@@ -144,7 +143,7 @@ void informar_fin_de_programa(sockets_conexiones conexiones, int aborto){
 		enviar(conexiones.socket_coordi, &envio, sizeof(int), logger_esi);
 		enviar(conexiones.socket_plani, &envio, sizeof(int), logger_esi);
 	} else{
-		log_info(logger_esi, "Fallo de clave. Abortando ESI.\n");
+		log_info(logger_esi, "Abortando ESI.\n");
 		int aborto;
 		serializar_id(&aborto, 85);
 		enviar(conexiones.socket_plani, &aborto, sizeof(int), logger_esi);
@@ -155,12 +154,8 @@ int ejecutar_instruccion_sgte(FILE* archivo, int socket_Coordinador){
 	t_esi_operacion operacion = parsear_linea(archivo);
 	if(!operacion.valido) return -1;
 	log_info(logger_esi,"Parseado de instruccion completo");
-	/*if(excede_tamanio_clave(operacion)){
-		return -1;
-	}*/
 	mostrar_instruccion(operacion);
 	if(enviar_instruccion(operacion, socket_Coordinador) > 0){
-		log_info(logger_esi, "Se ha enviado correctamente a instruccion al Coordinador \n ");
 		liberar_instruccion(operacion);
 		return 1;
 	} else {
@@ -226,9 +221,5 @@ int enviar_exit_coordi(int socket){
 	serializar_id(&envio, 81);
 	return enviar(socket, &envio, sizeof(int), logger_esi);
 }
-
-
-// Serializacion/Deserializacion
-
 
 #endif /* ESI_FUNCIONES_H_ */

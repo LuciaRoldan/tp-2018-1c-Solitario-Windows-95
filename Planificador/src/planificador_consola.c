@@ -11,11 +11,11 @@ void ejecutar_consola(){
 		linea = readline("\n > Ingrese un comando: ");
 		if(!string_is_empty(linea)){
 			add_history(linea);
-			printf("\t\t La linea ingresada fue: %s\n", linea);
+			printf("*** La linea ingresada fue: %s\n", linea);
 			string_to_lower(linea);
 
 			if(!strncmp(linea, "exit", 4)) {
-				printf("\t\tCerrando Consola. Hasta luego. \n");
+				printf("*** Cerrando Consola. Hasta luego. \n");
 				free(linea);
 				pausar_planificacion();
 				usleep(100000);
@@ -31,10 +31,7 @@ void ejecutar_consola(){
 			case BLOQUEAR:
 				if(palabras[1] != NULL && palabras[2] != NULL){
 					if(palabras[3]==NULL){
-						printf("Usted quiere bloquear un ESI.\n");
-						printf("Operacion: %s ---- \t", palabras[0]);
-						printf("Clave: %s ---- \t", palabras[1]);
-						printf("ID: %s ---- \n", palabras[2]);
+						printf("Usted quiere bloquear al ESI de ID <%s> para la clave <%s>.\n",palabras[2], palabras[1]);
 						clave = malloc(strlen(palabras[1]));
 						strcpy(clave, palabras[1]+1);
 						el_id = atoi(palabras[2]);
@@ -49,9 +46,7 @@ void ejecutar_consola(){
 			case DESBLOQUEAR:
 				if(palabras[1] != NULL){
 					if(palabras[2]==NULL){
-					printf("Usted quiere desbloquear un ESI de para una clave.\n");
-					printf("Operacion: %s ---- \t", palabras[0]);
-					printf("Clave: %s ---- \n", palabras[1]);
+					printf("Usted quiere desbloquear la clave <%s>.\n", palabras[1]);
 					clave = malloc(strlen(palabras[1])+1);
 					strcpy(clave, palabras[1]);
 					desbloquear(clave);
@@ -65,9 +60,7 @@ void ejecutar_consola(){
 			case KILL:
 				if(palabras[1] != NULL){
 					if(palabras[2]==NULL){
-						printf("Usted quiere finalizar un proceso.\n");
-						printf("Operacion: %s ---- \t", palabras[0]);
-						printf("ID: %s\n", palabras[1]);
+						printf("Usted quiere finalizar el proceso %s.\n", palabras[1]);
 						el_id = atoi(palabras[1]);
 						kill_esi(el_id);
 					} else {
@@ -80,7 +73,6 @@ void ejecutar_consola(){
 			case PAUSAR:
 				if(palabras[1] == NULL) {
 					printf("Usted quiere pausar la planificacion.\n");
-					printf("Operacion: %s\n", palabras[0]);
 					pausar_planificacion();
 				} else {
 					printf("Demasiados argumentos para la operacion de pausar.\n");
@@ -89,7 +81,6 @@ void ejecutar_consola(){
 			case CONTINUAR:
 				if(palabras[1] == NULL) {
 					printf("Usted quiere continuar la planificacion.\n");
-					printf("Operacion: %s\n", palabras[0]);
 					continuar_planificacion();
 				} else {
 					printf("Demasiados argumentos para la operacion de continuar.\n");
@@ -98,9 +89,7 @@ void ejecutar_consola(){
 			case LISTAR:
 				if(palabras[1] != NULL) {
 					if(palabras[2]==NULL){
-						printf("Usted quiere listar los procesos en cola de espera para un recurso.\n");
-						printf("Operacion: %s ---- \t", palabras[0]);
-						printf("Recurso: %s\n", palabras[1]);
+						printf("Usted quiere listar los procesos en cola de espera para el recurso <%s>.\n", palabras[1]);
 						recurso = palabras[1];
 						listar_procesos_encolados(recurso);
 					} else {
@@ -113,9 +102,7 @@ void ejecutar_consola(){
 			case STATUS:
 				if(palabras[1] != NULL) {
 					if(palabras[2]==NULL){
-						printf("Usted quiere ver el estado de una clave.\n");
-						printf("Operacion: %s ---- \t", palabras[0]);
-						printf("Clave: %s\n", palabras[1]);
+						printf("Usted quiere ver el estado de la clave <%s>.\n", palabras[1]);
 						clave = palabras[1];
 						pedir_status(clave);
 					} else {
@@ -128,7 +115,6 @@ void ejecutar_consola(){
 			case DEADLOCK:
 				if(palabras[1] == NULL) {
 					printf("Usted quiere analizar deadlocks.\n");
-					printf("Operacion: %s\n", palabras[0]);
 					deadlock();
 				} else {
 					printf("Demasiados argumentos para la operacion de deadlock. \n");
