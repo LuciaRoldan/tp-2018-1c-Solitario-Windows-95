@@ -84,7 +84,7 @@ void serializar_pedido_desbloqueo(void* buffer, char* clave);
 void guardar_archivo(char* clave,int tamanio_clave, t_log* logger);
 
 //---Pedido status_clave---//
-char* recibe_pedido_status(char* la_clave);
+char* recibe_pedido_status();
 int enviar_status_clave(char* clave);
 
 //---Enviar---//
@@ -125,7 +125,5 @@ int buscar_siguiente_entrada_ocupada(int inicio_indice);
 void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva);
 bool entradas_libres_contiguas(int necesarias);
 char* obtener_valor_archivo(char* clave, int tamanio_clave);
-void funcion_para_escribir();
-void mostrar_string();
 
 #endif /* FUNCIONES_INSTANCIA_H_ */
