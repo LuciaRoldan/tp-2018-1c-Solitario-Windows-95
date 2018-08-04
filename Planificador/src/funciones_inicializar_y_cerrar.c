@@ -65,6 +65,7 @@ void inicializar_semaforos(){
 	sem_init(&s_eliminar_pcb, 0, 0);
 	sem_init(&s_planificar, 0, 0);
 	sem_init(&s_podes_cerrar_dice_el_esi, 0, 0);
+	sem_init(&s_esi_despedido, 0, 0);
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -189,6 +190,13 @@ void cerrar_planificador(){ //arreglar
 	log_info(logger, "El tamanio de la lista de PCBs es %d", list_size(pcbs));
 	free(pcbs);
 
+	cerrar_hilos = 1;
+
+//	sem_post(&s_cerrar_un_hilo);
+//	hilo_a_cerrar = &esi_a_cerrar->hilo;
+//	hay_hilos_por_cerrar = 1;
+//	sem_wait(&s_hilo_cerrado);
+
 	se_cerro_todo = 1;
 }
 
@@ -201,6 +209,7 @@ void cerrar_cosas_de_un_esi(void* esi){
 	hilo_a_cerrar = &esi_a_cerrar->hilo;
 	hay_hilos_por_cerrar = 1;
 
+	log_info(logger, "holahola");
 	if(terminar_todo == 1){
 	sem_post(&s_planificar);
 	//log_info(logger, "Post a planificar desde cerrar cosas");
@@ -210,7 +219,6 @@ void cerrar_cosas_de_un_esi(void* esi){
 	//	log_info(logger, "Post a planificar desde cerrar cosas");
 	//}
 
-	//log_info(logger, "Post a cerrar_un_hilo");
 	sem_post(&s_cerrar_un_hilo);
 	sem_wait(&s_hilo_cerrado);
 }

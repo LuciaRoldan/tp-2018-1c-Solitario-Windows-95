@@ -5,7 +5,7 @@ void manejar_esis(){
 
 	while(terminar_todo){
 
-		while(pausar_planificador >= 0){
+		while(pausar_planificador >= 0 && se_cerro_todo != 1){
 
 			if(list_size(esis_ready) > 0){
 
@@ -19,6 +19,13 @@ void manejar_esis(){
 				}
 
 				pthread_mutex_lock(&m_lista_esis_ready);
+
+				if (pausar_planificador == -1 || terminar_todo == -1){ //cambie
+					log_info(logger, "Voy a hacer un break porque me pausaron");
+					pthread_mutex_unlock(&m_lista_esis_ready);
+					break;
+					log_info(logger, "No hice el break un carajo");
+				}
 
 				if(list_size(esis_ready) > 0){
 
@@ -49,6 +56,7 @@ void manejar_esis(){
 			}
 		}
 	}
+	log_info(logger, "Saliendo del hilo manejar_esis");
 }
 
 
@@ -93,6 +101,7 @@ void recibir_esis(void* socket_esis){
 	        perror("Fallo en el accept");
 		}
 	}
+	log_info(logger, "Saliendo del hilo recibir_esis");
 }
 
 //--MANEJAR UN ESI--//
@@ -111,7 +120,7 @@ void manejar_esi(void* la_pcb){
 		int resultado = recibir_un_int(pcb_esi.socket);
 		log_info(logger, "El ESI %d me envio el resultado_esi %d:", pcb_esi.id, resultado);
 
-		if (resultado >= 0 && terminar_todo != -1){
+		if (resultado >= 0){ //&terminar_todo != -1
 			switch (resultado){
 				case (84):
 					if (terminar_todo != -1){
@@ -127,6 +136,10 @@ void manejar_esi(void* la_pcb){
 				break;
 				case (81):
 					mover_esi_a_finalizados(id_esi_ejecutando);
+					chau = 0;
+				break;
+				case (20): //exit de consola
+					esi_a_finalizar = pcb_esi.id;
 					chau = 0;
 				break;
 				default:
@@ -196,5 +209,6 @@ void manejar_coordinador(void* socket){
 	if(terminar_todo != -1){
 		cerrar_planificador();
 	}
-	pthread_exit(NULL);
+	log_info(logger, "Saliendo del hilo manejar_coordinador");
+	//pthread_exit(NULL);
 }

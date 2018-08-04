@@ -83,12 +83,14 @@ void mover_esi_a_finalizados(int id_esi){
 
 	pcb* esi_finalizado;
 
+	log_info(logger, "pase sem esis ready");
+
 	pthread_mutex_lock(&m_id_buscado);
 	id_buscado = id_esi;
 	esi_finalizado = list_find(pcbs, ids_iguales_pcb);
 	int id_esi_finalizado = esi_finalizado->id;
 
-	if(esi_a_finalizar != -1){
+	if(esi_a_finalizar != -1 && terminar_todo != -1){
 		informar_coordi_kill(id_esi_finalizado);
 		enviar_esi_kill(esi_finalizado->socket);
 		esi_a_finalizar = -1;
@@ -116,6 +118,8 @@ void mover_esi_a_finalizados(int id_esi){
 	memcpy(id, &id_esi_finalizado, sizeof(int));
 	list_add(esis_finalizados, id);
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_finalizado);
+
+	log_info(logger, "Saliendo del hilo manejar_esi %d", id_esi);
 
 	cerrar_cosas_de_un_esi(esi_finalizado);
 }

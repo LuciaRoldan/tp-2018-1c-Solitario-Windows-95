@@ -17,6 +17,8 @@ void ejecutar_consola(){
 			if(!strncmp(linea, "exit", 4)) {
 				printf("\t\tCerrando Consola. Hasta luego. \n");
 				free(linea);
+				pausar_planificacion();
+				usleep(100000);
 				desencadenar_cerrar_planificador();
 				exit(1);
 				break;
@@ -136,6 +138,9 @@ void ejecutar_consola(){
 			   printf("Comando no reconocido. Ingrese nuevamente. \n");
 			   break;
 			}
+		}
+		if(se_cerro_todo == 1){
+			break;
 		}
   }
   free(linea);
