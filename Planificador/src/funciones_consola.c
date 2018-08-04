@@ -18,10 +18,20 @@ void desbloquear(char * clave){
 }
 
 void pedir_status(char* clave){
-	int tamanio_buffer = tamanio_buffer_string(clave);
-	void* buffer_pedido_clave = malloc(tamanio_buffer);
-	serializar_string_log(buffer_pedido_clave, clave, 21, logger);
-	enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
+	clave_buscada = clave;
+	clave_bloqueada* nodo_clave = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
+	if(!list_any_satisfy(claves_bloqueadas, claves_iguales_nodo_clave)){
+		printf("\t Clave desconocida: %s\n",clave);
+		return;
+	} else if (nodo_clave->esi_que_la_usa == 0){
+		printf("\t La clave fue liberada, por lo tanto no posee ningun valor\n");
+		return;
+	} else {
+		int tamanio_buffer = tamanio_buffer_string(clave);
+		void* buffer_pedido_clave = malloc(tamanio_buffer);
+		serializar_string_log(buffer_pedido_clave, clave, 21, logger);
+		enviar(sockets_planificador.socket_coordinador, buffer_pedido_clave, tamanio_buffer, logger);
+	}
 }
 
 //--Recibir status del Coordinador--//
@@ -37,8 +47,9 @@ void recibir_status_clave(){
 	free(buffer);
 }
 
+
 void mostrar_status_clave(status_clave status){
-	if (strcmp(status.contenido, " ") != 0){
+	if (!strcmp(status.contenido, "") == 0){
 		printf("\t El valor de la clave es: %s\n", status.contenido);
 	} else {
 		printf("\t La clave existe pero esta vacia.\n");

@@ -149,6 +149,7 @@ t_handshake deserializar_handshake(void *buffer_recepcion);
 t_esi_operacion deserializar_instruccion(void* buffer);
 datos_configuracion deserializar_configuracion_inicial_instancia(void* buffer);
 status_clave deserializar_status_clave(void* buffer);
+status_clave deserializar_status_clave_log(void* buffer, t_log* logger);
 void deserializar_string(void* buffer, char* mensaje);
 
 //tamaños de buffers

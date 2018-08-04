@@ -177,6 +177,8 @@ void cerrar_planificador(){
 	free(pcbs);
 
 	se_cerro_todo = 1;
+
+	printf("\t El Planificador termino su ejecucion\n");
 }
 
 //--Cuando termina un ESI--//

@@ -118,7 +118,7 @@ void manejar_esi(void* la_pcb){
 		//log_info(logger, "En manejar_esi y el ID del ESI es: %d", pcb_esi.id);
 
 		int resultado = recibir_un_int(pcb_esi.socket);
-		log_info(logger, "El ESI %d me envio el resultado_esi %d:", pcb_esi.id, resultado);
+		log_info(logger, "El ESI %d me envio el resultado_esi %d:\n", pcb_esi.id, resultado);
 
 		if (resultado >= 0){ //&terminar_todo != -1
 			switch (resultado){

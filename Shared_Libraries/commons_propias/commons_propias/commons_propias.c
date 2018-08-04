@@ -123,7 +123,6 @@ int enviar(int socket_destino, void* envio, int tamanio_del_envio, t_log* logger
  		log_info(logger, "Quise enviar a %d", socket_destino);
  		_exit_with_error(socket_destino, "No se pudo enviar el mensaje", NULL, logger);
  	}
- 	log_info(logger, "Envie al socket %d", socket_destino);
  	return bytes_enviados;
  }
 
@@ -133,7 +132,6 @@ int recibir(int socket_receptor, void* buffer_receptor, int tamanio_que_recibo, 
 	/*if (bytes_recibidos <= 0) {
 			_exit_with_error(socket_receptor, "Error recibiendo el contenido", NULL, logger);
 		}*/
-	log_info(logger, "Recibi %d bytes", bytes_recibidos);
 	return bytes_recibidos;
 }
 
@@ -309,7 +307,7 @@ void serializar_status_clave(void* buffer, status_clave status){
 	int id_protocolo = 83;
 	int tamanio_clave = strlen(status.clave)+1;
 	int tamanio_contenido = (strlen(status.contenido)+1)*sizeof(char);
-	int tamanio_total = tamanio_buffer_status(status)- sizeof(int)*2;
+	int tamanio_total = tamanio_buffer_status(status)- sizeof(int)*2; //*2
 	memcpy(buffer, &id_protocolo, sizeof(int));
 	memcpy(buffer + sizeof(int), &tamanio_total, sizeof(int));
 	memcpy(buffer + sizeof(int)*2, &tamanio_clave, sizeof(int));
@@ -329,8 +327,28 @@ status_clave deserializar_status_clave(void* buffer) {//Se hicieron dos recibir 
 	memcpy(&status.id_instancia_actual, buffer + sizeof(int) + tamanio_clave, sizeof(int));
 	memcpy(&status.id_instancia_nueva, buffer + sizeof(int)*2 + tamanio_clave, sizeof(int));
 	memcpy(&tamanio_contenido, buffer + sizeof(int)*3 + tamanio_clave, sizeof(int));
-	status.contenido = malloc(tamanio_clave);
+	status.contenido = malloc(tamanio_contenido);
 	memcpy(status.contenido, buffer + sizeof(int)*4 + tamanio_clave, tamanio_contenido);
+	return status;
+}
+
+status_clave deserializar_status_clave_log(void* buffer, t_log* logger) {//Se hicieron dos recibir antes, uno para el protocolo y otro para el tamaño del buffer
+	status_clave status;
+	int tamanio_clave, tamanio_contenido;
+	memcpy(&tamanio_clave, buffer, sizeof(int));
+	log_info(logger, "El tamanio de la clave es: %d", tamanio_clave);
+	status.clave = malloc(tamanio_clave);
+	memcpy(status.clave, buffer + sizeof(int), tamanio_clave);
+	log_info(logger, "La clave es: %s", status.clave);
+	memcpy(&status.id_instancia_actual, buffer + sizeof(int) + tamanio_clave, sizeof(int));
+	log_info(logger, "El id actual es: %d", status.id_instancia_actual);
+	memcpy(&status.id_instancia_nueva, buffer + sizeof(int)*2 + tamanio_clave, sizeof(int));
+	log_info(logger, "El id instancia nueva es: %d", status.id_instancia_nueva);
+	memcpy(&tamanio_contenido, buffer + sizeof(int)*3 + tamanio_clave, sizeof(int));
+	log_info(logger, "El tamanio_contenido es: %d", tamanio_contenido);
+	status.contenido = malloc(tamanio_contenido);
+	memcpy(status.contenido, buffer + sizeof(int)*4 + tamanio_clave, tamanio_contenido);
+	log_info(logger, "El contenido es: %s", status.contenido);
 	return status;
 }
 

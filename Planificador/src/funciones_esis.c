@@ -144,12 +144,12 @@ void liberar_clave(char* clave){
 			if(!list_is_empty(nodo_clave->esis_en_espera)){
 				void* el_esi = list_remove(nodo_clave->esis_en_espera, 0);
 				int* id_esi_ahora_ready = el_esi;
-				nodo_clave->esi_que_la_usa = *id_esi_ahora_ready;
+				//nodo_clave->esi_que_la_usa = *id_esi_ahora_ready;
 
 				//pthread_mutex_lock(&m_id_buscado);
 				id_buscado = *id_esi_ahora_ready;
 				//pthread_mutex_unlock(&m_id_buscado);
-				log_info(logger, "y es ahora ocupada por el ESI %d", nodo_clave->esi_que_la_usa);
+				//log_info(logger, "y es ahora ocupada por el ESI %d", nodo_clave->esi_que_la_usa);
 				void* un_esi = list_find(pcbs, ids_iguales_pcb);
 				pcb* el_nuevo_esi_ready = un_esi;
 
