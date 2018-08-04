@@ -158,6 +158,7 @@ void manejar_esi(void* la_pcb){
 	if(pcb_esi.id == esi_a_finalizar){
 		mover_esi_a_finalizados(pcb_esi.id);
 	}
+	log_info(logger, "Saliendo del hilo manejar_esi %d", pcb_esi.id);
 }
 
 //--MANEJAR COORDINADOR--//

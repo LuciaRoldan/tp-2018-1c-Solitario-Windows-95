@@ -119,8 +119,6 @@ void mover_esi_a_finalizados(int id_esi){
 	list_add(esis_finalizados, id);
 	log_info(logger, "Esi %d agregado a esis_finalizados", id_esi_finalizado);
 
-	log_info(logger, "Saliendo del hilo manejar_esi %d", id_esi);
-
 	cerrar_cosas_de_un_esi(esi_finalizado);
 }
 
