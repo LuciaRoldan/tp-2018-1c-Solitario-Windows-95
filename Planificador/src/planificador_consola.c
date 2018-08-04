@@ -8,7 +8,7 @@ void ejecutar_consola(){
 	int el_id;
 
 	while(1) {
-		linea = readline("\n > Ingrese un comando: ");
+		linea = readline("\n > Ingrese un comando: \n");
 		if(!string_is_empty(linea)){
 			add_history(linea);
 			printf("*** La linea ingresada fue: %s\n", linea);
@@ -120,6 +120,14 @@ void ejecutar_consola(){
 					printf("Demasiados argumentos para la operacion de deadlock. \n");
 				}
 				break;
+			case PLANIFICAR:
+				if(palabras[1] == NULL) {
+					printf("Planificar.\n");
+					post_a_planificar();
+				} else {
+					printf("Demasiados argumentos para la operacion planificar. \n");
+				}
+				break;
 		   default:
 			   printf("Comando no reconocido. Ingrese nuevamente. \n");
 			   break;
@@ -158,6 +166,9 @@ op_consola analizar_linea(char* linea){
 	}
 	if(string_starts_with(linea, "deadlock")){
 		return DEADLOCK;
+	}
+	if(string_starts_with(linea, "planificar")){
+		return PLANIFICAR;
 	}
 	return INVALIDO;
 }

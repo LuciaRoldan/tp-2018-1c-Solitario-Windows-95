@@ -38,7 +38,8 @@ typedef enum {
 	KILL,
 	STATUS,
 	DEADLOCK,
-	INVALIDO
+	PLANIFICAR,
+	INVALIDO,
 } op_consola;
 
 //////////-----VARIABLES GLOBALES-----//////////
@@ -111,6 +112,7 @@ void listar_procesos_encolados(char* recurso);
 void kill_esi(int id);
 void pedir_status(char* clave);
 int deadlock();
+void post_a_planificar();
 
 //--Funciones auxiliares consola--//
 void enviar_esi_kill(int socket_esi);

@@ -154,10 +154,10 @@ void cerrar_planificador(){
 	fin_de_programa = 1;
 
 	list_iterate(pcbs, despedir_esi_vivo);
-	log_info(logger, "Despedi ESIS vivos");
+	log_info(logger, "Todos los ESISs finalizados");
 
 	list_clean_and_destroy_elements(claves_bloqueadas, borrar_nodo_clave);
-	log_info(logger, "Borre las claves_bloqueadas");
+	log_info(logger, "Todas las claves borradas");
 	log_info(logger, "El tamanio de la lista de claves_bloqueadas es %d", list_size(claves_bloqueadas));
 	free(claves_bloqueadas);
 
@@ -184,7 +184,6 @@ void cerrar_planificador(){
 //--Cuando termina un ESI--//
 void cerrar_cosas_de_un_esi(void* esi){
 	pcb* esi_a_cerrar = esi;
-	log_info(logger, "Entre en cerrar_cosas");
 
 	close(esi_a_cerrar->socket);
 	hilo_a_cerrar = &esi_a_cerrar->hilo;

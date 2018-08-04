@@ -10,10 +10,10 @@ void manejar_esis(){
 			if(list_size(esis_ready) > 0){
 
 				sem_wait(&s_planificar);
-				log_info(logger, "Pase el semaforo de la muerte");
+				//log_info(logger, "Pase el semaforo de la muerte");
 
 				if (pausar_planificador == -1 || terminar_todo == -1){ //cambie
-					log_info(logger, "Voy a hacer un break porque me pausaron");
+					log_info(logger, "Break en manejar_esis por operacion PAUSAR");
 					break;
 					log_info(logger, "No hice el break un carajo");
 				}
@@ -21,7 +21,7 @@ void manejar_esis(){
 				pthread_mutex_lock(&m_lista_esis_ready);
 
 				if (pausar_planificador == -1 || terminar_todo == -1){ //cambie
-					log_info(logger, "Voy a hacer un break porque me pausaron");
+					log_info(logger, "Break en manejar_esis por operacion PAUSAR");
 					pthread_mutex_unlock(&m_lista_esis_ready);
 					break;
 					log_info(logger, "No hice el break un carajo");

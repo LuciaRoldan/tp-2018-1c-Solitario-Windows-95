@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 		esi_a_finalizar = -1;
 		cerrar_hilos = -1;
 
-	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
+	logger = log_create("planificador.log", "PLANIFICADOR", 0, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(argv[1]); //leyendo archivo configuracion
 
 	if(strcmp(algoritmo, "SJF_CD") == 0){
@@ -56,7 +56,9 @@ int main(int argc, char* argv[]) {
 				sem_wait(&s_cerrar_un_hilo);
 				hay_hilos_por_cerrar = 0;
 				log_info(logger, "Hilo cerrado");
-				sem_post(&s_esi_despedido);
+				if (terminar_todo == -1){
+					sem_post(&s_esi_despedido);
+				}
 				sleep(1);
 				pthread_join(*hilo_a_cerrar, NULL);
 				if(se_cerro_todo == 1){

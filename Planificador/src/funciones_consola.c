@@ -16,6 +16,9 @@ void bloquear(char* clave, int id){
 void desbloquear(char * clave){
 	liberar_clave(clave);
 }
+void post_a_planificar(){
+	sem_post(&s_planificar);
+}
 
 void pedir_status(char* clave){
 	clave_buscada = clave;
@@ -76,11 +79,14 @@ void listar_procesos_encolados(char* recurso){
 
 void kill_esi(int id){
 	id_buscado = id;
+	pcb* esii = list_find(pcbs, ids_iguales_pcb);
 	if (list_any_satisfy(pcbs, ids_iguales_pcb)){
 		log_info(logger, "ESI %d sera finalizado por funcion 'kill' de consola.", id);
 		esi_a_finalizar = id;
 		if(list_size(esis_ready) == 0){
-			mover_esi_a_finalizados(id);
+			informar_coordi_kill(id);
+			enviar_esi_kill(esii->socket);
+			//mover_esi_a_finalizados(id);
 		}
 	} else {
 		log_info(logger, "No conozco a ese ESI");

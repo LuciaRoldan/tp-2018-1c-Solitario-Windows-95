@@ -109,7 +109,7 @@ void procesar_pedido(t_esi_operacion instruccion){
 		clave_buscada = instruccion.argumentos.SET.clave;
 		nodo_clave_buscada = list_find(claves_bloqueadas, claves_iguales_nodo_clave);
 		pthread_mutex_unlock(&m_clave_buscada);
-		log_info(logger, "Nodo_clave_buscada en SET el id del esi que la usa es: %d", nodo_clave_buscada->esi_que_la_usa);
+		log_info(logger, "SET realizado sobre una clave ocupada por el ESI: %d", nodo_clave_buscada->esi_que_la_usa);
 
 		if(nodo_clave_buscada == NULL){
 				log_info(logger, "SET realizado sobre una clave inexistente %s por el ESI %d", clave_buscada, id_esi_ejecutando);
