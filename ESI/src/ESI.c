@@ -76,6 +76,7 @@ int main(int argc, char* argv[]){
 				log_info(logger_esi, "Cerrando ESI %d por 'exit' de consola", idEsi);
 				void* buffer_exit = malloc(sizeof(int));
 				serializar_id(buffer_exit, 20);
+				enviar(conexiones.socket_plani, buffer_exit, sizeof(int), logger_esi);
 				enviar(conexiones.socket_coordi, buffer_exit, sizeof(int), logger_esi);
 				flag_exit = enviar_exit_coordi(conexiones.socket_coordi);
 				break;

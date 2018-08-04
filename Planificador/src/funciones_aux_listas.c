@@ -103,7 +103,7 @@ void despedir_esi_vivo(void* pcbb){
 	id_buscado = pcb_esi->id;
 	if(!list_any_satisfy(esis_finalizados, ids_iguales_pcb)){
 		enviar_esi_exit(pcb_esi->socket);
-		mover_esi_a_finalizados(pcb_esi->id);
+		sem_wait(&s_esi_despedido);
 	}
 	//pthread_mutex_unlock(&m_id_buscado);
 }

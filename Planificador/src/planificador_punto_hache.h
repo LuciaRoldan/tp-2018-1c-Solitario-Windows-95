@@ -72,6 +72,7 @@ int vino_uno;
 int desalojo;
 int se_cerro_todo;
 int esi_a_finalizar;
+int cerrar_hilos;
 
 ///---SEMAFOROS---///
 pthread_mutex_t m_recibir_resultado_esi;
@@ -90,6 +91,7 @@ sem_t s_hilo_cerrado;
 sem_t s_eliminar_pcb;
 sem_t s_podes_cerrar_dice_el_esi;
 sem_t s_planificar;
+sem_t s_esi_despedido;
 
 //////////----------FUNCIONES----------//////////
 

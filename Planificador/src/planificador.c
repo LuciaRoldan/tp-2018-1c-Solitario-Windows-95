@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
 		vino_uno = 0;
 		se_cerro_todo = -1;
 		esi_a_finalizar = -1;
+		cerrar_hilos = -1;
 
 	logger = log_create("planificador.log", "PLANIFICADOR", 1, LOG_LEVEL_INFO);
 	sockets_planificador = inicializar_planificador(argv[1]); //leyendo archivo configuracion
@@ -50,16 +51,17 @@ int main(int argc, char* argv[]) {
 	pthread_create(&hilo_consola, 0, ejecutar_consola, (void*) 0);
 
 	//CIERRO HILOS
-			while(hay_hilos_por_cerrar > 0 || fin_de_programa < 0 || se_cerro_todo < 0){
+	//hay_hilos_por_cerrar > 0 || fin_de_programa < 0 || se_cerro_todo < 0
+			while(1){
 				sem_wait(&s_cerrar_un_hilo);
-				log_info(logger, "Vine a cerrar el hilo");
 				hay_hilos_por_cerrar = 0;
 				log_info(logger, "Hilo cerrado");
-				sem_post(&s_hilo_cerrado);
+				sem_post(&s_esi_despedido);
+				sleep(1);
 				pthread_join(*hilo_a_cerrar, NULL);
-				//hay_hilos_por_cerrar = 0;
-				//pthread_mutex_unlock(&m_hilo_a_cerrar);
-				//sem_post(&s_eliminar_pcb);
+				if(se_cerro_todo == 1){
+					break;
+				}
 			}
 
 //			while(!terminar_programa){
@@ -71,8 +73,9 @@ int main(int argc, char* argv[]) {
 //						}
 //				}
 
-	//pthread_join(hilo_escucha_esis, NULL);
+	pthread_join(&hilo_escucha_esis, NULL);
 	pthread_join(&hilo_coordinador, NULL);
-	//pthread_join(&hilo_consola, NULL);
+	pthread_join(&hilo_consola, NULL);
+	pthread_join(&hilo_manejar_esis, NULL);
 	return 0;
 }

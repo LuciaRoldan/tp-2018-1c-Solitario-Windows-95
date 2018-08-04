@@ -65,6 +65,7 @@ void inicializar_semaforos(){
 	sem_init(&s_eliminar_pcb, 0, 0);
 	sem_init(&s_planificar, 0, 0);
 	sem_init(&s_podes_cerrar_dice_el_esi, 0, 0);
+	sem_init(&s_esi_despedido, 0, 0);
 }
 
 void handshake_coordinador(int socket_coordinador){
@@ -147,23 +148,10 @@ void desencadenar_cerrar_planificador(){
 	cerrar_planificador();
 }
 
-void cerrar_planificador(){ //arreglar
+void cerrar_planificador(){
 
 	terminar_todo = -1;
 	fin_de_programa = 1;
-
-	//sem_wait(&s_podes_cerrar_dice_el_esi);
-
-	//log_info(logger, "Pase la parte del exit que no puede fallar");
-
-	//list_iterate(pcbs, mostrar_estimacion);
-
-	//log_info(logger, "LA CANTIDAD DE PCBS ES %d", list_size(pcbs));
-
-	//if (deadlock() == 1){
-	//	pthread_mutex_unlock(&m_lista_esis_ready);
-	//}
-
 
 	list_iterate(pcbs, despedir_esi_vivo);
 	log_info(logger, "Despedi ESIS vivos");
@@ -178,7 +166,6 @@ void cerrar_planificador(){ //arreglar
 	free(conexion_coordinador.ip);
 	free(conexion_coordinador.puerto);
 	free(algoritmo);
-	//free(clave_buscada);
 	free(esis_ready);
 
 	list_clean_and_destroy_elements(esis_finalizados, free_esi_finalizado);
@@ -202,15 +189,13 @@ void cerrar_cosas_de_un_esi(void* esi){
 	hay_hilos_por_cerrar = 1;
 
 	if(terminar_todo == 1){
-	sem_post(&s_planificar);
-	//log_info(logger, "Post a planificar desde cerrar cosas");
+		sem_post(&s_planificar);
 	}
+	sem_post(&s_cerrar_un_hilo);
+
+	//log_info(logger, "Post a planificar desde cerrar cosas");
 	//if(list_size(esis_ready) == 0 && terminar_todo == 1 && esi_a_abortar == -1){ //no se por que pero hacen falta 2
 	//	sem_post(&s_planificar);
 	//	log_info(logger, "Post a planificar desde cerrar cosas");
 	//}
-
-	//log_info(logger, "Post a cerrar_un_hilo");
-	sem_post(&s_cerrar_un_hilo);
-	sem_wait(&s_hilo_cerrado);
 }
