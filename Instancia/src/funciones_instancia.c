@@ -272,6 +272,7 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 		tamanio_valor = strlen(instruccion.argumentos.SET.valor) + 1;
 		tamanio_clave = strlen(instruccion.argumentos.SET.clave) + 1;
 		list_iterate(tabla_entradas, sumar_operacion);
+		int cantidad_entradas_nuevas = cantidad_entradas_ocupa(tamanio_valor);
 
 		clave_buscada = malloc(tamanio_clave);
 		memcpy(clave_buscada, instruccion.argumentos.SET.clave, tamanio_clave);
@@ -282,11 +283,15 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			entrada_encontrada = list_find(tabla_entradas, condicion_clave_entrada);
 			entrada_encontrada->cantidad_operaciones = 0;
 
-			if(cantidad_entradas_ocupa(tamanio_valor) <= entrada_encontrada->cantidad_entradas){
-					memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
-					entrada_encontrada->tamanio_valor = tamanio_valor;
-					free(clave_buscada);
-					log_info(logger, "Quedo guardado: %s", entrada_encontrada->valor);
+			if(cantidad_entradas_nuevas <= entrada_encontrada->cantidad_entradas){
+				int diferencia_entradas = entrada_encontrada->cantidad_entradas - cantidad_entradas_nuevas;
+				memcpy(entrada_encontrada->valor, instruccion.argumentos.SET.valor, tamanio_valor);
+				entrada_encontrada->tamanio_valor = tamanio_valor;
+				entrada_encontrada->cantidad_entradas = cantidad_entradas_ocupa(tamanio_valor);
+				log_info(logger,"LA CLAVE %s TIENE %d ENTRADAS", entrada_encontrada->clave, entrada_encontrada->cantidad_entradas);
+				for(int i = 0; i < diferencia_entradas; i++){
+					acceso_tabla[entrada_encontrada->numero_pagina + cantidad_entradas_nuevas] = 0;
+			}
 
 			} else {
 
@@ -464,6 +469,7 @@ int asignar_memoria(estructura_clave* clave, int entradas_contiguas_necesarias, 
 			contador = 0;
 		}
 	}
+	log_info(logger,"TIENE %d PAGINAS LIBRES", espacios_libres);
 	log_info(logger, "El puntero de pagina quedo en: %d", puntero_pagina);
 
 	if(contador == entradas_contiguas_necesarias){ //Si tengo las necesarias
