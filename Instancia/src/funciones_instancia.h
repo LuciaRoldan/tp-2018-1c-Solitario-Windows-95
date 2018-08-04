@@ -125,5 +125,7 @@ int buscar_siguiente_entrada_ocupada(int inicio_indice);
 void reemplazar_y_destruir(int indice, estructura_clave* estructura_nueva);
 bool entradas_libres_contiguas(int necesarias);
 char* obtener_valor_archivo(char* clave, int tamanio_clave);
+void funcion_para_escribir();
+void mostrar_string();
 
 #endif /* FUNCIONES_INSTANCIA_H_ */

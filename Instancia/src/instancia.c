@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
 	}
 
 //	recibir_configuracion(socket_coordinador,logger);
-	configuracion_coordi.tamano_entrada = recibir_int(socket_coordinador,logger) + 1;
+	configuracion_coordi.tamano_entrada = recibir_int(socket_coordinador,logger);
 	configuracion_coordi.cantidad_entradas = recibir_int(socket_coordinador,logger);
 
 	log_info(logger,"Recibi la configuracion! ");

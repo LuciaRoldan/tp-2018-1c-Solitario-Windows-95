@@ -254,6 +254,55 @@ bool existe_clave(char* clave) {
 	return resultado;
 }
 
+
+void mostrar_string() {
+	char* auxiliar;
+	estructura_clave* entrada;
+	for (int i = 0; i < list_size(tabla_entradas); i++) {
+		entrada = list_get(tabla_entradas, i);
+		auxiliar = malloc(entrada->tamanio_valor);
+		strcpy(auxiliar, entrada->valor);
+		strcat(auxiliar + entrada->tamanio_valor, "\0");
+		log_info(logger,"LA ENTRADA %d TIENE EL VALOR %s", i, auxiliar);
+		free(auxiliar);
+	}
+}
+
+void funcion_para_escribir(){
+	char* auxiliar;
+	for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
+		if(acceso_tabla[i] == 1){
+			puntero_pagina_buscado = i;
+			estructura_clave* estructura = list_find(tabla_entradas, condicion_tiene_puntero_entrada);
+			int tamanio = estructura->tamanio_valor;
+			if(estructura->cantidad_entradas > 1){
+				for(int a = 0; a < estructura->cantidad_entradas - 1; a++){
+					auxiliar = (char*) malloc(configuracion_coordi.tamano_entrada +1);
+					strcpy(auxiliar, estructura->valor + (configuracion_coordi.tamano_entrada * a));
+					strcat(auxiliar + (configuracion_coordi.tamano_entrada * a), "\0");
+					log_info(logger, "LA PAGINA %d CONTIENE %s", (i + a) , auxiliar);
+					free(auxiliar);
+				}
+				i += estructura->cantidad_entradas - 1;
+				int resto = tamanio - ((estructura->cantidad_entradas - 1)* configuracion_coordi.tamano_entrada);
+				auxiliar = (char*) malloc(resto + 1);
+				strcpy(auxiliar, estructura->valor + (estructura->cantidad_entradas - 1) * configuracion_coordi.tamano_entrada);
+				strcat(auxiliar + ((estructura->cantidad_entradas - 1) * configuracion_coordi.tamano_entrada), "\0");
+				log_info(logger, "LA PAGINA %d CONTIENE %s", i , auxiliar);
+				free(auxiliar);
+
+			} else {
+				auxiliar = (char*) malloc(tamanio +1);
+				strcpy(auxiliar, estructura->valor);
+				strcat(auxiliar + estructura->tamanio_valor, "\0");
+				log_info(logger, "LA PAGINA %d CONTIENE ES ATOMICA %s", i, auxiliar);
+			}
+		} else {
+			log_info(logger, "LA PAGINA %d ESTA VACIA", i);
+		}
+	}
+}
+
 void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t_log* logger) {
 	int tamanio_valor = 0;
 	int tamanio_clave = 0;
@@ -400,16 +449,17 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			enviar_exito(socket_coordinador); //Revisar si esta bien aca porque siempre va a enviar exito
 
 		log_info(logger, "------------------------------------------------------------");
-		log_info(logger, "---------------------- TABLA ENTRADAS ----------------------");
-		for(int i = 0; i < list_size(tabla_entradas); i++){
-			estructura_clave* nodo = list_get(tabla_entradas, i);
-			log_info(logger, "En la posicion %d esta la clave %s con el valor %s", i, nodo->clave, nodo->valor);
-			log_info(logger, "El segmento ocupa %d paginas", nodo->cantidad_entradas);
-		}
-		log_info(logger, "-------------------------- BITMAP --------------------------");
-		for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
-			log_info(logger, "En la posicion %d el bitmap es %d", i, acceso_tabla[i]);
-		}
+//		log_info(logger, "---------------------- TABLA ENTRADAS ----------------------");
+//		for(int i = 0; i < list_size(tabla_entradas); i++){
+//			estructura_clave* nodo = list_get(tabla_entradas, i);
+//			log_info(logger, "En la posicion %d esta la clave %s con el valor %s", i, nodo->clave, nodo->valor);
+//			log_info(logger, "El segmento ocupa %d paginas", nodo->cantidad_entradas);
+//		}
+//		log_info(logger, "-------------------------- BITMAP --------------------------");
+//		for(int i = 0; i < configuracion_coordi.cantidad_entradas; i++){
+//			log_info(logger, "En la posicion %d el bitmap es %d", i, acceso_tabla[i]);
+//		}
+		mostrar_string();
 		log_info(logger, "------------------------------------------------------------");
 
 		log_info(logger, "Termine el set");
@@ -429,7 +479,9 @@ void procesar_instruccion(int socket_coordinador, t_esi_operacion instruccion, t
 			} else {
 				enviar_fallo(socket_coordinador);
 			}
-
+			log_info(logger, "------------------------------------------------------------");
+			mostrar_string();
+			log_info(logger, "------------------------------------------------------------");
 			list_iterate(tabla_entradas, sumar_operacion);
 			break;
 	}
@@ -571,7 +623,6 @@ bool condicion_tiene_puntero_entrada(void* datos){
 	estructura_clave entrada = *((estructura_clave*) datos);
 	bool respuesta = (entrada.numero_pagina <= puntero_pagina_buscado) && (puntero_pagina_buscado <= (entrada.numero_pagina + entrada.cantidad_entradas));
 	return respuesta;
-
 }
 
 int entradas_atomicas_contiguas(int puntero, int necesarias) {
@@ -845,6 +896,9 @@ void compactar(){
 			log_info(logger, "El nuevo bitmap en %d es %d", h, nuevo_acceso_tabla[h]);
 		}
 	log_info(logger, "*********************");
+	log_info(logger, "------------------------------------------------------------");
+	mostrar_string();
+	log_info(logger, "------------------------------------------------------------");
 
 	//Libero espacio anterior e igualo al nuevo
 	free(inicio_memoria);
